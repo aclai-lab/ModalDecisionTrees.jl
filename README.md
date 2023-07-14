@@ -12,6 +12,7 @@ This package provides algorithms for learning *decision trees* and *decision for
 Leveraging the express power of Modal Logic, these models can extract *temporal/spatial patterns*, and can natively handle *time series* and *images* (without any data preprocessing). Currently available via [MLJ.jl](https://github.com/alan-turing-institute/MLJ.jl) and [*Sole.jl*](https://github.com/aclai-lab/Sole.jl).
 #### Features & differences with [DecisionTree.jl](https://github.com/JuliaAI/DecisionTree.jl):
 The MLJ models provided (`ModalDecisionTree` and `ModalRandomForest`) can act as drop in replacements for DecisionTree.jl's tree and forest models. The main difference is that the two models provided are [probabilistic](https://alan-turing-institute.github.io/MLJ.jl/dev/adding_models_for_general_use/#Overview) and can perform both classification (with y labels of type `String` or `CategoricalValue`), and regression (with numeric y labels).
+<!-- Also feature_importance = :impurity is not supported -->
 Additionally, these models:
 - Are able to handle variables that are `AbstractVector{<:Real}` or `AbstractMatrix{<:Real}`;
 - Support [multimodal](https://en.wikipedia.org/wiki/Multimodal_learning) learning (e.g., learning from *combinations* of scalars, time series and images);

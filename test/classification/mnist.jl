@@ -68,7 +68,7 @@ begin
     recwidth(x) = Float32(size(x, 2))
     model = ModalDecisionTree(;
         relations = :IA7,
-        conditions = [minimum, maximum, recheight, recwidth],
+        features = [minimum, maximum, recheight, recwidth],
         featvaltype = Float32,
     )
 
@@ -76,7 +76,7 @@ begin
 
     model = ModalDecisionTree(;
         relations = :IA7,
-        conditions = [recheight, recwidth, minimum, maximum],
+        features = [recheight, recwidth, minimum, maximum],
         featvaltype = Float32,
     )
 
@@ -97,11 +97,11 @@ begin
     recwidth(x) = Float32(size(x, 2))
     model = ModalDecisionTree(;
         relations = :IA7,
-        conditions = [minimum, maximum, recheight, recwidth],
+        features = [minimum, maximum, recheight, recwidth],
         initconditions = :start_at_center,
         featvaltype = Float32,
-        # conditions = [minimum, maximum, UnivariateFeature{Float64}(recheight), UnivariateFeature{Float64}(recwidth)],
-        # conditions = [minimum, maximum, UnivariateFeature{Float32}(1, recheight), UnivariateFeature{Float32}(1, recwidth)],
+        # features = [minimum, maximum, UnivariateFeature{Float64}(recheight), UnivariateFeature{Float64}(recwidth)],
+        # features = [minimum, maximum, UnivariateFeature{Float32}(1, recheight), UnivariateFeature{Float32}(1, recwidth)],
     )
 
     mach = machine(model, X_train, y_train) |> fit!
@@ -117,11 +117,11 @@ end
 begin
     model = ModalDecisionTree(;
         relations = :IA3,
-        conditions = [minimum],
+        features = [minimum],
         initconditions = :start_at_center,
         featvaltype = Float32,
-        # conditions = [minimum, maximum, UnivariateFeature{Float64}(recheight), UnivariateFeature{Float64}(recwidth)],
-        # conditions = [minimum, maximum, UnivariateFeature{Float32}(1, recheight), UnivariateFeature{Float32}(1, recwidth)],
+        # features = [minimum, maximum, UnivariateFeature{Float64}(recheight), UnivariateFeature{Float64}(recwidth)],
+        # features = [minimum, maximum, UnivariateFeature{Float32}(1, recheight), UnivariateFeature{Float32}(1, recwidth)],
     )
 
     mach = machine(model, X_train, y_train) |> fit!
@@ -138,7 +138,7 @@ end
 begin
     model = ModalDecisionTree(;
         relations = :IA7,
-        conditions = [minimum],
+        features = [minimum],
         initconditions = :start_at_center,
         downsize = (x)->ModalDecisionTrees.moving_average(x, (10,10)),
     )
@@ -147,11 +147,11 @@ begin
 
     model = ModalDecisionTree(;
         relations = :IA7,
-        conditions = [minimum],
+        features = [minimum],
         initconditions = :start_at_center,
         downsize = (10,10),
-        # conditions = [minimum, maximum, UnivariateFeature{Float64}(recheight), UnivariateFeature{Float64}(recwidth)],
-        # conditions = [minimum, maximum, UnivariateFeature{Float32}(1, recheight), UnivariateFeature{Float32}(1, recwidth)],
+        # features = [minimum, maximum, UnivariateFeature{Float64}(recheight), UnivariateFeature{Float64}(recwidth)],
+        # features = [minimum, maximum, UnivariateFeature{Float32}(1, recheight), UnivariateFeature{Float32}(1, recwidth)],
     )
 
     mach = machine(model, X_train, y_train) |> fit!

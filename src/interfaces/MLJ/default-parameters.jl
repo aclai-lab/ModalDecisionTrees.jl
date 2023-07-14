@@ -144,8 +144,8 @@ end
 mlj_default_initconditions = nothing
 
 mlj_default_initconditions_str = "" *
-    ":start_with_global (i.e., starting with a global decision, such as ⟨G⟩ min(V1) > 2) " *
-    "for 1-dimensional data and :start_at_center for 2-dimensional data."
+    ":start_with_global" # (i.e., starting with a global decision, such as ⟨G⟩ min(V1) > 2) " *
+    # "for 1-dimensional data and :start_at_center for 2-dimensional data."
 
 AVAILABLE_INITCONDITIONS = OrderedDict{Symbol,InitialCondition}([
     :start_with_global => MDT.start_without_world,
@@ -165,7 +165,7 @@ function readinitconditions(model, dataset)
             elseif d == 1
                 AVAILABLE_INITCONDITIONS[:start_with_global]
             elseif d == 2
-                AVAILABLE_INITCONDITIONS[:start_at_center]
+                AVAILABLE_INITCONDITIONS[:start_with_global]
             else
                 error("Unexpected dimensionality: $(d)")
             end

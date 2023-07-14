@@ -104,6 +104,14 @@ function MMI.clean!(m::SymbolicModel)
     isnothing(m.relations)                      && (m.relations  = mlj_default_relations)
     m.relations isa Vector{<:AbstractRelation}  && (m.relations  = m.relations)
 
+    # Patch name: features -> conditions
+    if !isnothing(m.features)
+        if !isnothing(m.conditions)
+            error("Please, only specify one hyper-parameter in `features` and `conditions`.")
+        end
+        m.conditions = m.features
+    end
+
     if !(isnothing(m.conditions) ||
         m.conditions isa Vector{<:Union{SoleModels.VarFeature,Base.Callable}} ||
         m.conditions isa Vector{<:Tuple{Base.Callable,Integer}} ||

@@ -62,7 +62,7 @@ mach = mach = machine(ModalDecisionTree(;), Xnt, y) |> m->fit!(m, rows = train_i
 
 mach = machine(ModalDecisionTree(;
     relations = :IA7,
-    conditions = [minimum],
+    features = [minimum],
     initconditions = :start_at_center,
 ), Xnt, y) |> m->fit!(m, rows = train_idxs)
 @test nnodes(fitted_params(mach).model) == 147
@@ -70,7 +70,7 @@ mach = machine(ModalDecisionTree(;
 
 mach = machine(ModalDecisionTree(;
     relations = :IA7,
-    conditions = [minimum, maximum],
+    features = [minimum, maximum],
     # initconditions = :start_at_center,
     featvaltype = Float32,
 ), selectrows(Xnt, train_idxs), selectrows(y, train_idxs)) |> m->fit!(m)
@@ -107,7 +107,7 @@ train_idxs, test_idxs = p[1:round(Int, N*.2)], p[round(Int, N*.2)+1:end]
 # train_idxs = train_idxs[1:10]
 mach = machine(ModalDecisionTree(;
     relations = :IA7,
-    conditions = [hedge, vedge],
+    features = [hedge, vedge],
     # initconditions = :start_at_center,
     featvaltype = Float32,
 ), selectrows(Xnt, train_idxs), selectrows(y, train_idxs)) |> m->fit!(m)
@@ -125,7 +125,7 @@ readmetrics.(joinrules(listrules(ModalDecisionTrees.translate(tree2))))
 # train_idxs = train_idxs[1:10]
 mach = machine(ModalDecisionTree(;
     relations = :IA7,
-    conditions = [shedge, svedge],
+    features = [shedge, svedge],
     # initconditions = :start_at_center,
     featvaltype = Float32,
 ), selectrows(Xnt, train_idxs), selectrows(y, train_idxs)) |> m->fit!(m)
