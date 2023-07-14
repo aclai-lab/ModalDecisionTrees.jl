@@ -5,7 +5,7 @@ using Pkg
 # Pkg.add("Revise")
 # Pkg.add("MLJ")
 # Pkg.add("MLJBase")
-# Pkg.add(url = "https://github.com/giopaglia/ModalDecisionTrees.jl", rev = "dev-v0.8")
+# Pkg.add(url = "https://github.com/aclai-lab/ModalDecisionTrees.jl", rev = "dev-v0.8")
 # Pkg.add("ScientificTypes")
 # Pkg.add("DataFrames")
 # Pkg.add("Tables")
