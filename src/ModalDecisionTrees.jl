@@ -19,8 +19,7 @@ using SoleBase: LogOverview, LogDebug, LogDetail
 using SoleBase: spawn, nat_sort
 
 using SoleData
-using SoleData: maxchannelsize,
-                nvariables,
+using SoleData: nvariables,
                 get_instance,
                 slicedataset
 
@@ -72,7 +71,7 @@ import SoleModels: height
 ############################################################################################
 
 export slicedataset,
-       nmodalities, ninstances, nvariables, maxchannelsize
+       nmodalities, ninstances, nvariables
 
 export DTree,                         # Decision tree
         DForest,                      # Decision forest
