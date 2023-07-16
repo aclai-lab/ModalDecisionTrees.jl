@@ -42,10 +42,10 @@ ThreadsX = "ac1d9e8a-700a-412c-b207-f0111f4b6c0d"
 
 [compat]
 julia = "1"
-SoleBase = "0.9.2"
-SoleData = "0.9.1"
-SoleLogics = "0.3.0"
-SoleModels = "0.1.0"
+SoleBase = "0.11"
+SoleData = "0.10"
+SoleLogics = "0.4.0"
+SoleModels = "0.2.0"
 
 [extras]
 ARFFFiles = "da404889-ca92-49ff-9e8b-0aa6b4d38dc8"
