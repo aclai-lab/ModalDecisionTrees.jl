@@ -1,4 +1,3 @@
-@testset "parse-and-translate" begin
 
 using SoleModels
 using SoleModels: printmodel
@@ -46,13 +45,11 @@ tree_str2 = """
   ✘ NO_CLEAN_HISTORY_AND_LOW_PROBABILITY : 1/1 (conf = 1.0000)
 """
 
-tree1 = parse_tree(tree_str1)
+tree1 = parse_tree(tree_str1; worldtypes = [SoleModels.Interval], initconditions = [ModalDecisionTrees.start_without_world])
 
-tree2 = parse_tree(tree_str2)
+tree2 = parse_tree(tree_str2; worldtypes = [SoleModels.Interval], initconditions = [ModalDecisionTrees.start_without_world])
 
 pure_tree1 = translate(tree1)
 
 pure_tree2 = translate(tree2)
 
-
-end

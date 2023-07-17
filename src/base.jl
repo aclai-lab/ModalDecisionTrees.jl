@@ -457,6 +457,8 @@ struct DTree{L<:Label} <: SymbolicModel{L}
         worldtypes     :: AbstractVector{<:Type},
         initconditions :: AbstractVector{<:InitialCondition},
     ) where {L<:Label}
+        @assert length(worldtypes) > 0 "Cannot instantiate DTree with no worldtype."
+        @assert length(initconditions) > 0 "Cannot instantiate DTree with no initcondition."
         new{L}(root, collect(worldtypes), Vector{InitialCondition}(collect(initconditions)))
     end
 

@@ -44,6 +44,9 @@ test_suites = [
         "multimodal-datasets.jl"
         "multiformulas-construction.jl"
     ]),
+    ("Parsing", [
+        "parse-and-translate-existentialdecisions.jl"
+    ]),
 ]
 
 @testset "ModalDecisionTrees.jl" begin

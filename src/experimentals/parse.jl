@@ -1,19 +1,24 @@
 
-################################################################################
-# Parse Trees
-################################################################################
-
 function parse_tree(
     tree_str::String;
     check_format = true,
     _depth = 0,
     offset = 0,
+    openbr  = SoleModels.UVF_OPENING_BRACKET,
+    closebr = SoleModels.UVF_CLOSING_BRACKET,
+    varprefix = SoleModels.UVF_VARPREFIX,
     worldtypes = Type{SL.AbstractWorld}[],
     initconditions = MDT.InitialCondition[],
 )
+    @assert openbr in ["[", "("] "Unexpected opening bracket: $(openbr)"
+    @assert closebr in ["]", ")"] "Unexpected closing bracket: $(closebr)"
+
+    @assert length(worldtypes) > 0 "Please, provide argument `worldtypes`."
+    @assert length(initconditions) > 0 "Please, provide argument `initconditions`."
+
     worldtypes = Type{<:SL.AbstractWorld}[worldtypes...]
     initconditions = MDT.InitialCondition[initconditions...]
-    root = _parse_tree(tree_str; check_format = check_format, _depth = _depth, offset = offset)
+    root = _parse_tree(tree_str; check_format = check_format, _depth = _depth, offset = offset, varprefix = varprefix)
     DTree(root, worldtypes, initconditions)
 end
 
@@ -22,20 +27,27 @@ function _parse_tree(
     check_format = true,
     _depth = 0,
     offset = 0,
+    varprefix = SoleModels.UVF_VARPREFIX,
+    openbr = SoleModels.UVF_OPENING_BRACKET,
+    closebr = SoleModels.UVF_CLOSING_BRACKET,
 )
+    ########################################################################################
+    ########################################################################################
+    ########################################################################################
+    child_kwargs = (;
+        varprefix = varprefix,
+    )
 
-    ########################################################################################
-    ########################################################################################
-    ########################################################################################
-    
+    V = varprefix
+
     # _threshold_ex = "[-+]?(?:[0-9]+(\.[0-9]*)?|\.[0-9]+)" # TODO use smarter regex (e.g., https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch06s10.html )
     _threshold_ex = "[^\\)\\s)]+" # TODO use smarter regex (e.g., https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch06s10.html )
     _indentation_ex = "[ │]*[✔✘]"
     _metrics_ex = "\\(\\S*.*\\)"
     _feature_ex             = "(?:\\S+)\\s+(?:(?:⫹|⫺|⪳|⪴|⪵|⪶|↗|↘|>|<|=|≤|≥|<=|>=))"
-    _normal_feature_ex_capturing    = "^(\\S*)\\(A(\\d+)\\)\\s+((?:>|<|=|≤|≥|<=|>=))\$"
-    _propositional_feature_ex_capturing    = "^A(\\d+)\\s+((?:>|<|=|≤|≥|<=|>=))\$"
-    _special_feature_ex_capturing   = "^A(\\d+)\\s+((?:⫹|⫺|⪳|⪴|⪵|⪶|↗|↘))\$"
+    _normal_feature_ex_capturing    = "^(\\S*)\\$openbr$V(\\d+)\\$closebr\\s+((?:>|<|=|≤|≥|<=|>=))\$"
+    _propositional_feature_ex_capturing    = "^$V(\\d+)\\s+((?:>|<|=|≤|≥|<=|>=))\$"
+    _special_feature_ex_capturing   = "^$V(\\d+)\\s+((?:⫹|⫺|⪳|⪴|⪵|⪶|↗|↘))\$"
     _decision_ex            = "$(_feature_ex)\\s+(?:$(_threshold_ex))"
     _decision_ex__capturing = "($(_feature_ex))\\s+($(_threshold_ex))"
     
@@ -149,7 +161,7 @@ function _parse_tree(
         feature, test_operator = _parse_feature_test_operator(feature_test_operator)
         threshold = _parse_simple_real(threshold) 
 
-        ScalarExistentialFormula(relation, feature, test_operator, threshold)
+        SimpleDecision(ScalarExistentialFormula(relation, feature, test_operator, threshold))
     end
     function _parse_leaf((i_this_line, leaf_str)::Tuple{<:Integer,<:AbstractString},)
         m = match(Regex(leaf_ex__capturing), leaf_str)
@@ -188,9 +200,9 @@ function _parse_tree(
             # DEBUG
             # println(match(Regex("($(_indentation_ex)\\s+)?"), _line))
             # println(match(Regex("^\\s*($(_indentation_ex)\\s+)?({(\\d+)}\\s+)?"), _line))
-            # println(match(Regex("^\\s*($(_indentation_ex)\\s+)?({(\\d+)}\\s+)?A(\\d+)"), _line))
-            # println(match(Regex("^\\s*($(_indentation_ex)\\s+)?({(\\d+)}\\s+)?(\\S+\\s+)?A(\\d+)"), _line))
-            # println(match(Regex("^\\s*($(_indentation_ex)\\s+)?({(\\d+)}\\s+)?(\\S+\\s+)?A(\\d+)\\s+([⫹⫺⪳⪴⪵⪶↗↘])"), _line))
+            # println(match(Regex("^\\s*($(_indentation_ex)\\s+)?({(\\d+)}\\s+)?$V(\\d+)"), _line))
+            # println(match(Regex("^\\s*($(_indentation_ex)\\s+)?({(\\d+)}\\s+)?(\\S+\\s+)?$V(\\d+)"), _line))
+            # println(match(Regex("^\\s*($(_indentation_ex)\\s+)?({(\\d+)}\\s+)?(\\S+\\s+)?$V(\\d+)\\s+([⫹⫺⪳⪴⪵⪶↗↘])"), _line))
             # println(match(Regex("^\\s*($(_indentation_ex)\\s+)?({(\\d+)}\\s+)?$(_decision_ex)"), _line))
             # println(match(Regex("^\\s*($(_indentation_ex)\\s+)?({(\\d+)}\\s+)?$(decision_ex)"), _line))
             # println(match(Regex("^\\s*($(_indentation_ex)\\s+)?({(\\d+)}\\s+)?$(decision_ex)\\s+$(leaf_ex)"), _line))
@@ -255,8 +267,8 @@ function _parse_tree(
         # println(clean_lines(lines[yes_line:no_line]))
         # println("\n")
         # println(clean_lines(lines[no_line+1:end]))
-        left  = _parse_tree(left_tree_str;  offset = yes_line-1, check_format = false, _depth = _depth + 1)
-        right = _parse_tree(right_tree_str; offset = no_line-1,  check_format = false, _depth = _depth + 1)
+        left  = _parse_tree(left_tree_str;  offset = yes_line-1, check_format = false, _depth = _depth + 1, child_kwargs...)
+        right = _parse_tree(right_tree_str; offset = no_line-1,  check_format = false, _depth = _depth + 1, child_kwargs...)
         
         if isnothing(leaf_str)
             DTInternal(i_modality, decision, left, right)
