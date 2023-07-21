@@ -1,12 +1,13 @@
 
 
 using Tables
-using ARFFFiles
+# using ARFFFiles
 using DataFrames
 using StatsBase
 import MLJModelInterface: fit
 using HTTP
 using ZipFile
+using DataStructures
 
 variable_names_latex = [
 "\\text{hand tip}_X^L",
@@ -35,50 +36,83 @@ variable_names_latex = [
 "\\text{thumb}_Z^R",
 ]
 
-function load_arff_dataset(dataset_name, path = "http://www.timeseriesclassification.com/Downloads/$(dataset_name).zip")
+function load_arff_dataset(dataset_name, path = "http://www.timeseriesclassification.com/ClassificationDownloads/$(dataset_name).zip")
 # function load_arff_dataset(dataset_name, path = "../datasets/Multivariate_arff/$(dataset_name)")
-    df_train, df_test = begin
+    (X_train, y_train), (X_test, y_test) = begin
         if(any(startswith.(path, ["https://", "http://"])))
             r = HTTP.get(path);
             z = ZipFile.Reader(IOBuffer(r.body))
+            # (
+            #     ARFFFiles.load(DataFrame, z.files[[f.name == "$(dataset_name)_TRAIN.arff" for f in z.files]][1]),
+            #     ARFFFiles.load(DataFrame, z.files[[f.name == "$(dataset_name)_TEST.arff" for f in z.files]][1]),
+            # )
             (
-                ARFFFiles.load(DataFrame, z.files[[f.name == "$(dataset_name)_TRAIN.arff" for f in z.files]][1]),
-                ARFFFiles.load(DataFrame, z.files[[f.name == "$(dataset_name)_TEST.arff" for f in z.files]][1]),
+                read(z.files[[f.name == "$(dataset_name)_TRAIN.arff" for f in z.files]][1], String) |> parseARFF,
+                read(z.files[[f.name == "$(dataset_name)_TEST.arff" for f in z.files]][1], String) |> parseARFF,
             )
         else
             (
-                ARFFFiles.load(DataFrame, "$(path)/$(dataset_name)_TRAIN.arff"),
-                ARFFFiles.load(DataFrame, "$(path)/$(dataset_name)_TEST.arff"),
+                # ARFFFiles.load(DataFrame, "$(path)/$(dataset_name)_TRAIN.arff"),
+                # ARFFFiles.load(DataFrame, "$(path)/$(dataset_name)_TEST.arff"),
+                read(z.files[[f.name == "$(path)/$(dataset_name)_TRAIN.arff" for f in z.files]][1], String) |> parseARFF,
+                read(z.files[[f.name == "$(path)/$(dataset_name)_TEST.arff" for f in z.files]][1], String) |> parseARFF,
             )
         end
     end
 
     @assert dataset_name == "NATOPS" "This code is only for showcasing. Need to expand code to comprehend more datasets."
+    # variable_names = [
+    #     "Hand tip left, X coordinate",
+    #     "Hand tip left, Y coordinate",
+    #     "Hand tip left, Z coordinate",
+    #     "Hand tip right, X coordinate",
+    #     "Hand tip right, Y coordinate",
+    #     "Hand tip right, Z coordinate",
+    #     "Elbow left, X coordinate",
+    #     "Elbow left, Y coordinate",
+    #     "Elbow left, Z coordinate",
+    #     "Elbow right, X coordinate",
+    #     "Elbow right, Y coordinate",
+    #     "Elbow right, Z coordinate",
+    #     "Wrist left, X coordinate",
+    #     "Wrist left, Y coordinate",
+    #     "Wrist left, Z coordinate",
+    #     "Wrist right, X coordinate",
+    #     "Wrist right, Y coordinate",
+    #     "Wrist right, Z coordinate",
+    #     "Thumb left, X coordinate",
+    #     "Thumb left, Y coordinate",
+    #     "Thumb left, Z coordinate",
+    #     "Thumb right, X coordinate",
+    #     "Thumb right, Y coordinate",
+    #     "Thumb right, Z coordinate",
+    # ]
+
     variable_names = [
-        "Hand tip left, X coordinate",
-        "Hand tip left, Y coordinate",
-        "Hand tip left, Z coordinate",
-        "Hand tip right, X coordinate",
-        "Hand tip right, Y coordinate",
-        "Hand tip right, Z coordinate",
-        "Elbow left, X coordinate",
-        "Elbow left, Y coordinate",
-        "Elbow left, Z coordinate",
-        "Elbow right, X coordinate",
-        "Elbow right, Y coordinate",
-        "Elbow right, Z coordinate",
-        "Wrist left, X coordinate",
-        "Wrist left, Y coordinate",
-        "Wrist left, Z coordinate",
-        "Wrist right, X coordinate",
-        "Wrist right, Y coordinate",
-        "Wrist right, Z coordinate",
-        "Thumb left, X coordinate",
-        "Thumb left, Y coordinate",
-        "Thumb left, Z coordinate",
-        "Thumb right, X coordinate",
-        "Thumb right, Y coordinate",
-        "Thumb right, Z coordinate",
+        "X[Hand tip l]",
+        "Y[Hand tip l]",
+        "Z[Hand tip l]",
+        "X[Hand tip r]",
+        "Y[Hand tip r]",
+        "Z[Hand tip r]",
+        "X[Elbow l]",
+        "Y[Elbow l]",
+        "Z[Elbow l]",
+        "X[Elbow r]",
+        "Y[Elbow r]",
+        "Z[Elbow r]",
+        "X[Wrist l]",
+        "Y[Wrist l]",
+        "Z[Wrist l]",
+        "X[Wrist r]",
+        "Y[Wrist r]",
+        "Z[Wrist r]",
+        "X[Thumb l]",
+        "Y[Thumb l]",
+        "Z[Thumb l]",
+        "X[Thumb r]",
+        "Y[Thumb r]",
+        "Z[Thumb r]",
     ]
 
 
@@ -108,8 +142,8 @@ function load_arff_dataset(dataset_name, path = "http://www.timeseriesclassifica
     "\\text{thumb r}_Y",
     "\\text{thumb r}_Z",
     ]
-    X_train, Y_train = fix_dataframe(df_train, variable_names)
-    X_test,  Y_test  = fix_dataframe(df_test, variable_names)
+    X_train  = fix_dataframe(X_train, variable_names)
+    X_test   = fix_dataframe(X_test, variable_names)
 
     class_names = [
         "I have command",
@@ -122,22 +156,99 @@ function load_arff_dataset(dataset_name, path = "http://www.timeseriesclassifica
 
     fix_class_names(y) = class_names[round(Int, parse(Float64, y))]
 
-    Y_train = map(fix_class_names, Y_train)
-    Y_test  = map(fix_class_names, Y_test)
+    y_train = map(fix_class_names, y_train)
+    y_test  = map(fix_class_names, y_test)
 
-    @assert nrow(X_train) == length(Y_train) "$(nrow(X_train)), $(length(Y_train))"
+    @assert nrow(X_train) == length(y_train) "$(nrow(X_train)), $(length(y_train))"
 
-    ((X_train, Y_train), (X_test,  Y_test))
+    ((X_train, y_train), (X_test,  y_test))
+end
+
+const _ARFF_SPACE       = UInt8(' ')
+const _ARFF_COMMENT     = UInt8('%')
+const _ARFF_AT          = UInt8('@')
+const _ARFF_SEP         = UInt8(',')
+const _ARFF_NEWLINE     = UInt8('\n')
+const _ARFF_NOMSTART    = UInt8('{')
+const _ARFF_NOMEND      = UInt8('}')
+const _ARFF_ESC         = UInt8('\\')
+const _ARFF_MISSING     = UInt8('?')
+const _ARFF_RELMARK     = UInt8('\'')
+
+# function readARFF(path::String)
+#     open(path, "r") do io
+#         df = DataFrame()
+#         classes = String[]
+#         lines = readlines(io) ...
+function parseARFF(arffstring::String)
+    df = DataFrame()
+    classes = String[]
+    lines = split(arffstring, "\n")
+    for i in 1:length(lines)
+        line = lines[i]
+        # If not empty line or comment
+        if !isempty(line)
+            if UInt8(line[1]) != _ARFF_COMMENT
+                sline = split(line, " ")
+                # println(sline[1][1])
+                # If the first symbol is @
+                if UInt8(sline[1][1]) == _ARFF_AT
+                    # If @relation
+                    if sline[1][2:end] == "relation"
+                        # println("Relation: " * sline[2])
+                    end
+
+                    # if sline[1][2:end] == "variable" && sline[2] == "class"
+                    #     classes = sline[3][2:end-1]
+                    #     println(classes)
+                    # end
+                # data, first char is '
+                elseif UInt8(sline[1][1]) == _ARFF_RELMARK
+                    sline[1] = sline[1][2:end]
+                    data_and_class = split(sline[1],"\'")
+                    string_data = split(data_and_class[1], "\\n")
+                    class = data_and_class[2][2:end]
+
+                    if isempty(names(df))
+                        for i in 1:length(string_data)
+                            insertcols!(df, Symbol("V$(i)") => Array{Float64, 1}[]) # add the variables as 1,2,3,ecc.
+                        end
+                    end
+
+                    float_data = Dict{Int,Vector{Float64}}()
+
+                    for i in 1:length(string_data)
+                        float_data[i] = map(x->parse(Float64,x), split(string_data[i], ","))
+                    end
+
+                    # @show float_data
+
+
+                    push!(df, [float_data[i] for i in 1:length(string_data)])
+                    push!(classes, class)
+                    # @show data
+                    # @show class
+                end
+            end
+        end
+    end
+
+    # for i in eachrow(df)
+    #   println(typeof(i))
+    #   break
+    # end
+    p = sortperm(eachrow(df), by=x->classes[rownumber(x)])
+
+    return df[p, :], classes[p]
 end
 
 function fix_dataframe(df, variable_names = nothing)
-    s = unique(size.(df[:,:relationalAtt]))
+    s = unique(size.(df[:,1]))
     @assert length(s) == 1 "$(s)"
-    n = unique(names.(df[:,:relationalAtt]))
-    @assert length(n) == 1 "$(n)"
-    nvars, npoints = s[1]
-    old_var_names = n[1]
-    X = Dict()
+    @assert length(s[1]) == 1 "$(s[1])"
+    nvars, npoints = length(names(df)), s[1][1]
+    old_var_names = names(df)
+    X = OrderedDict()
 
     if isnothing(variable_names)
         variable_names = ["V$(i_var)" for i_var in 1:nvars]
@@ -146,13 +257,13 @@ function fix_dataframe(df, variable_names = nothing)
     @assert nvars == length(variable_names)
 
     for (i_var,var) in enumerate(variable_names)
-        X[Symbol(var)] = [collect(instance[i_var,old_var_names]) for instance in (df[:,:relationalAtt])]
+        X[Symbol(var)] = [row[i_var] for row in eachrow(df)]
     end
 
     X = DataFrame(X)
-    Y = df[:,end]
+    # Y = df[:,end]
 
-    X, string.(Y)
+    # X, string.(Y)
     # X, Y
 end
 

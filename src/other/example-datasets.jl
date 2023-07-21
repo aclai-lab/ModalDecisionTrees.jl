@@ -6,19 +6,19 @@ function load_japanesevowels()
     X = DataFrame(MLJ.OpenML.load(375)) # Load JapaneseVowels https://www.openml.org/search?type=data&status=active&id=375
     names(X)
 
-    local take_col = []
-    local take = 1
-    local prev_frame = nothing
+    take_col = []
+    take = 1
+    prev_frame = nothing
     # prev_utterance = nothing
     for row in eachrow(X)
         cur_frame = Float64(row.frame)
         # cur_utterance = row.utterance
-        if !isnothing(local prev_frame) && cur_frame == 1.0
-            local take += 1
+        if !isnothing(prev_frame) && cur_frame == 1.0
+            i_take += 1
         end
-        local prev_frame = cur_frame
-        # local prev_utterance = cur_utterance
-        push!(take_col, take)
+        prev_frame = cur_frame
+        # prev_utterance = cur_utterance
+        push!(take_col, i_take)
     end
 
     # combine(groupby(X, [:speaker, :take, :utterance]), :coefficient1 => Base.vect)

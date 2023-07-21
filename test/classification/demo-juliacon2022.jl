@@ -24,9 +24,9 @@ X_test,  y_test  = dataset_test;
 # names(X_train[:,[end]])
 
 # X_train = moving_average.(X_train, 10, 10)
-X_train = ((x)->x[1:3]).(X_train)
+# X_train = ((x)->x[1:3]).(X_train)
 # X_test = moving_average.(X_test, 10, 10)
-X_test = ((x)->x[1:3]).(X_test)
+# X_test = ((x)->x[1:3]).(X_test)
 
 # X_train[:,:new] = [randn(2,2) for i in 1:nrow(X_train)]
 # X_test[:, :new] = [randn(2,2) for i in 1:nrow(X_test)]

@@ -86,7 +86,7 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
         merge_purity_threshold = m.merge_purity_threshold
         if isnothing(merge_purity_threshold)
             if !isnothing(classes_seen)
-                merge_purity_threshold = 1.0
+                merge_purity_threshold = Inf
             else
                 error("Please, provide a `merge_purity_threshold` parameter (maximum MAE at splits).")
             end
@@ -96,9 +96,12 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
 
     verbosity < 2 || MDT.printmodel(model; max_depth = m.display_depth, variable_names_map = var_grouping)
 
-    solemodel = ModalDecisionTrees.translate(model, (;
+    translate_function = m->ModalDecisionTrees.translate(m, (;
         # syntaxstring_kwargs = (; hidemodality = (length(var_grouping) == 1), variable_names_map = var_grouping)
     ))
+
+    solemodel_full = translate_function(model)
+    solemodel = translate_function(MDT.prune(model; simplify = true))
 
     fitresult = (
         model         = model,
@@ -110,9 +113,13 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
         printmodel                  = ModelPrinter(m, model, solemodel, var_grouping),
         sprinkle                    = (Xnew, ynew)->begin
             (Xnew, ynew, var_grouping, classes_seen, w) = MMI.reformat(m, Xnew, ynew; passive_mode = true)
-            ModalDecisionTrees.sprinkle(model, Xnew, ynew)
+            translate_function(ModalDecisionTrees.sprinkle(model, Xnew, ynew))
         end,
+        model                       = model,
+        model_full                  = model_full,
+        # TODO remove redundancy?
         solemodel                   = solemodel,
+        solemodel_full              = solemodel_full,
         var_grouping                = var_grouping,
     )
 
