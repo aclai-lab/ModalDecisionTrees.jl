@@ -1,12 +1,9 @@
 
 
 using Tables
-using ARFFFiles
 using DataFrames
 using StatsBase
 import MLJModelInterface: fit
-using HTTP
-using ZipFile
 
 variable_names_latex = [
 "\\text{hand tip}_X^L",
@@ -34,102 +31,6 @@ variable_names_latex = [
 "\\text{thumb}_Y^R",
 "\\text{thumb}_Z^R",
 ]
-
-function load_arff_dataset(dataset_name, path = "http://www.timeseriesclassification.com/Downloads/$(dataset_name).zip")
-# function load_arff_dataset(dataset_name, path = "../datasets/Multivariate_arff/$(dataset_name)")
-    df_train, df_test = begin
-        if(any(startswith.(path, ["https://", "http://"])))
-            r = HTTP.get(path);
-            z = ZipFile.Reader(IOBuffer(r.body))
-            (
-                ARFFFiles.load(DataFrame, z.files[[f.name == "$(dataset_name)_TRAIN.arff" for f in z.files]][1]),
-                ARFFFiles.load(DataFrame, z.files[[f.name == "$(dataset_name)_TEST.arff" for f in z.files]][1]),
-            )
-        else
-            (
-                ARFFFiles.load(DataFrame, "$(path)/$(dataset_name)_TRAIN.arff"),
-                ARFFFiles.load(DataFrame, "$(path)/$(dataset_name)_TEST.arff"),
-            )
-        end
-    end
-
-    @assert dataset_name == "NATOPS" "This code is only for showcasing. Need to expand code to comprehend more datasets."
-    variable_names = [
-        "Hand tip left, X coordinate",
-        "Hand tip left, Y coordinate",
-        "Hand tip left, Z coordinate",
-        "Hand tip right, X coordinate",
-        "Hand tip right, Y coordinate",
-        "Hand tip right, Z coordinate",
-        "Elbow left, X coordinate",
-        "Elbow left, Y coordinate",
-        "Elbow left, Z coordinate",
-        "Elbow right, X coordinate",
-        "Elbow right, Y coordinate",
-        "Elbow right, Z coordinate",
-        "Wrist left, X coordinate",
-        "Wrist left, Y coordinate",
-        "Wrist left, Z coordinate",
-        "Wrist right, X coordinate",
-        "Wrist right, Y coordinate",
-        "Wrist right, Z coordinate",
-        "Thumb left, X coordinate",
-        "Thumb left, Y coordinate",
-        "Thumb left, Z coordinate",
-        "Thumb right, X coordinate",
-        "Thumb right, Y coordinate",
-        "Thumb right, Z coordinate",
-    ]
-
-    X_train, Y_train = fix_dataframe(df_train, variable_names)
-    X_test,  Y_test  = fix_dataframe(df_test, variable_names)
-
-    class_names = [
-        "I have command",
-        "All clear",
-        "Not clear",
-        "Spread wings",
-        "Fold wings",
-        "Lock wings",
-    ]
-
-    fix_class_names(y) = class_names[round(Int, parse(Float64, y))]
-
-    Y_train = map(fix_class_names, Y_train)
-    Y_test  = map(fix_class_names, Y_test)
-
-    @assert nrow(X_train) == length(Y_train) "$(nrow(X_train)), $(length(Y_train))"
-
-    ((X_train, Y_train), (X_test,  Y_test))
-end
-
-function fix_dataframe(df, variable_names = nothing)
-    s = unique(size.(df[:,:relationalAtt]))
-    @assert length(s) == 1 "$(s)"
-    n = unique(names.(df[:,:relationalAtt]))
-    @assert length(n) == 1 "$(n)"
-    nvars, npoints = s[1]
-    old_var_names = n[1]
-    X = Dict()
-
-    if isnothing(variable_names)
-        variable_names = ["V$(i_var)" for i_var in 1:nvars]
-    end
-
-    @assert nvars == length(variable_names)
-
-    for (i_var,var) in enumerate(variable_names)
-        X[Symbol(var)] = [collect(instance[i_var,old_var_names]) for instance in (df[:,:relationalAtt])]
-    end
-
-    X = DataFrame(X)
-    Y = df[:,end]
-
-    X, string.(Y)
-    # X, Y
-end
-
-
 
 function show_latex(tree; file_suffix = "", variable_names = nothing, silent = true)
     include("../results/utils/print-tree-to-latex.jl")
