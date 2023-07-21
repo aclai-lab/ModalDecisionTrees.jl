@@ -100,8 +100,11 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
         # syntaxstring_kwargs = (; hidemodality = (length(var_grouping) == 1), variable_names_map = var_grouping)
     ))
 
+    rawmodel_full = model
+    rawmodel = MDT.prune(model; simplify = true)
+
     solemodel_full = translate_function(model)
-    solemodel = translate_function(MDT.prune(model; simplify = true))
+    solemodel = translate_function(rawmodel)
 
     fitresult = (
         model         = model,
@@ -115,9 +118,11 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
             (Xnew, ynew, var_grouping, classes_seen, w) = MMI.reformat(m, Xnew, ynew; passive_mode = true)
             translate_function(ModalDecisionTrees.sprinkle(model, Xnew, ynew))
         end,
-        model                       = model,
-        model_full                  = model_full,
         # TODO remove redundancy?
+        model                       = solemodel,
+        model_full                  = solemodel_full,
+        rawmodel                    = rawmodel,
+        rawmodel_full               = rawmodel_full,
         solemodel                   = solemodel,
         solemodel_full              = solemodel_full,
         var_grouping                = var_grouping,
@@ -135,8 +140,8 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
     return fitresult, cache, report
 end
 
-MMI.fitted_params(::TreeModel, fitresult) = merge(fitresult, (; tree = fitresult.model))
-MMI.fitted_params(::ForestModel, fitresult) = merge(fitresult, (; forest = fitresult.model))
+MMI.fitted_params(::TreeModel, fitresult) = merge(fitresult, (; tree = fitresult.rawmodel))
+MMI.fitted_params(::ForestModel, fitresult) = merge(fitresult, (; forest = fitresult.rawmodel))
 
 ############################################################################################
 ############################################################################################
@@ -149,7 +154,7 @@ function MMI.predict(m::SymbolicModel, fitresult, Xnew, var_grouping = nothing)
             "var_grouping = $(var_grouping)" *
             "\n"
     end
-    MDT.apply_proba(fitresult.model, Xnew, get(fitresult, :classes_seen, nothing); suppress_parity_warning = true)
+    MDT.apply_proba(fitresult.rawmodel, Xnew, get(fitresult, :classes_seen, nothing); suppress_parity_warning = true)
 end
 
 ############################################################################################
@@ -187,7 +192,7 @@ function MMI.feature_importances(m::SymbolicModel, fitresult, report)
         error("Unexpected feature_importance encountered: $(m.feature_importance).")
     end
 
-    featimportance_dict = compute_featureimportance(fitresult.model, fitresult.var_grouping; normalize=true)
+    featimportance_dict = compute_featureimportance(fitresult.rawmodel, fitresult.var_grouping; normalize=true)
     featimportance_vec = collect(featimportance_dict)
     sort!(featimportance_vec, rev=true, by=x->last(x))
 

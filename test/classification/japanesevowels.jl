@@ -54,7 +54,7 @@ acc = sum(yhat .== y[test_idxs])/length(yhat)
 @test_throws ErrorException listrules(report(mach).solemodel; use_shortforms=false, use_leftmostlinearform = true, force_syntaxtree = true)
 
 # Access raw model
-fitted_params(mach).model;
+fitted_params(mach).rawmodel;
 report(mach).printmodel(3);
 
 MLJ.fit!(mach)
@@ -113,5 +113,5 @@ yhat = MLJ.predict_mode(mach, rows=test_idxs)
 acc = sum(yhat .== y[test_idxs])/length(yhat)
 MLJ.kappa(yhat, y[test_idxs])
 
-@test_nowarn prune(fitted_params(mach).model, simplify=true)
-@test_nowarn prune(fitted_params(mach).model, simplify=true, min_samples_leaf = 20)
+@test_nowarn prune(fitted_params(mach).rawmodel, simplify=true)
+@test_nowarn prune(fitted_params(mach).rawmodel, simplify=true, min_samples_leaf = 20)

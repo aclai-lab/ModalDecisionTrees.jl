@@ -24,11 +24,11 @@ yhat = MLJ.predict_mode(mach, X)
 
 @test MLJBase.accuracy(y, yhat) > 0.8
 
-@test_nowarn fitted_params(mach).model
+@test_nowarn fitted_params(mach).rawmodel
 @test_nowarn report(mach).solemodel
 
-@test_nowarn printmodel(prune(fitted_params(mach).model, simplify=true, min_samples_leaf = 20), max_depth = 3)
-@test_nowarn printmodel(prune(fitted_params(mach).model, simplify=true, min_samples_leaf = 20))
+@test_nowarn printmodel(prune(fitted_params(mach).rawmodel, simplify=true, min_samples_leaf = 20), max_depth = 3)
+@test_nowarn printmodel(prune(fitted_params(mach).rawmodel, simplify=true, min_samples_leaf = 20))
 
 @test_nowarn printmodel(report(mach).solemodel, header = false)
 @test_nowarn printmodel(report(mach).solemodel, header = :brief)

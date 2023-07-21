@@ -29,7 +29,7 @@ function (c::ModelPrinter)(
     max_depth::Union{Nothing,Integer} = c.m.display_depth;
     kwargs...
 )
-    c(io, (print_solemodel ? c.solemodel : c.model); max_depth = max_depth, kwargs...)
+    c(io, (print_solemodel ? c.solemodel : c.rawmodel); max_depth = max_depth, kwargs...)
 end
 
 function (c::ModelPrinter)(

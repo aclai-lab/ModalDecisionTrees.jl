@@ -18,13 +18,13 @@ train_idxs, test_idxs = p[1:round(Int, N*.4)], p[round(Int, N*.4)+1:end]
 
 # Full training
 mach = machine(ModalDecisionTree(;), X, y) |> fit!
-@test nnodes(fitted_params(mach).model) == 191
+@test nnodes(fitted_params(mach).rawmodel) == 191
 @test sum(predict_mode(mach, X) .== y) / length(y) > 0.92
 
 ############################################################################################
 
 mach = machine(ModalDecisionTree(;), X, y) |> m->fit!(m, rows = train_idxs)
-@test nnodes(fitted_params(mach).model) == 115
+@test nnodes(fitted_params(mach).rawmodel) == 115
 @test sum(predict_mode(mach, rows = test_idxs) .== y[test_idxs]) / length(y[test_idxs]) > 0.78
 
 
@@ -33,7 +33,7 @@ mach = machine(ModalDecisionTree(;
     max_depth           = 6,
     min_samples_leaf    = 5,
 ), X, y) |> m->fit!(m, rows = train_idxs)
-@test nnodes(fitted_params(mach).model) == 77
+@test nnodes(fitted_params(mach).rawmodel) == 77
 @test sum(predict_mode(mach, rows = test_idxs) .== y[test_idxs]) / length(y[test_idxs]) > 0.75
 
 
@@ -47,7 +47,7 @@ mach = machine(ModalRandomForest(;
     min_purity_increase = 0.0,
     rng = Random.MersenneTwister(1)
 ), X, y) |> m->fit!(m, rows = train_idxs)
-@test nnodes(fitted_params(mach).model) == 1242
+@test nnodes(fitted_params(mach).rawmodel) == 1242
 @test predict_mode(mach, rows = test_idxs)
 @test predict(mach, rows = test_idxs)
 @test sum(predict_mode(mach, rows = test_idxs) .== y[test_idxs]) / length(y[test_idxs]) > 0.85
@@ -57,7 +57,7 @@ mach = machine(ModalRandomForest(;
 
 # NamedTuple dataset
 mach = mach = machine(ModalDecisionTree(;), Xnt, y) |> m->fit!(m, rows = train_idxs)
-@test nnodes(fitted_params(mach).model) == 131
+@test nnodes(fitted_params(mach).rawmodel) == 131
 @test sum(predict_mode(mach, rows = test_idxs) .== y[test_idxs]) / length(y[test_idxs]) > 0.68
 
 mach = machine(ModalDecisionTree(;
@@ -65,7 +65,7 @@ mach = machine(ModalDecisionTree(;
     features = [minimum],
     initconditions = :start_at_center,
 ), Xnt, y) |> m->fit!(m, rows = train_idxs)
-@test nnodes(fitted_params(mach).model) == 147
+@test nnodes(fitted_params(mach).rawmodel) == 147
 @test sum(predict_mode(mach, rows = test_idxs) .== y[test_idxs]) / length(y[test_idxs]) > 0.67
 
 mach = machine(ModalDecisionTree(;
@@ -74,7 +74,7 @@ mach = machine(ModalDecisionTree(;
     # initconditions = :start_at_center,
     featvaltype = Float32,
 ), selectrows(Xnt, train_idxs), selectrows(y, train_idxs)) |> m->fit!(m)
-@test nnodes(fitted_params(mach).model) == 131
+@test nnodes(fitted_params(mach).rawmodel) == 131
 @test sum(predict_mode(mach, selectrows(Xnt, test_idxs)) .== y[test_idxs]) / length(y[test_idxs]) > 0.71
 
 
@@ -111,7 +111,7 @@ mach = machine(ModalDecisionTree(;
     # initconditions = :start_at_center,
     featvaltype = Float32,
 ), selectrows(Xnt, train_idxs), selectrows(y, train_idxs)) |> m->fit!(m)
-@test nnodes(fitted_params(mach).model) == 71
+@test nnodes(fitted_params(mach).rawmodel) == 71
 @test sum(predict_mode(mach, selectrows(Xnt, test_idxs)) .== y[test_idxs]) / length(y[test_idxs]) > 0.73
 
 preds, tree2 = report(mach).sprinkle(selectrows(Xnt, test_idxs), selectrows(y, test_idxs));
@@ -129,7 +129,7 @@ mach = machine(ModalDecisionTree(;
     # initconditions = :start_at_center,
     featvaltype = Float32,
 ), selectrows(Xnt, train_idxs), selectrows(y, train_idxs)) |> m->fit!(m)
-@test nnodes(fitted_params(mach).model) == 79
+@test nnodes(fitted_params(mach).rawmodel) == 79
 @test sum(predict_mode(mach, selectrows(Xnt, test_idxs)) .== y[test_idxs]) / length(y[test_idxs]) > 0.73
 
 preds, tree2 = report(mach).sprinkle(selectrows(Xnt, test_idxs), selectrows(y, test_idxs));
@@ -141,7 +141,7 @@ printmodel.(joinrules(listrules(ModalDecisionTrees.translate(tree2))); show_metr
 readmetrics.(joinrules(listrules(ModalDecisionTrees.translate(tree2))))
 
 mach = machine(ModalDecisionTree(;), Xnt, y) |> m->fit!(m, rows = train_idxs)
-@test nnodes(fitted_params(mach).model) == 137
+@test nnodes(fitted_params(mach).rawmodel) == 137
 @test sum(predict_mode(mach, rows = test_idxs) .== y[test_idxs]) / length(y[test_idxs]) > 0.70
 
 mach = machine(ModalDecisionTree(;
@@ -149,7 +149,7 @@ mach = machine(ModalDecisionTree(;
     max_depth           = 6,
     min_samples_leaf    = 5,
 ), Xnt, y) |> m->fit!(m, rows = train_idxs)
-@test nnodes(fitted_params(mach).model) == 77
+@test nnodes(fitted_params(mach).rawmodel) == 77
 @test sum(predict_mode(mach, rows = test_idxs) .== y[test_idxs]) / length(y[test_idxs]) > 0.75
 
 
@@ -162,5 +162,5 @@ mach = machine(ModalRandomForest(;
     min_samples_split   = 2,
     min_purity_increase = 0.0,
 ), Xnt, y) |> m->fit!(m, rows = train_idxs)
-@test nnodes(fitted_params(mach).model) == 77
+@test nnodes(fitted_params(mach).rawmodel) == 77
 @test sum(predict_mode(mach, rows = test_idxs) .== y[test_idxs]) / length(y[test_idxs]) > 0.75

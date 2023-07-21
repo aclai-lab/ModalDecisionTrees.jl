@@ -44,7 +44,7 @@ fitresult = MMI.fit(model, 0, X_train, Y_train);
 
 Y_test_preds, test_tree = MMI.predict(model, fitresult[1], X_test, Y_test);
 
-tree = fitresult[1].model
+tree = fitresult[1].rawmodel
 
 fitresult[3].print_tree()
 
@@ -57,7 +57,7 @@ println(test_tree)
 # SoleModels.ConfusionMatrix(Y_test_preds, Y_test)
 
 
-# tree = fitresult.model
+# tree = fitresult.rawmodel
 # println(tree)
 # println(test_tree)
 # fitreport.print_tree()
@@ -99,7 +99,7 @@ show_latex(test_tree, "test", [variable_names_latex])
 
 #     Y_test_preds, test_tree = MMI.predict(model, fitresult[1], X_static_test, Y_test);
 
-#     tree = fitresult[1].model
+#     tree = fitresult[1].rawmodel
 
 #     fitresult[3].print_tree()
 

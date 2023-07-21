@@ -7,12 +7,12 @@ X, y = @load_iris
 
 model = ModalDecisionTree(; max_depth = 0)
 mach = machine(model, X, y) |> fit!
-@test height(fitted_params(mach).model) == 0
-@test depth(fitted_params(mach).model) == 0
+@test height(fitted_params(mach).rawmodel) == 0
+@test depth(fitted_params(mach).rawmodel) == 0
 
 model = ModalDecisionTree(; max_depth = 2, )
 mach = machine(model, X, y) |> fit!
-@test depth(fitted_params(mach).model) == 2
+@test depth(fitted_params(mach).rawmodel) == 2
 
 model = ModalDecisionTree(;
 	min_samples_leaf = 2,
