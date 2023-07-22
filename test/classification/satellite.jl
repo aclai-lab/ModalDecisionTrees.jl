@@ -70,9 +70,9 @@ MLJ.fit!(mach, rows=train_idxs)
 
 report(mach).printmodel(1000; threshold_digits = 2);
 
-listrules(report(mach).solemodel; use_shortforms=true, use_leftmostlinearform = true)
+listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true)
 
-fs = SoleModels.antecedent.(listrules(report(mach).solemodel; use_shortforms=true, use_leftmostlinearform = true))
+fs = SoleModels.antecedent.(listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true))
 fsnorm = map(f->normalize(modforms(f)[1]; allow_proposition_flipping = true), fs)
 
 # TODO: expand to implicationstate
@@ -125,6 +125,6 @@ simplify.(fsnorm)
 
 syntaxstring.(simplify.(fsnorm)) .|> println;
 
-printmodel.(listrules(report(mach).solemodel); show_metrics = true, threshold_digits = 2);
+printmodel.(listrules(report(mach).model); show_metrics = true, threshold_digits = 2);
 mae = MLJ.mae(MLJ.predict_mean(mach, rows=test_idxs), y[test_idxs])
 mae = MLJ.mae(MLJ.predict_mean(mach, rows=train_idxs), y[train_idxs])

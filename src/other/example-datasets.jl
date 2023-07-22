@@ -7,7 +7,7 @@ function load_japanesevowels()
     names(X)
 
     take_col = []
-    take = 1
+    i_take = 1
     prev_frame = nothing
     # prev_utterance = nothing
     for row in eachrow(X)

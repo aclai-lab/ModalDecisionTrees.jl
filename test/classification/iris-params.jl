@@ -79,23 +79,23 @@ report(mach).printmodel(hidemodality=false)
 @test_nowarn report(mach).printmodel(show_metrics = true, show_intermediate_finals = true)
 @test_nowarn report(mach).printmodel(show_metrics = true, show_intermediate_finals = true, max_depth=nothing)
 @test_nowarn report(mach).printmodel(show_metrics = (;), show_intermediate_finals = 200, max_depth=nothing)
-printmodel.(listrules(report(mach).solemodel); show_metrics=true);
+printmodel.(listrules(report(mach).model); show_metrics=true);
 
 out1 = (io = IOBuffer(); report(mach).printmodel(io, true); String(take!(io)))
 out2 = (io = IOBuffer(); report(mach).printmodel(io, false); String(take!(io)))
 
 @test occursin("petal", out1)
 @test occursin("petal", out2)
-# @test occursin("petal", displaymodel(report(mach).solemodel))
+# @test occursin("petal", displaymodel(report(mach).model))
 
-@test_nowarn listrules(report(mach).solemodel)
-@test_nowarn listrules(report(mach).solemodel; use_shortforms=true)
-@test_nowarn listrules(report(mach).solemodel; use_shortforms=false)
-printmodel.(listrules(report(mach).solemodel; use_shortforms=true, use_leftmostlinearform = true))
-@test_nowarn listrules(report(mach).solemodel; use_shortforms=true, use_leftmostlinearform = true)
-# @test_throws ErrorException listrules(report(mach).solemodel; use_shortforms=true, use_leftmostlinearform = true)
-@test_nowarn listrules(report(mach).solemodel; use_shortforms=false, use_leftmostlinearform = true)
-@test_throws ErrorException listrules(report(mach).solemodel; use_shortforms=false, use_leftmostlinearform = true, force_syntaxtree = true)
+@test_nowarn listrules(report(mach).model)
+@test_nowarn listrules(report(mach).model; use_shortforms=true)
+@test_nowarn listrules(report(mach).model; use_shortforms=false)
+printmodel.(listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true))
+@test_nowarn listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true)
+# @test_throws ErrorException listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true)
+@test_nowarn listrules(report(mach).model; use_shortforms=false, use_leftmostlinearform = true)
+@test_throws ErrorException listrules(report(mach).model; use_shortforms=false, use_leftmostlinearform = true, force_syntaxtree = true)
 
 
 @test_nowarn report(mach).printmodel(true, 3; syntaxstring_kwargs = (;hidemodality = true))
@@ -110,7 +110,7 @@ Xnew = (sepal_length = [6.4, 7.2, 7.4],
 		petal_width = [2.1, 1.6, 1.9],)
 yhat = MLJ.predict(mach, Xnew)
 
-yhat = MLJ.predict(mach, X)
+yhat = MLJ.predict_mode(mach, X)
 
 @test MLJBase.accuracy(y, yhat) > 0.8
 

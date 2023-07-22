@@ -40,8 +40,8 @@ mach = machine(model, X_train, y_train) |> fit!
 
 report(mach).printmodel(1000; threshold_digits = 2);
 
-printmodel(report(mach).solemodel; show_metrics = true);
-printmodel.(listrules(report(mach).solemodel); show_metrics = true);
+printmodel(report(mach).model; show_metrics = true);
+printmodel.(listrules(report(mach).model); show_metrics = true);
 
 yhat_test = MLJ.predict_mode(mach, X_test)
 
@@ -124,8 +124,8 @@ mach = machine(model, X_train, y_train) |> fit!
 
 report(mach).printmodel(1000; threshold_digits = 2);
 
-printmodel(report(mach).solemodel; show_metrics = true);
-printmodel.(listrules(report(mach).solemodel); show_metrics = true);
+printmodel(report(mach).model; show_metrics = true);
+printmodel.(listrules(report(mach).model); show_metrics = true);
 
 yhat_test = MLJ.predict_mode(mach, X_test)
 

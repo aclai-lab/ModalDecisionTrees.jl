@@ -34,19 +34,19 @@ function compute_purity(
     nt = sum(nc)
     return loss_function(nc, nt)::Float64
 end
-# function _compute_purity(
-#     labels           ::AbstractVector{L},
-#     weights          ::AbstractVector{U} = default_weights(labels);
-#     loss_function    ::Union{Nothing,Function} = default_loss_function(L),
-# ) where {L<:RLabel,U}
-#     sums = labels .* weights
-#     nt = sum(weights)
-#     return -(loss_function(sums, nt))::Float64
-# end
+function _compute_purity(
+    labels           ::AbstractVector{L},
+    weights          ::AbstractVector{U} = default_weights(labels);
+    loss_function    ::Union{Nothing,Function} = default_loss_function(L),
+) where {L<:RLabel,U}
+    # sums = labels .* weights
+    nt = sum(weights)
+    return (loss_function(labels, weights, nt))::Float64
+end
 function compute_purity(
     labels           ::AbstractVector{L},
     weights          ::AbstractVector{U} = default_weights(labels);
     loss_function    ::Union{Nothing,Function} = default_loss_function(L),
 ) where {L<:RLabel,U}
-    _compute_purity = _compute_purity(labels, weights = weights; loss_function = loss_function)
+    _compute_purity(labels, weights; loss_function = loss_function)
 end

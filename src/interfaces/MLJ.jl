@@ -108,6 +108,8 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
 
     fitresult = (
         model         = model,
+        rawmodel      = rawmodel,
+        solemodel     = solemodel,
         var_grouping  = var_grouping,
     )
 

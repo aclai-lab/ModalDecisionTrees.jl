@@ -118,7 +118,7 @@ preds, tree2 = report(mach).sprinkle(selectrows(Xnt, test_idxs), selectrows(y, t
 
 @test MLJBase.accuracy(preds, selectrows(y, test_idxs)) > 0.75
 
-# printmodel.(joinrules(listrules(report(mach).solemodel)); show_metrics = true, threshold_digits = 2);
+# printmodel.(joinrules(listrules(report(mach).model)); show_metrics = true, threshold_digits = 2);
 printmodel.(joinrules(listrules(ModalDecisionTrees.translate(tree2))); show_metrics = true, threshold_digits = 2);
 readmetrics.(joinrules(listrules(ModalDecisionTrees.translate(tree2))))
 
@@ -136,7 +136,7 @@ preds, tree2 = report(mach).sprinkle(selectrows(Xnt, test_idxs), selectrows(y, t
 
 @test MLJBase.accuracy(preds, selectrows(y, test_idxs)) > 0.75
 
-# printmodel.(joinrules(listrules(report(mach).solemodel)); show_metrics = true, threshold_digits = 2);
+# printmodel.(joinrules(listrules(report(mach).model)); show_metrics = true, threshold_digits = 2);
 printmodel.(joinrules(listrules(ModalDecisionTrees.translate(tree2))); show_metrics = true, threshold_digits = 2);
 readmetrics.(joinrules(listrules(ModalDecisionTrees.translate(tree2))))
 

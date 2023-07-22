@@ -148,9 +148,9 @@ mach = MLJ.fit!(machine(ModalDecisionTree(; min_samples_leaf = 1), X_all, y), ro
 
 report(mach).printmodel(1000; threshold_digits = 2);
 
-printmodel.(listrules(report(mach).solemodel; use_shortforms=true, use_leftmostlinearform = true))
+printmodel.(listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true))
 
-printmodel.(joinrules(listrules(report(mach).solemodel; use_shortforms=true, use_leftmostlinearform = true)))
+printmodel.(joinrules(listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true)))
 
 model = ModalDecisionTree(min_purity_increase = 0.001)
 

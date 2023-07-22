@@ -25,19 +25,19 @@ yhat = MLJ.predict_mode(mach, X)
 @test MLJBase.accuracy(y, yhat) > 0.8
 
 @test_nowarn fitted_params(mach).rawmodel
-@test_nowarn report(mach).solemodel
+@test_nowarn report(mach).model
 
 @test_nowarn printmodel(prune(fitted_params(mach).rawmodel, simplify=true, min_samples_leaf = 20), max_depth = 3)
 @test_nowarn printmodel(prune(fitted_params(mach).rawmodel, simplify=true, min_samples_leaf = 20))
 
-@test_nowarn printmodel(report(mach).solemodel, header = false)
-@test_nowarn printmodel(report(mach).solemodel, header = :brief)
-@test_nowarn printmodel(report(mach).solemodel, header = true)
+@test_nowarn printmodel(report(mach).model, header = false)
+@test_nowarn printmodel(report(mach).model, header = :brief)
+@test_nowarn printmodel(report(mach).model, header = true)
 
 io = IOBuffer()
-@test_nowarn printmodel(io, report(mach).solemodel, show_subtree_info = true)
+@test_nowarn printmodel(io, report(mach).model, show_subtree_info = true)
 # String(take!(io))
 
-@test_nowarn printmodel.((SoleModels.listrules(report(mach).solemodel,)));
+@test_nowarn printmodel.((SoleModels.listrules(report(mach).model,)));
 
 ################################################################################

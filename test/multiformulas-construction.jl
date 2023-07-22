@@ -16,18 +16,9 @@ _size = ((x)->(hasmethod(size, (typeof(x),)) ? size(x) : missing))
 
 # Very multimodal tree:
 N = 100
-X_all = DataFrame(
-    mode0 = [rand() for i in 1:N],
-    mode1 = [rand(5) for i in 1:N],
-    mode2 = [rand(2,2) for i in 1:N],
-)
-y = string.(rand(1:10, N))
-mach = MLJ.fit!(machine(ModalDecisionTree(; n_subfeatures = 0.2, min_samples_leaf = 1), X_all, y))
 
-report(mach).printmodel(1000; threshold_digits = 2);
-
-redundant_ruleset = (listrules(report(mach).solemodel; use_shortforms=false))
-succinct_ruleset = (listrules(report(mach).solemodel; use_shortforms=true))
+redundant_ruleset = (listrules(report(mach).model; use_shortforms=false))
+succinct_ruleset = (listrules(report(mach).model; use_shortforms=true))
 
 multilogiset, var_grouping = ModalDecisionTrees.wrapdataset(X_all, ModalDecisionTree(; min_samples_leaf = 1))
 
@@ -63,13 +54,13 @@ filter.(!isnothing, eachcol(hcat(succinct_y...)))
 @test_broken preds2 = first.(preds2)
 @test_broken preds == preds2
 
-printmodel.(listrules(report(mach).solemodel; use_shortforms=true));
-printmodel.(listrules(report(mach).solemodel; use_shortforms=true, use_leftmostlinearform = true));
+printmodel.(listrules(report(mach).model; use_shortforms=true));
+printmodel.(listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true));
 printmodel.(joinrules(redundant_ruleset); show_metrics = true);
 printmodel.(joinrules(succinct_ruleset); show_metrics = true);
 
-printmodel.(joinrules(listrules(report(mach).solemodel)));
+printmodel.(joinrules(listrules(report(mach).model)));
 
 
-@test_nowarn printmodel.(listrules(report(mach).solemodel; use_shortforms=true, use_leftmostlinearform = true))
-@test_nowarn printmodel.(joinrules(listrules(report(mach).solemodel; use_shortforms=true, use_leftmostlinearform = true)))
+@test_nowarn printmodel.(listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true))
+@test_nowarn printmodel.(joinrules(listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true)))
