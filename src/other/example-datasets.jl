@@ -38,7 +38,7 @@ function load_japanesevowels()
     minimum_n_points = minimum(collect(Iterators.flatten(eachrow(length.(X[:,Not([:speaker, :take, :utterance])])))))
     new_X = (x->x[1:minimum_n_points]).(X[:,Not([:speaker, :take, :utterance])])
 
-    new_X, varnames = SoleData.dataframe2cube(new_X)
+    # new_X, varnames = SoleData.dataframe2cube(new_X)
 
     new_X, Y
 end

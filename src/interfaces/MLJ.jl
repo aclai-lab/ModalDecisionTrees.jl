@@ -118,7 +118,8 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
         printmodel                  = ModelPrinter(m, model, solemodel, var_grouping),
         sprinkle                    = (Xnew, ynew)->begin
             (Xnew, ynew, var_grouping, classes_seen, w) = MMI.reformat(m, Xnew, ynew; passive_mode = true)
-            translate_function(ModalDecisionTrees.sprinkle(model, Xnew, ynew))
+            preds, m = ModalDecisionTrees.sprinkle(model, Xnew, ynew)
+            preds, translate_function(m)
         end,
         # TODO remove redundancy?
         model                       = solemodel,

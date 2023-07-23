@@ -177,7 +177,7 @@ using Random
 tree = ModalDecisionTree(min_samples_leaf=4)
 
 # Load an example dataset (a temporal one)
-X, y = load_japanesevowels()
+X, y = ModalDecisionTrees.load_japanesevowels()
 N = length(y)
 
 mach = machine(tree, X, y)
@@ -190,8 +190,8 @@ train_idxs, test_idxs = p[1:round(Int, N*.8)], p[round(Int, N*.8)+1:end]
 fit!(mach, rows=train_idxs)
 
 # Perform predictions, compute accuracy
-yhat = predict(mach, X[test_idxs,:])
-accuracy = sum(yhat .== y[test_idxs])/length(yhat)
+yhat = predict_mode(mach, X[test_idxs,:])
+accuracy = MLJ.accuracy(yhat, y[test_idxs])
 
 # Access raw model
 fitted_params(mach).model
@@ -277,7 +277,7 @@ using Random
 forest = ModalRandomForest(ntrees = 50)
 
 # Load an example dataset (a temporal one)
-X, y = load_japanesevowels()
+X, y = ModalDecisionTrees.load_japanesevowels()
 N = length(y)
 
 mach = machine(forest, X, y)
@@ -291,9 +291,9 @@ fit!(mach, rows=train_idxs)
 
 # Perform predictions, compute accuracy
 Xnew = X[test_idxs,:]
-yhat = predict(mach, Xnew) # probabilistic predictions
-ynew = predict_mode(mach, Xnew)   # point predictions
-accuracy = sum(ynew .== y[test_idxs])/length(yhat)
+ynew = predict_mode(mach, Xnew) # point predictions
+accuracy = MLJ.accuracy(ynew, y[test_idxs])
+yhat = predict_mode(mach, Xnew) # probabilistic predictions
 pdf.(yhat, "1")    # probabilities for one of the classes ("1")
 
 # Access raw model

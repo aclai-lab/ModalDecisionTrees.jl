@@ -35,7 +35,7 @@ Additionally, these models:
 Simply type the following commands in Julia's REPL:
 
 ```julia
-using Pkg; Pkg.add(url="https://github.com/aclai-lab/ModalDecisionTrees.jl")
+using Pkg; Pkg.add("ModalDecisionTrees");
 ```
 -->
 
@@ -45,7 +45,8 @@ Simply type the following commands in Julia's REPL:
 
 ```julia
 # Install package
-using Pkg; Pkg.add(url="https://github.com/aclai-lab/ModalDecisionTrees.jl")
+using Pkg; Pkg.add("MLJ");
+using Pkg; Pkg.add("ModalDecisionTrees");
 
 # Import packages
 using MLJ
@@ -53,7 +54,7 @@ using ModalDecisionTrees
 using Random
 
 # Load an example dataset (a temporal one)
-X, y = load_japanesevowels()
+X, y = ModalDecisionTrees.load_japanesevowels()
 N = length(y)
 
 # Instantiate an MLJ machine based on a Modal Decision Tree with ≥ 4 samples at leaf
@@ -67,8 +68,8 @@ train_idxs, test_idxs = p[1:round(Int, N*.8)], p[round(Int, N*.8)+1:end]
 fit!(mach, rows=train_idxs)
 
 # Perform predictions, compute accuracy
-yhat = predict(mach, X[test_idxs,:])
-accuracy = sum(yhat .== y[test_idxs])/length(yhat)
+yhat = predict_mode(mach, X[test_idxs,:])
+accuracy = MLJ.accuracy(yhat, y[test_idxs])
 
 # Print model
 report(mach).printmodel(3)

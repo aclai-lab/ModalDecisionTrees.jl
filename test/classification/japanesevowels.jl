@@ -14,6 +14,8 @@ t = ModalDecisionTree(;
 # Load an example dataset (a temporal one)
 X, y = ModalDecisionTrees.load_japanesevowels()
 
+X, varnames = SoleData.dataframe2cube(X)
+
 p = randperm(Random.MersenneTwister(2), 100)
 X, y = X[:, :, p], y[p]
 
@@ -92,6 +94,8 @@ end
 ############################################################################################
 
 X, y = ModalDecisionTrees.load_japanesevowels()
+
+X, varnames = SoleData.dataframe2cube(X)
 
 multilogiset, var_grouping = ModalDecisionTrees.wrapdataset(X, ModalDecisionTree(; min_samples_leaf = 1))
 
