@@ -328,7 +328,7 @@ function sprinkle(
 
     # Propagate instances down the tree
     if print_progress
-        p = Progress(ninstances(Xs), 1, "Applying trees...")
+        p = Progress(ninstances(Xs), 1, "Applying tree...")
     end
     Threads.@threads for i_instance in 1:ninstances(Xs)
         worlds = mm_instance_initialworldset(Xs, tree, i_instance)

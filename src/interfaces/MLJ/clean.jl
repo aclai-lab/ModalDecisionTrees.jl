@@ -107,9 +107,11 @@ function MMI.clean!(m::SymbolicModel)
     # Patch name: features -> conditions
     if !isnothing(m.features)
         if !isnothing(m.conditions)
-            error("Please, only specify one hyper-parameter in `features` and `conditions`.")
+            error("Please, only specify one hyper-parameter in `features` and `conditions`." *
+                "Given: features = $(m.features) & conditions = $(m.conditions).")
         end
         m.conditions = m.features
+        m.features = nothing
     end
 
     if !(isnothing(m.conditions) ||
