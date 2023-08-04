@@ -2,6 +2,8 @@ using StatsBase
 
 export apply_tree, apply_forest, apply_model, printapply, tree_walk_metrics
 
+export sprinkle
+
 import SoleModels: apply
 
 ############################################################################################
@@ -297,16 +299,17 @@ function sprinkle(
 
     worlds[i_modality(tree)] = new_worlds
 
-    this_prediction, this_leaf = sprinkle(this(tree),  Xs, i_instance, worlds, y; kwargs...) # TODO test whether this works correctly
+    this_prediction, this_leaf = sprinkle(this(tree), Xs, i_instance, worlds, y; kwargs...) # TODO test whether this works correctly
 
-    pred, left_leaf, right_leaf =
+    pred, left_leaf, right_leaf = begin
         if satisfied
-            pred, left_leaf = sprinkle(left(tree),  Xs, i_instance, worlds, y; kwargs...)
+            pred, left_leaf = sprinkle(left(tree), Xs, i_instance, worlds, y; kwargs...)
             pred, left_leaf, right(tree)
         else
             pred, right_leaf = sprinkle(right(tree), Xs, i_instance, worlds, y; kwargs...)
             pred, left(tree), right_leaf
         end
+    end
 
     pred, DTInternal(i_modality(tree), decision(tree), this_leaf, left_leaf, right_leaf)
 end
@@ -323,7 +326,7 @@ function sprinkle(
     # Reset
     tree = (reset_leaves ? _empty_tree_leaves(tree) : tree)
 
-    predictions = L[]
+    predictions = Vector{L}(undef, ninstances(Xs))
     _root = root(tree)
 
     # Propagate instances down the tree
@@ -333,7 +336,7 @@ function sprinkle(
     Threads.@threads for i_instance in 1:ninstances(Xs)
         worlds = mm_instance_initialworldset(Xs, tree, i_instance)
         pred, _root = sprinkle(_root, Xs, i_instance, worlds, Y[i_instance]; kwargs...)
-        push!(predictions, pred)
+        predictions[i_instance] = pred
         print_progress && next!(p)
     end
     predictions, DTree(_root, worldtypes(tree), initconditions(tree))

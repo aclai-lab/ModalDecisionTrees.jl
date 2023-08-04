@@ -144,10 +144,10 @@ end
 #   #  to being hard operators
 #   # max_world_wratio = 1/prod(maxchannelsize(X))
 #   # if canonical_geq in test_operators
-#   #   test_operators = filter((e)->(!(e isa CanonicalFeatureGeqSoft) || e.alpha < 1-max_world_wratio), test_operators)
+#   #   test_operators = filter((e)->(!(e isa CanonicalConditionGeqSoft) || e.alpha < 1-max_world_wratio), test_operators)
 #   # end
 #   # if canonical_leq in test_operators
-#   #   test_operators = filter((e)->(!(e isa CanonicalFeatureLeqSoft) || e.alpha < 1-max_world_wratio), test_operators)
+#   #   test_operators = filter((e)->(!(e isa CanonicalConditionLeqSoft) || e.alpha < 1-max_world_wratio), test_operators)
 #   # end
 
 
