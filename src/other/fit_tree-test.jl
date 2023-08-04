@@ -20,7 +20,7 @@ for i_var in 1:n_vars
     push!(features, UnivariateMin(i_var))
     push!(featsnops, [≥])
     push!(features, UnivariateMax(i_var))
-    push!(featsnops, [≤])
+    push!(featsnops, [<])
 end
 
 Xs = MultiLogiset([
