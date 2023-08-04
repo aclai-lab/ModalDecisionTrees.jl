@@ -24,10 +24,12 @@ for i_var in 1:n_vars
 end
 
 Xs = MultiLogiset([
-    SupportedLogiset(
-        scalarlogiset(randn(n_pts, n_vars, _ninstances), get_interval_ontology(1), features, featsnops);
-        precompute_relmemoset = true,
-        precompute_globmemoset = true,
+        scalarlogiset(randn(n_pts, n_vars, _ninstances),
+        features,
+        conditions = featsnops,
+        relations = [IARelations...],
+        onestep_precompute_relmemoset = true,
+        onestep_precompute_globmemoset = true,
     )
 ]);
 

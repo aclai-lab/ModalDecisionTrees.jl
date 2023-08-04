@@ -103,7 +103,7 @@ end
 ##############################################################################
 
 # function optimize_tree_parameters!(
-#       X               :: DimensionalLogiset{T,N},
+#       X               :: DimensionalLogise't{T,N},
 #       initcond   :: InitialCondition,
 #       allow_global_splits :: Bool,
 #       test_operators  :: AbstractVector{<:TestOperator}
@@ -113,9 +113,9 @@ end
 #   #  flatten to adimensional case + strip of all relations from the ontology
 #   if prod(maxchannelsize(X)) == 1
 #       if (length(ontology(X).relations) > 0)
-#           @warn "The DimensionalLogiset provided has degenerate maxchannelsize $(maxchannelsize(X)), and more than 0 relations: $(ontology(X).relations)."
+#           @warn "The DimensionalLogise't provided has degenerate maxchannelsize $(maxchannelsize(X)), and more than 0 relations: $(ontology(X).relations)."
 #       end
-#       # X = DimensionalLogiset{T,0}(DimensionalDatasets.strip_ontology(ontology(X)), @views DimensionalDatasets.strip_domain(domain(X)))
+#       # X = DimensionalLogise't{T,0}(DimensionalDatasets.strip_ontology(ontology(X)), @views DimensionalDatasets.strip_domain(domain(X)))
 #   end
 
 #   ontology_relations = deepcopy(ontology(X).relations)
@@ -196,12 +196,6 @@ end
 #       inUseRelation_ids, availableRelation_ids
 #   )
 # end
-
-
-# In the modal case, dataset instances are Kripke structures.
-# In this implementation, we don't accept a generic Kripke structure in the explicit form of
-#  a graph; instead, an instance is a dimensional domain (e.g. a matrix or a 3D matrix) onto which
-#  worlds and relations are determined by a given Ontology.
 
 # DEBUGprintln = println
 

@@ -119,11 +119,11 @@ function displaydecision(
 end
 
 function displaydecision_inverse(decision::AbstractDecision, kwargs...; args...)
-    syntaxstring(negation(decision), kwargs...; args...)
+    syntaxstring(dual(decision), kwargs...; args...)
 end
 
 function displaydecision_inverse(i_modality::ModalityId, decision::AbstractDecision, kwargs...; args...)
-    displaydecision(i_modality, negation(decision), kwargs...; args...)
+    displaydecision(i_modality, dual(decision), kwargs...; args...)
 end
 
 
