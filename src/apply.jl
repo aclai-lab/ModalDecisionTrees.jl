@@ -333,7 +333,8 @@ function sprinkle(
     if print_progress
         p = Progress(ninstances(Xs), 1, "Applying tree...")
     end
-    Threads.@threads for i_instance in 1:ninstances(Xs)
+    # Note: no multi-threading
+    for i_instance in 1:ninstances(Xs)
         worlds = mm_instance_initialworldset(Xs, tree, i_instance)
         pred, _root = sprinkle(_root, Xs, i_instance, worlds, Y[i_instance]; kwargs...)
         predictions[i_instance] = pred
