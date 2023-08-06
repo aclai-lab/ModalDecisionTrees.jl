@@ -261,13 +261,15 @@ end
 
 ############################################################################################
 
+# DATASET_TYPE = MultiLogiset
+DATASET_TYPE = Any
 struct PredictingFunction{L<:Label}
-    # f::FunctionWrapper{Vector{L},Tuple{MultiLogiset}} # TODO restore!!!
-    f::FunctionWrapper{Any,Tuple{MultiLogiset}}
+    # f::FunctionWrapper{Vector{L},Tuple{DATASET_TYPE}} # TODO restore!!!
+    f::FunctionWrapper{Any,Tuple{DATASET_TYPE}}
 
     function PredictingFunction{L}(f::Any) where {L<:Label}
-        # new{L}(FunctionWrapper{Vector{L},Tuple{MultiLogiset}}(f)) # TODO restore!!!
-        new{L}(FunctionWrapper{Any,Tuple{MultiLogiset}}(f))
+        # new{L}(FunctionWrapper{Vector{L},Tuple{DATASET_TYPE}}(f)) # TODO restore!!!
+        new{L}(FunctionWrapper{Any,Tuple{DATASET_TYPE}}(f))
     end
 end
 (pf::PredictingFunction{L})(args...; kwargs...) where {L} = pf.f(args...; kwargs...)::Vector{L}
