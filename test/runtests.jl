@@ -44,8 +44,8 @@ test_suites = [
         "multimodal-datasets.jl"
         "multiformulas-construction.jl"
     ]),
-    ("Parsing", [
-        "parse-and-translate-existentialdecisions.jl"
+    ("Other", [
+        "other/parse-and-translate.jl"
     ]),
 ]
 
