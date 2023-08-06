@@ -193,12 +193,12 @@ struct ConfusionMatrix{T<:Number}
         weights::Union{Nothing,AbstractVector{Z}} = nothing;
         force_class_order = nothing,
     ) where {L<:CLabel,Z}
-        @assert length(actual) == length(predicted) "Cannot compute ConfusionMatrix with uneven number of actual $(length(actual)) and predicted $(length(predicted)) labels."
+        @assert length(actual) == length(predicted) "Cannot compute ConfusionMatrix with mismatching number of actual $(length(actual)) and predicted $(length(predicted)) labels."
 
         if isnothing(weights)
             weights = default_weights(actual)
         end
-        @assert length(actual) == length(weights)   "Cannot compute ConfusionMatrix with uneven number of actual $(length(actual)) and weights $(length(weights)) labels."
+        @assert length(actual) == length(weights)   "Cannot compute ConfusionMatrix with mismatching number of actual $(length(actual)) and weights $(length(weights)) labels."
 
         class_labels = begin
             class_labels = unique([actual; predicted])
