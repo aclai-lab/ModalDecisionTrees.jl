@@ -262,7 +262,7 @@ function sprinkle(
     suppress_parity_warning = false,
 ) where {L<:Label}
     _supp_train_labels      = L[leaf.supp_train_labels...,      y]
-    _supp_train_predictions = L[leaf.supp_train_predictions..., apply(leaf, Xs, i_instance, worlds; kwargs...)]
+    _supp_train_predictions = L[leaf.supp_train_predictions..., apply(leaf, Xs, i_instance, worlds)]
 
     _predicting_function = begin
         if update_labels
