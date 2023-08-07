@@ -76,7 +76,7 @@ end
 function apply(leaf::NSDTLeaf, Xs, i_instance::Integer, worlds::AbstractVector{<:AbstractWorldSet}; suppress_parity_warning = false)
     d = slicedataset(Xs, [i_instance])
     println(typeof(Xs))
-    println(typeof(first(Xs)))
+    println(hasmethod(first, (typeof(Xs),)) ? length(Xs) : nothing)
     println(typeof(d))
     println(hasmethod(length, (typeof(d),)) ? length(d) : nothing)
     println(hasmethod(size,   (typeof(d),)) ? size(d)   : nothing)
