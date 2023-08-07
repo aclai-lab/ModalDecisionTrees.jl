@@ -75,9 +75,11 @@ end
 
 function apply(leaf::NSDTLeaf, Xs, i_instance::Integer, worlds::AbstractVector{<:AbstractWorldSet}; suppress_parity_warning = false)
     d = slicedataset(Xs, [i_instance])
+    println(typeof(Xs))
+    println(typeof(first(Xs)))
     println(typeof(d))
-    println(hasmethod(size,   (typeof(d),)) ? size(d)   : nothing)
     println(hasmethod(length, (typeof(d),)) ? length(d) : nothing)
+    println(hasmethod(size,   (typeof(d),)) ? size(d)   : nothing)
     preds = leaf.predicting_function(d)
     @assert length(preds) == 1 "Error in apply(::NSDTLeaf, ...) The predicting function returned some malformed output. Expected is a Vector of a single prediction, while the returned value is:\n$(preds)\n$(hasmethod(length, (typeof(preds),)) ? length(preds) : "(length = $(length(preds)))")\n$(hasmethod(size, (typeof(preds),)) ? size(preds) : "(size = $(size(preds)))")"
     # println(preds)
