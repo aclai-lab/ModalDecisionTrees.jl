@@ -264,8 +264,9 @@ function sprinkle(
     update_labels = false,
     suppress_parity_warning = false,
 ) where {L<:Label}
+    pred = apply(leaf, Xs, i_instance, worlds; suppress_parity_warning = suppress_parity_warning)
     _supp_train_labels      = L[leaf.supp_train_labels...,      y]
-    _supp_train_predictions = L[leaf.supp_train_predictions..., apply(leaf, Xs, i_instance, worlds)]
+    _supp_train_predictions = L[leaf.supp_train_predictions..., pred]
 
     _predicting_function = begin
         if update_labels
@@ -275,8 +276,7 @@ function sprinkle(
         end
     end
 
-    d = slicedataset(Xs, [i_instance])
-    _predicting_function(d)[1], NSDTLeaf{L}(_predicting_function, _supp_train_labels, leaf.supp_valid_labels, _supp_train_predictions, leaf.supp_valid_predictions)
+    pred, NSDTLeaf{L}(_predicting_function, _supp_train_labels, leaf.supp_valid_labels, _supp_train_predictions, leaf.supp_valid_predictions)
 end
 
 function sprinkle(
