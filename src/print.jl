@@ -112,7 +112,7 @@ function displaymodel(
 )
     outstr = ""
     outstr *= "Feature function: $(nsdt.feature_function)"
-    _ntrees = ntrees(forest)
+    _ntrees = ntrees(nsdt)
     for (i_tree,tree) in enumerate(nsdt.trees)
         outstr *= "Tree $(i_tree) / $(_ntrees)\n"
         outstr *= displaymodel(tree, args...; kwargs...)
