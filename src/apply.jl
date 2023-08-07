@@ -74,10 +74,12 @@ function apply(leaf::DTLeaf, Xs, i_instance::Integer, worlds::AbstractVector{<:A
 end
 
 function apply(leaf::NSDTLeaf, Xs, i_instance::Integer, worlds::AbstractVector{<:AbstractWorldSet}; suppress_parity_warning = false)
+    if Xs isa AbstractVector
+        println(length(Xs))
+        println(typeof(first(Xs)))
+        println(first(Xs))
+    end
     d = slicedataset(Xs, [i_instance])
-    println(typeof(Xs))
-    println(Xs isa MultiLogiset ? nothing : length(Xs))
-
     println(typeof(d))
     println(hasmethod(length, (typeof(d),)) ? length(d) : nothing)
     println(hasmethod(size,   (typeof(d),)) ? size(d)   : nothing)
