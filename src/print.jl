@@ -42,9 +42,20 @@ function displaybriefprediction(leaf::DTLeaf)
     string(prediction(leaf))
 end
 
+# TODO move to SoleBase and rename to string_ellipsis
+function str_ellipsis(str, maxcharacters = 60)
+    str = "$(str)"
+    if length(str) <= maxcharacters
+        str
+    else
+        str[1:div(maxcharacters,2)] * "..." * str[(end-div(maxcharacters,2)+1):end]
+    end
+end
+
 function displaybriefprediction(leaf::NSDTLeaf)
     # "{$(leaf.predicting_function), size = $(Base.summarysize(leaf.predicting_function))}"
-    "<$(leaf.predicting_function)>"
+    str = "$(leaf.predicting_function)"
+    "<$(str_ellipsis(str))>"
 end
 
 function get_metrics_str(metrics::NamedTuple)
