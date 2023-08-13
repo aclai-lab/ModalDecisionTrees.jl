@@ -355,10 +355,10 @@ function train_functional_leaves(
     supp_train_predictions = functional_model(train_X)
     supp_valid_predictions = functional_model(valid_X)
 
-    function predicting_function(X)::Vector{L} # TODO avoid this definition, just return the model
-        functional_model(X)
+    function get_predicting_function(model) # TODO avoid this definition, just return the model
+        return X->model(X)::Vector{L}
     end
-    NSDTLeaf{L}(predicting_function, supp_train_labels, supp_valid_labels, supp_train_predictions, supp_valid_predictions)
+    NSDTLeaf{L}(get_predicting_function(functional_model), supp_train_labels, supp_valid_labels, supp_train_predictions, supp_valid_predictions)
 end
 
 

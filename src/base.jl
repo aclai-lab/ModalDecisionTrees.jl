@@ -326,7 +326,7 @@ struct NSDTLeaf{L<:Label} <: AbstractDecisionLeaf{L}
         )
     end
 
-    function NSDTLeaf{L}(f::Any, args...; kwargs...) where {L<:Label}
+    function NSDTLeaf{L}(f::Callable, args...; kwargs...) where {L<:Label}
         NSDTLeaf{L}(PredictingFunction{L}(f), args...; kwargs...)
     end
 
