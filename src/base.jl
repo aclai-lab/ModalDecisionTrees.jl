@@ -130,7 +130,8 @@ end
 is_propositional_decision(d::ScalarOneStepFormula) = (SoleModels.relation(d) == identityrel)
 is_global_decision(d::ScalarOneStepFormula) = (SoleModels.relation(d) == globalrel)
 
-import SoleModels: relation, atom, metacond, feature, test_operator, threshold
+import SoleLogics: value
+import SoleModels: relation, metacond, feature, test_operator, threshold
 
 struct SimpleDecision{F<:ScalarExistentialFormula} <: AbstractDecision
     formula  :: F
