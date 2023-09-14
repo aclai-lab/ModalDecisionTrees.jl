@@ -29,12 +29,11 @@ Additionally, these models:
 
 #### JuliaCon 2022 lightning talk (8 minutes)
 
-<!-- [![](https://img.youtube.com/vi/8F1vZsl8Zvg/0.jpg)](https://youtu.be/8F1vZsl8Zvg) -->
-<p align="center">
+<div align="center">
 <a href="https://youtu.be/8F1vZsl8Zvg">
   <img src="https://img.youtube.com/vi/8F1vZsl8Zvg/0.jpg">
 </a>
-</p>
+</div>
 
 
 <!-- 
