@@ -27,7 +27,7 @@ Additionally, these models:
 - Only supports numeric features;
 - Does not support `missing` or `NaN` values.
 
-#### JuliaCon 2022 lightning talk (8 minutes)
+#### JuliaCon 2022 8-minute talk
 
 <!-- [![](https://img.youtube.com/vi/8F1vZsl8Zvg/0.jpg)](https://youtu.be/8F1vZsl8Zvg) -->
 <div align="center">
