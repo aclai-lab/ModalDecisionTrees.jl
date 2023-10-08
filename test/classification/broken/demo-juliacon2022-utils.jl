@@ -36,7 +36,7 @@ variable_names_latex = [
 "\\text{thumb}_Z^R",
 ]
 
-function load_arff_dataset(dataset_name, path = "http://www.timeseriesclassification.com/ClassificationDownloads/$(dataset_name).zip")
+function load_arff_dataset(dataset_name, path = "http://www.timeseriesclassification.com/aeon-toolkit/$(dataset_name).zip")
 # function load_arff_dataset(dataset_name, path = "../datasets/Multivariate_arff/$(dataset_name)")
     (X_train, y_train), (X_test, y_test) = begin
         if(any(startswith.(path, ["https://", "http://"])))
