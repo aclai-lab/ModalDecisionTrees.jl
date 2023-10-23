@@ -115,7 +115,7 @@ function simplify(t::SyntaxTree)
                 end
             end
         end
-        tree(LeftmostLinearForm(SoleLogics.op(t), chs))
+        tree(LeftmostLinearForm(SoleLogics.connective(t), chs))
     else
         t
     end

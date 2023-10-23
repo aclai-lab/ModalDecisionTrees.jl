@@ -255,7 +255,7 @@ end
 # end
 
 
-# function isimplicative(f::AbstractFormula)
+# function isimplicative(f::Formula)
 #     t = tree(f)
 #     return token(t) == → ||
 #         (any(isa.(token(t), [BoxRelationalOperator, □])) && first(children(t)) == →)
