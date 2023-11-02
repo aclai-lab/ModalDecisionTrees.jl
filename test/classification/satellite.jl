@@ -101,23 +101,23 @@ function knowntoimply(t1::SyntaxTree, t2::SyntaxTree)
         false
     end
 end
-function simplify(t::SyntaxTree)
-    if token(t) in [CONJUNCTION, DISJUNCTION]
-        t = LeftmostLinearForm(t)
-        chs = children(t)
+function simplify(φ::SyntaxTree)
+    if token(φ) in [CONJUNCTION, DISJUNCTION]
+        φ = LeftmostLinearForm(φ)
+        chs = children(φ)
         for i in length(chs):-1:1
             ch1 = chs[i]
             for ch2 in chs
-                if (token(t) == CONJUNCTION && knowntoimply(ch2, ch1)) ||
-                   (token(t) == DISJUNCTION && knowntoimply(ch1, ch2))
+                if (token(φ) == CONJUNCTION && knowntoimply(ch2, ch1)) ||
+                   (token(φ) == DISJUNCTION && knowntoimply(ch1, ch2))
                     deleteat!(chs, i)
                     break
                 end
             end
         end
-        tree(LeftmostLinearForm(SoleLogics.connective(t), chs))
+        tree(LeftmostLinearForm(SoleLogics.connective(φ), chs))
     else
-        t
+        φ
     end
 end
 
