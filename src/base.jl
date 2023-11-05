@@ -102,8 +102,7 @@ isinrightsubtree(node::DTNode, parent::AbstractDecisionLeaf) = false
 using SoleLogics
 using SoleLogics: identityrel, globalrel
 using SoleModels.DimensionalDatasets: alpha
-using SoleModels: AbstractTemplatedFormula,
-                  ScalarOneStepFormula,
+using SoleModels: ScalarOneStepFormula,
                   ScalarExistentialFormula,
                   ScalarUniversalFormula
 
@@ -167,18 +166,18 @@ function SimpleDecision(
     SimpleDecision(ScalarExistentialFormula(relation(f), newcond))
 end
 
-mutable struct DoubleEdgedDecision{F<:AbstractTemplatedFormula} <: AbstractDecision
+mutable struct DoubleEdgedDecision{F<:Formula} <: AbstractDecision
     formula   :: F
     _back     :: Base.RefValue{N} where N<:AbstractNode # {L,DoubleEdgedDecision}
     _forth    :: Base.RefValue{N} where N<:AbstractNode # {L,DoubleEdgedDecision}
 
-    function DoubleEdgedDecision{F}(formula::F) where {F<:AbstractTemplatedFormula}
+    function DoubleEdgedDecision{F}(formula::F) where {F<:Formula}
         ded = new{F}()
         ded.formula = formula
         ded
     end
 
-    function DoubleEdgedDecision(formula::F) where {F<:AbstractTemplatedFormula}
+    function DoubleEdgedDecision(formula::F) where {F<:Formula}
         DoubleEdgedDecision{F}(formula)
     end
 end
