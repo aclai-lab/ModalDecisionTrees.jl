@@ -143,7 +143,7 @@ function apply(
         if isnothing(tree_weights)
             tree_weights = Ones{Int}(length(trees), ninstances(Xs)) # TODO optimize?
         elseif tree_weights isa AbstractVector
-            tree_weights = hcat([tree_weights for i in 1:ninstances(Xs)]...)
+            tree_weights = hcat([tree_weights for i_instance in 1:ninstances(Xs)]...)
         else
             @show typeof(tree_weights)
             error("Unexpected tree_weights encountered $(tree_weights).")
@@ -366,7 +366,7 @@ function sprinkle(
         if isnothing(tree_weights)
             tree_weights = Ones{Int}(length(trees), ninstances(Xs)) # TODO optimize?
         elseif tree_weights isa AbstractVector
-            tree_weights = hcat([tree_weights for i in 1:ninstances(Xs)]...)
+            tree_weights = hcat([tree_weights for i_instance in 1:ninstances(Xs)]...)
         else
             @show typeof(tree_weights)
             error("Unexpected tree_weights encountered $(tree_weights).")
@@ -537,7 +537,7 @@ function apply_proba(
         if isnothing(tree_weights)
             tree_weights = nothing # Ones{Int}(length(trees), ninstances(Xs)) # TODO optimize?
         elseif tree_weights isa AbstractVector
-            tree_weights = hcat([tree_weights for i in 1:ninstances(Xs)]...)
+            tree_weights = hcat([tree_weights for i_instance in 1:ninstances(Xs)]...)
         else
             @show typeof(tree_weights)
             error("Unexpected tree_weights encountered $(tree_weights).")

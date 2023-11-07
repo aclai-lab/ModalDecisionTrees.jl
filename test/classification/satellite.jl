@@ -73,7 +73,7 @@ report(mach).printmodel(1000; threshold_digits = 2);
 listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true)
 
 fs = SoleModels.antecedent.(listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true))
-fsnorm = map(f->normalize(modforms(f)[1]; allow_proposition_flipping = true), fs)
+fsnorm = map(f->normalize(modforms(f)[1]; allow_atom_flipping = true), fs)
 
 # TODO: expand to implicationstate
 function knowntoimply(t1::SyntaxTree, t2::SyntaxTree)
@@ -89,7 +89,7 @@ function knowntoimply(t1::SyntaxTree, t2::SyntaxTree)
         knowntoimply(children(t1)[1], children(t2)[1])
     elseif token(t1) == _diamg && token(t2) == _diamg
         knowntoimply(children(t1)[1], children(t2)[1])
-    elseif token(t1) isa Proposition{<:ScalarCondition} && token(t2) isa Proposition{<:ScalarCondition}
+    elseif token(t1) isa Atom{<:ScalarCondition} && token(t2) isa Atom{<:ScalarCondition}
         c1 = atom(token(t1))
         c2 = atom(token(t2))
         # if SoleModels.metacond(c1) == SoleModels.metacond(c2)

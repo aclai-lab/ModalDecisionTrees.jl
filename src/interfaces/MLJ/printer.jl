@@ -13,7 +13,7 @@ function (c::ModelPrinter)(args...; kwargs...)
     c(stdout, args...; kwargs...)
 end
 # Do not remove (generates compile-time warnings)
-function (c::ModelPrinter)(io::IO; kwargs... )
+function (c::ModelPrinter)(io::IO; kwargs...)
     c(io, true, c.m.display_depth; kwargs...)
 end
 function (c::ModelPrinter)(

@@ -129,7 +129,7 @@ end
 is_propositional_decision(d::ScalarOneStepFormula) = (SoleModels.relation(d) == identityrel)
 is_global_decision(d::ScalarOneStepFormula) = (SoleModels.relation(d) == globalrel)
 
-import SoleModels: relation, proposition, metacond, feature, test_operator, threshold
+import SoleModels: relation, atom, metacond, feature, test_operator, threshold
 
 struct SimpleDecision{F<:ScalarExistentialFormula} <: AbstractDecision
     formula  :: F
@@ -138,7 +138,7 @@ end
 formula(d::SimpleDecision) = d.formula
 
 relation(d::SimpleDecision) = relation(formula(d))
-proposition(d::SimpleDecision) = proposition(formula(d))
+atom(d::SimpleDecision) = atom(formula(d))
 metacond(d::SimpleDecision) = metacond(formula(d))
 feature(d::SimpleDecision) = feature(formula(d))
 test_operator(d::SimpleDecision) = test_operator(formula(d))
@@ -160,8 +160,7 @@ function SimpleDecision(
     threshold_backmap::Function
 )
     f = formula(d)
-    p = proposition(f)
-    cond = atom(p)
+    cond = value(atom(f))
     newcond = ScalarCondition(metacond(cond), threshold_backmap(threshold(cond)))
     SimpleDecision(ScalarExistentialFormula(relation(f), newcond))
 end

@@ -138,14 +138,14 @@ function _condition(feature::AbstractFeature, test_op, threshold::T) where {T}
     return cond
 end
 
-function get_proposition(φ::ScalarExistentialFormula)
+function get_atom(φ::ScalarExistentialFormula)
     test_op = test_operator(φ)
-    return Proposition(_condition(feature(φ), test_op, threshold(φ)))
+    return Atom(_condition(feature(φ), test_op, threshold(φ)))
 end
 
-function get_proposition_inv(φ::ScalarExistentialFormula)
+function get_atom_inv(φ::ScalarExistentialFormula)
     test_op = inverse_test_operator(test_operator(φ))
-    return Proposition(_condition(feature(φ), test_op, threshold(φ)))
+    return Atom(_condition(feature(φ), test_op, threshold(φ)))
 end
 
 function get_diamond_op(φ::ScalarExistentialFormula)
@@ -161,11 +161,11 @@ function get_lambda(parent::DTNode, child::DTNode)
     f = formula(ModalDecisionTrees.decision(parent))
     isprop = (relation(f) == identityrel)
     if isinleftsubtree(child, parent)
-        p = get_proposition(f)
+        p = get_atom(f)
         diamond_op = get_diamond_op(f)
         return isprop ? SyntaxTree(p) : diamond_op(p)
     elseif isinrightsubtree(child, parent)
-        p_inv = get_proposition_inv(f)
+        p_inv = get_atom_inv(f)
         box_op = get_box_op(f)
         return isprop ? SyntaxTree(p_inv) : box_op(p_inv)
     else
@@ -206,7 +206,7 @@ end
 
             if isinleftsubtree(nodes[2], nodes[1])
                 f = formula(ModalDecisionTrees.decision(nodes[1]))
-                p = MultiFormula(i_modality(nodes[1]), SyntaxTree(get_proposition(f)))
+                p = MultiFormula(i_modality(nodes[1]), SyntaxTree(get_atom(f)))
                 isprop = (relation(f) == identityrel)
 
                 if isinleftsubtree(nodes[3], nodes[2])
