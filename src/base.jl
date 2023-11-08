@@ -21,15 +21,15 @@ const start_at_center      = StartAtCenter();
 struct StartAtWorld{W<:AbstractWorld}  <: InitialCondition w::W end;
 
 function initialworldset(fr::AbstractMultiModalFrame{W}, initcond::StartWithoutWorld) where {W<:AbstractWorld}
-    WorldSet{W}([SoleLogics.emptyworld(fr)])
+    Worlds{W}([SoleLogics.emptyworld(fr)])
 end
 
 function initialworldset(fr::AbstractMultiModalFrame{W}, initcond::StartAtCenter) where {W<:AbstractWorld}
-    WorldSet{W}([SoleLogics.centralworld(fr)])
+    Worlds{W}([SoleLogics.centralworld(fr)])
 end
 
 function initialworldset(::AbstractMultiModalFrame{W}, initcond::StartAtWorld{W}) where {W<:AbstractWorld}
-    WorldSet{W}([initcond.w])
+    Worlds{W}([initcond.w])
 end
 
 anchor(φ::AbstractSyntaxStructure, ::StartWithoutWorld) = φ
@@ -45,11 +45,11 @@ function initialworldset(
 end
 
 function initialworldsets(Xs::MultiLogiset, initconds::AbstractVector{<:InitialCondition})
-    Ss = Vector{Vector{WST} where {W,WST<:WorldSet{W}}}(undef, nmodalities(Xs)) # Fix
+    Ss = Vector{Vector{WST} where {W,WST<:Worlds{W}}}(undef, nmodalities(Xs)) # Fix
     for (i_modality,X) in enumerate(eachmodality(Xs))
         W = worldtype(X)
-        Ss[i_modality] = WorldSet{W}[initialworldset(X, i_instance, initconds[i_modality]) for i_instance in 1:ninstances(Xs)]
-        # Ss[i_modality] = WorldSet{W}[[Interval(1,2)] for i_instance in 1:ninstances(Xs)]
+        Ss[i_modality] = Worlds{W}[initialworldset(X, i_instance, initconds[i_modality]) for i_instance in 1:ninstances(Xs)]
+        # Ss[i_modality] = Worlds{W}[[Interval(1,2)] for i_instance in 1:ninstances(Xs)]
     end
     Ss
 end

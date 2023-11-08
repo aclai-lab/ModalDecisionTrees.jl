@@ -18,7 +18,7 @@ struct DecisionPathNode
     feature       :: AbstractFeature
     test_operator :: TestOperator
     threshold     :: T where T
-    worlds        :: AbstractWorldSet
+    worlds        :: AbstractWorlds
 end
 
 taken(n::DecisionPathNode) = n.taken
@@ -30,8 +30,8 @@ worlds(n::DecisionPathNode) = n.worlds
 
 const DecisionPath = Vector{DecisionPathNode}
 
-_get_path_in_tree(leaf::DTLeaf, X::Any, i_instance::Integer, worlds::AbstractVector{<:AbstractWorldSet}, i_modality::ModalityId, paths::Vector{DecisionPath})::AbstractWorldSet = return worlds[i_modality]
-function _get_path_in_tree(tree::DTInternal, X::MultiLogiset, i_instance::Integer, worlds::AbstractVector{<:AbstractWorldSet}, i_modality::Integer, paths::Vector{DecisionPath})::AbstractWorldSet
+_get_path_in_tree(leaf::DTLeaf, X::Any, i_instance::Integer, worlds::AbstractVector{<:AbstractWorlds}, i_modality::ModalityId, paths::Vector{DecisionPath})::AbstractWorlds = return worlds[i_modality]
+function _get_path_in_tree(tree::DTInternal, X::MultiLogiset, i_instance::Integer, worlds::AbstractVector{<:AbstractWorlds}, i_modality::Integer, paths::Vector{DecisionPath})::AbstractWorlds
     satisfied = true
     (satisfied,new_worlds,worlds_map) =
         modalstep(
@@ -48,7 +48,7 @@ function _get_path_in_tree(tree::DTInternal, X::MultiLogiset, i_instance::Intege
     # if survivors of next step are in the list of worlds viewed by one
     # of the just accumulated "new_worlds" then that world is a survivor
     # for this step
-    new_survivors::AbstractWorldSet = Vector{AbstractWorld}()
+    new_survivors::AbstractWorlds = Vector{AbstractWorld}()
     for curr_w in keys(worlds_map)
         if length(intersect(worlds_map[curr_w], survivors)) > 0
             push!(new_survivors, curr_w)

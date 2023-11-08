@@ -13,7 +13,7 @@ mutable struct NodeMeta{L<:Label,P} <: AbstractNode{L}
     region             :: UnitRange{Int}                   # a slice of the instances used to decide the split of the node
     depth              :: Int
     modaldepth         :: Int
-    # worlds      :: AbstractVector{WorldSet{W}}           # current set of worlds for each training instance
+    # worlds      :: AbstractVector{Worlds{W}}           # current set of worlds for each training instance
     purity             :: P                                # purity grade attained at training time
     prediction         :: L                                # most likely label
     is_leaf            :: Bool                             # whether this is a leaf node, or a split one
@@ -211,7 +211,7 @@ Base.@propagate_inbounds @inline function split_node!(
     node                      :: NodeMeta{L,P},                     # node to split
     Xs                        :: MultiLogiset,       # modal dataset
     Ss                        :: AbstractVector{
-        <:AbstractVector{WST} where {WorldType,WST<:WorldSet{WorldType}}
+        <:AbstractVector{WST} where {WorldType,WST<:Vector{WorldType}}
     }, # vector of current worlds for each instance and modality
     Y                         :: AbstractVector{L},                  # label vector
     initconditions            :: AbstractVector{<:InitialCondition},   # world starting conditions
@@ -379,7 +379,7 @@ Base.@propagate_inbounds @inline function split_node!(
     #   lsums[i] = zero(U)
     # end
 
-    Sfs = Vector{Vector{WST} where {WorldType,WST<:WorldSet{WorldType}}}(undef, nmodalities(Xs))
+    Sfs = Vector{Vector{WST} where {WorldType,WST<:Vector{WorldType}}}(undef, nmodalities(Xs))
     for (i_modality,WT) in enumerate(worldtype.(eachmodality(Xs)))
         Sfs[i_modality] = Vector{Vector{WT}}(undef, _ninstances)
         @simd for i in 1:_ninstances

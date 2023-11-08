@@ -1,7 +1,7 @@
 
 using ResumableFunctions
 using SoleLogics: AbstractFrame
-using SoleModels: AbstractWorld, AbstractWorldSet, AbstractFeature
+using SoleModels: AbstractWorld, AbstractWorlds, AbstractFeature
 using Logging: @logmsg
 using SoleModels: AbstractLogiset, SupportedLogiset
 
@@ -46,7 +46,7 @@ Perform the modal step, that is, evaluate an existential formula
 function modalstep(
     X, # ::AbstractScalarLogiset{W},
     i_instance::Integer,
-    worlds::AbstractVector{W},
+    worlds::AbstractWorlds{W},
     decision::SimpleDecision{<:ScalarExistentialFormula},
     return_worldmap::Union{Val{true},Val{false}} = Val(false)
 ) where {W<:AbstractWorld}
@@ -60,7 +60,7 @@ function modalstep(
     # TODO the's room for optimization here: with some relations (e.g. IA_A, IA_L) can be made smaller
 
     if return_worldmap isa Val{true}
-        worlds_map = ThreadSafeDict{W,AbstractVector{W}}()
+        worlds_map = ThreadSafeDict{W,AbstractWorlds{W}}()
     end
     if length(worlds) == 0
         # If there are no neighboring worlds, then the modal decision is not met
@@ -69,7 +69,7 @@ function modalstep(
         # Otherwise, check whether at least one of the accessible worlds witnesses truth of the decision.
         # TODO rewrite with new_worlds = map(...acc_worlds)
         # Initialize new worldset
-        new_worlds = Vector{W}()
+        new_worlds = Worlds{W}()
 
         # List all accessible worlds
         acc_worlds = begin
@@ -119,7 +119,7 @@ end
 Base.@propagate_inbounds @resumable function generate_feasible_decisions(
     X::AbstractScalarLogiset{W,U},
     i_instances::AbstractVector{<:Integer},
-    Sf::AbstractVector{<:AbstractWorldSet{W}},
+    Sf::AbstractVector{<:AbstractWorlds{W}},
     allow_propositional_decisions::Bool,
     allow_modal_decisions::Bool,
     allow_global_decisions::Bool,
@@ -156,7 +156,7 @@ end
 Base.@propagate_inbounds @resumable function generate_propositional_feasible_decisions(
     X::AbstractScalarLogiset{W,U,FT,FR},
     i_instances::AbstractVector{<:Integer},
-    Sf::AbstractVector{<:AbstractWorldSet{W}},
+    Sf::AbstractVector{<:AbstractWorlds{W}},
     features_inds::AbstractVector{<:Integer},
     grouped_featsaggrsnops::AbstractVector{<:AbstractDict{<:Aggregator,<:AbstractVector{<:ScalarMetaCondition}}},
     grouped_featsnaggrs::AbstractVector{<:AbstractVector{Tuple{<:Integer,<:Aggregator}}},
@@ -235,7 +235,7 @@ end
 Base.@propagate_inbounds @resumable function generate_modal_feasible_decisions(
     X::AbstractScalarLogiset{W,U,FT,FR},
     i_instances::AbstractVector{<:Integer},
-    Sf::AbstractVector{<:AbstractWorldSet{W}},
+    Sf::AbstractVector{<:AbstractWorlds{W}},
     modal_relations_inds::AbstractVector{<:Integer},
     features_inds::AbstractVector{<:Integer},
     grouped_featsaggrsnops::AbstractVector{<:AbstractDict{<:Aggregator,<:AbstractVector{<:ScalarMetaCondition}}},
@@ -328,7 +328,7 @@ end
 Base.@propagate_inbounds @resumable function generate_global_feasible_decisions(
     X::AbstractScalarLogiset{W,U,FT,FR},
     i_instances::AbstractVector{<:Integer},
-    Sf::AbstractVector{<:AbstractWorldSet{W}},
+    Sf::AbstractVector{<:AbstractWorlds{W}},
     features_inds::AbstractVector{<:Integer},
     grouped_featsaggrsnops::AbstractVector{<:AbstractDict{<:Aggregator,<:AbstractVector{<:ScalarMetaCondition}}},
     grouped_featsnaggrs::AbstractVector{<:AbstractVector{Tuple{<:Integer,<:Aggregator}}},

@@ -36,7 +36,7 @@ apply_model_proba = apply_proba
 ############################################################################################
 
 mm_instance_initialworldset(Xs, tree::DTree, i_instance::Integer) = begin
-    Ss = Vector{WorldSet}(undef, nmodalities(Xs))
+    Ss = Vector{Worlds}(undef, nmodalities(Xs))
     for (i_modality,X) in enumerate(eachmodality(Xs))
         Ss[i_modality] = initialworldset(X, i_instance, initconditions(tree)[i_modality])
     end
@@ -69,11 +69,11 @@ end
 # Apply models: predict labels for a new dataset of instances
 ################################################################################
 
-function apply(leaf::DTLeaf, Xs, i_instance::Integer, worlds::AbstractVector{<:AbstractWorldSet}; suppress_parity_warning = false)
+function apply(leaf::DTLeaf, Xs, i_instance::Integer, worlds::AbstractVector{<:AbstractWorlds}; suppress_parity_warning = false)
     prediction(leaf)
 end
 
-function apply(leaf::NSDTLeaf, Xs, i_instance::Integer, worlds::AbstractVector{<:AbstractWorldSet}; suppress_parity_warning = false)
+function apply(leaf::NSDTLeaf, Xs, i_instance::Integer, worlds::AbstractVector{<:AbstractWorlds}; suppress_parity_warning = false)
     # if Xs isa AbstractVector
     #     println(length(Xs))
     #     println(typeof(first(Xs)))
@@ -90,7 +90,7 @@ function apply(leaf::NSDTLeaf, Xs, i_instance::Integer, worlds::AbstractVector{<
     preds[1]
 end
 
-function apply(tree::DTInternal, Xs, i_instance::Integer, worlds::AbstractVector{<:AbstractWorldSet}; kwargs...)
+function apply(tree::DTInternal, Xs, i_instance::Integer, worlds::AbstractVector{<:AbstractWorlds}; kwargs...)
     @logmsg LogDetail "applying branch..."
     @logmsg LogDetail " worlds" worlds
     (satisfied,new_worlds) =
@@ -239,7 +239,7 @@ function sprinkle(
     leaf::DTLeaf{L},
     Xs,
     i_instance::Integer,
-    worlds::AbstractVector{<:AbstractWorldSet},
+    worlds::AbstractVector{<:AbstractWorlds},
     y::L;
     update_labels = false,
     suppress_parity_warning = false,
@@ -261,7 +261,7 @@ function sprinkle(
     leaf::NSDTLeaf{L},
     Xs,
     i_instance::Integer,
-    worlds::AbstractVector{<:AbstractWorldSet},
+    worlds::AbstractVector{<:AbstractWorlds},
     y::L;
     update_labels = false,
     suppress_parity_warning = false,
@@ -285,7 +285,7 @@ function sprinkle(
     tree::DTInternal{L},
     Xs,
     i_instance::Integer,
-    worlds::AbstractVector{<:AbstractWorldSet},
+    worlds::AbstractVector{<:AbstractWorlds},
     y::L;
     kwargs...,
 ) where {L}
@@ -449,11 +449,11 @@ using CategoricalDistributions
 using CategoricalDistributions: UnivariateFinite
 using CategoricalArrays
 
-function apply_proba(leaf::DTLeaf, Xs, i_instance::Integer, worlds::AbstractVector{<:AbstractWorldSet})
+function apply_proba(leaf::DTLeaf, Xs, i_instance::Integer, worlds::AbstractVector{<:AbstractWorlds})
     supp_labels(leaf)
 end
 
-function apply_proba(tree::DTInternal, Xs, i_instance::Integer, worlds::AbstractVector{<:AbstractWorldSet})
+function apply_proba(tree::DTInternal, Xs, i_instance::Integer, worlds::AbstractVector{<:AbstractWorlds})
     @logmsg LogDetail "applying branch..."
     @logmsg LogDetail " worlds" worlds
     (satisfied,new_worlds) =

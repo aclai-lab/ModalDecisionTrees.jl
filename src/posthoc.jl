@@ -264,7 +264,7 @@ function train_functional_leaves(
     kwargs...,
 )
     # World sets for (dataset, modality, instance)
-    worlds = Vector{Vector{Vector{<:WST} where {WorldType<:AbstractWorld,WST<:WorldSet{WorldType}}}}([
+    worlds = Vector{Vector{Vector{<:WST} where {WorldType<:AbstractWorld,WST<:Vector{WorldType}}}}([
         ModalDecisionTrees.initialworldsets(X, initconditions(tree))
     for (X,Y) in datasets])
     DTree(train_functional_leaves(root(tree), worlds, datasets, args...; kwargs...), worldtypes(tree), initconditions(tree))
@@ -273,7 +273,7 @@ end
 # At internal nodes, a functional model is trained by calling a callback function, and the leaf is created
 function train_functional_leaves(
     node::DTInternal{L},
-    worlds::AbstractVector{<:AbstractVector{<:AbstractVector{<:AbstractWorldSet}}},
+    worlds::AbstractVector{<:AbstractVector{<:AbstractVector{<:AbstractWorlds}}},
     datasets::AbstractVector{D},
     args...;
     kwargs...,
@@ -283,8 +283,8 @@ function train_functional_leaves(
     datasets_l = D[]
     datasets_r = D[]
 
-    worlds_l = AbstractVector{<:AbstractVector{<:AbstractWorldSet}}[]
-    worlds_r = AbstractVector{<:AbstractVector{<:AbstractWorldSet}}[]
+    worlds_l = AbstractVector{<:AbstractVector{<:AbstractWorlds}}[]
+    worlds_r = AbstractVector{<:AbstractVector{<:AbstractWorlds}}[]
 
     for (i_dataset,(X,Y)) in enumerate(datasets)
 
@@ -329,7 +329,7 @@ end
 # At leaves, a functional model is trained by calling a callback function, and the leaf is created
 function train_functional_leaves(
     leaf::AbstractDecisionLeaf{L},
-    worlds::AbstractVector{<:AbstractVector{<:AbstractVector{<:AbstractWorldSet}}},
+    worlds::AbstractVector{<:AbstractVector{<:AbstractVector{<:AbstractWorlds}}},
     datasets::AbstractVector{<:Tuple{Any,AbstractVector}};
     train_callback::Function,
 ) where {L<:Label}

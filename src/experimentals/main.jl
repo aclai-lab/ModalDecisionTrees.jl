@@ -26,12 +26,12 @@ using SoleModels: nfeatures, nrelations,
 using SoleModels: scalarlogiset
 
 using SoleModels: AbstractWorld, AbstractRelation
-using SoleModels: AbstractWorldSet, WorldSet
+using SoleModels: AbstractWorlds, Worlds
 
 using SoleLogics: FullDimensionalFrame
 using SoleModels.DimensionalDatasets
 using SoleModels: MultiLogiset
-using SoleModels: WorldSet
+using SoleModels: Worlds
 
 
 using SoleModels: worldtype

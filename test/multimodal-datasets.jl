@@ -75,10 +75,10 @@ X_images1 = DataFrame(
 _size.(X_images1)
 
 logiset = scalarlogiset(X_images1[:,Not(:ID)]; use_onestep_memoization=true, conditions = [
-    ScalarMetaCondition(UnivariateMax{Float64}(1), ≥),
-    ScalarMetaCondition(UnivariateMax{Float64}(1), <),
-    ScalarMetaCondition(UnivariateMin{Float64}(1), ≥),
-    ScalarMetaCondition(UnivariateMin{Float64}(1), <),
+    ScalarMetaCondition(UnivariateMax(1), ≥),
+    ScalarMetaCondition(UnivariateMax(1), <),
+    ScalarMetaCondition(UnivariateMin(1), ≥),
+    ScalarMetaCondition(UnivariateMin(1), <),
 ], relations = [globalrel])
 ModalDecisionTrees.build_tree(logiset, y)
 ModalDecisionTrees.build_tree(logiset, y;
