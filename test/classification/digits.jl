@@ -2,7 +2,7 @@ using Random
 using ModalDecisionTrees
 using MLJBase
 
-include("../data/load.jl")
+include("$(dirname(dirname(pathof(ModalDecisionTrees))))/test/data/load.jl")
 
 X, y = load_digits()
 Xcube = cat(map(r->reshape(r, (8,8,1)), eachrow(X))...; dims=4)

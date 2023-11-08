@@ -70,7 +70,7 @@ cls_node = DTInternal(2, _decision, cls_leaf, cls_leaf, cls_leaf)
 
 # create node without local _decision
 # cls_node = @test_nowarn DTInternal(2, _decision, cls_leaf, cls_leaf)
-@test (@test_logs (:warn,) DTInternal(2, _decision, cls_leaf, cls_leaf))
+@test_logs (:warn,) DTInternal(2, _decision, cls_leaf, cls_leaf)
 cls_node = DTInternal(2, _decision, cls_leaf, cls_leaf)
 
 # Mixed tree

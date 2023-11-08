@@ -63,7 +63,8 @@ function translate(
         if isnothing(shortform)
             φl, φr
         else
-            dl, dr = deepcopy(modforms(shortform)), deepcopy(modforms(shortform))
+            dl, dr = Dict{Int64,SoleLogics.SyntaxTree}(deepcopy(modforms(shortform))), Dict{Int64,SoleLogics.SyntaxTree}(deepcopy(modforms(shortform)))
+
             dl[i_modality(node)] = modforms(φl)[i_modality(node)]
             dr[i_modality(node)] = modforms(φr)[i_modality(node)]
             MultiFormula(dl), MultiFormula(dr)

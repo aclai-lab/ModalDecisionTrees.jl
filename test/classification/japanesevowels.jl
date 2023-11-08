@@ -3,6 +3,7 @@ using Test
 using MLJ
 using ModalDecisionTrees
 using SoleModels
+using SoleData
 using Random
 
 # A Modal Decision Tree with ≥ 4 samples at leaf
