@@ -110,7 +110,7 @@ p = randperm(Random.MersenneTwister(1), N)
 train_idxs, test_idxs = p[1:round(Int, N*.8)], p[round(Int, N*.8)+1:end]
 
 
-mach = @test_nowarn machine(t, modality(multilogiset, 1), y)
+mach = @test_logs (:warn,) machine(t, modality(multilogiset, 1), y)
 
 MLJ.fit!(mach, rows=train_idxs)
 
@@ -118,7 +118,7 @@ yhat = MLJ.predict_mode(mach, rows=test_idxs)
 acc = sum(yhat .== y[test_idxs])/length(yhat)
 @test MLJ.kappa(yhat, y[test_idxs]) > 0.5
 
-mach = @test_nowarn machine(t, multilogiset, y)
+mach = @test_logs (:warn,) machine(t, multilogiset, y)
 
 # Fit
 MLJ.fit!(mach, rows=train_idxs)
@@ -126,6 +126,8 @@ MLJ.fit!(mach, rows=train_idxs)
 yhat = MLJ.predict_mode(mach, rows=test_idxs)
 acc = sum(yhat .== y[test_idxs])/length(yhat)
 MLJ.kappa(yhat, y[test_idxs]) > 0.5
+
+@test_nowarn yhat = MLJ.predict_mode(mach, multilogiset)
 
 @test_nowarn prune(fitted_params(mach).rawmodel, simplify=true)
 @test_nowarn prune(fitted_params(mach).rawmodel, simplify=true, min_samples_leaf = 20)
