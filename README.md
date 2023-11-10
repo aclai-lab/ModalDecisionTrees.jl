@@ -31,7 +31,7 @@ Additionally, these models:
 
 <!-- [![](https://img.youtube.com/vi/8F1vZsl8Zvg/0.jpg)](https://youtu.be/8F1vZsl8Zvg) -->
 <div align="center">
-<a href="https://youtu.be/8F1vZsl8Zvg">
+<a target="_blank" href="https://youtu.be/8F1vZsl8Zvg">
   <img src="https://img.youtube.com/vi/8F1vZsl8Zvg/0.jpg">
 </a>
 </div>

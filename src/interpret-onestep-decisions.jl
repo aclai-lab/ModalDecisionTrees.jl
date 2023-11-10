@@ -85,7 +85,7 @@ function modalstep(
         end
 
         for w in acc_worlds
-            if checkcondition(value(atom(φ)), X, i_instance, w)
+            if checkcondition(value(value(φ)), X, i_instance, w)
                 # @logmsg LogDetail " Found world " w ch_readWorld ... ch_readWorld(w, channel)
                 satisfied = true
                 push!(new_worlds, w)
@@ -218,7 +218,7 @@ Base.@propagate_inbounds @resumable function generate_propositional_feasible_dec
                 #   continue
                 # end
                 # @logmsg LogDetail " Test operator $(metacondition)"
-                # Look for the best threshold 'a', as in propositions like "feature >= a"
+                # Look for the best threshold 'a', as in atoms like "feature >= a"
                 for threshold in aggr_domain
                     decision = SimpleDecision(ScalarExistentialFormula(relation, ScalarCondition(metacondition, threshold)))
                     # @logmsg LogDebug " Testing decision: $(displaydecision(decision))"
@@ -311,7 +311,7 @@ Base.@propagate_inbounds @resumable function generate_modal_feasible_decisions(
                 for metacondition in aggrsnops[aggregator]
                     # @logmsg LogDetail " Test operator $(metacondition)"
 
-                    # Look for the best threshold 'a', as in propositions like "feature >= a"
+                    # Look for the best threshold 'a', as in atoms like "feature >= a"
                     for threshold in aggr_domain
                         decision = SimpleDecision(ScalarExistentialFormula(relation, ScalarCondition(metacondition, threshold)))
                         # @logmsg LogDebug " Testing decision: $(displaydecision(decision))"
@@ -404,7 +404,7 @@ Base.@propagate_inbounds @resumable function generate_global_feasible_decisions(
             for metacondition in aggrsnops[aggregator]
                 # @logmsg LogDetail " Test operator $(metacondition)"
 
-                # Look for the best threshold 'a', as in propositions like "feature >= a"
+                # Look for the best threshold 'a', as in atoms like "feature >= a"
                 for threshold in aggr_domain
                     decision = SimpleDecision(ScalarExistentialFormula(relation, ScalarCondition(metacondition, threshold)))
                     # @logmsg LogDebug " Testing decision: $(displaydecision(decision))"

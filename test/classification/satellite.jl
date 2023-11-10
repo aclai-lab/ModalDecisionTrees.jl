@@ -90,8 +90,8 @@ function knowntoimply(t1::SyntaxTree, t2::SyntaxTree)
     elseif token(t1) == _diamg && token(t2) == _diamg
         knowntoimply(children(t1)[1], children(t2)[1])
     elseif token(t1) isa Atom{<:ScalarCondition} && token(t2) isa Atom{<:ScalarCondition}
-        c1 = atom(token(t1))
-        c2 = atom(token(t2))
+        c1 = value(token(t1))
+        c2 = value(token(t2))
         # if SoleModels.metacond(c1) == SoleModels.metacond(c2)
         #     @show c1, c2
         #     @show SoleModels.test_operator(c1)(SoleModels.threshold(c1), SoleModels.threshold(c2))
