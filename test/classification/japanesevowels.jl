@@ -46,7 +46,8 @@ acc = sum(yhat .== y[test_idxs])/length(yhat)
 
 @test_throws BoundsError report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = [["a", "b"]]))
 @test_throws BoundsError report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = ["a", "b"]))
-@test_logs (:warn,) report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = 'A':('A'+nvars)))
+# @test_logs (:warn,) report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = 'A':('A'+nvars)))
+@test_nowarn report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = 'A':('A'+nvars)))
 
 @test_nowarn printmodel(report(mach).model)
 @test_nowarn listrules(report(mach).model)
@@ -103,20 +104,28 @@ multilogiset, var_grouping = ModalDecisionTrees.wrapdataset(X, ModalDecisionTree
 # A Modal Decision Tree
 t = ModalDecisionTree(min_samples_split=100, post_prune = true, merge_purity_threshold = true)
 
-@test_broken mach = machine(t, multilogiset, y)
-
-
 N = length(y)
 
 p = randperm(Random.MersenneTwister(1), N)
 train_idxs, test_idxs = p[1:round(Int, N*.8)], p[round(Int, N*.8)+1:end]
 
-# Fit
-@test_broken MLJ.fit!(mach, rows=train_idxs)
+
+mach = @test_nowarn machine(t, modality(multilogiset, 1), y)
+
+MLJ.fit!(mach, rows=train_idxs)
 
 yhat = MLJ.predict_mode(mach, rows=test_idxs)
 acc = sum(yhat .== y[test_idxs])/length(yhat)
-MLJ.kappa(yhat, y[test_idxs])
+@test MLJ.kappa(yhat, y[test_idxs]) > 0.5
+
+mach = @test_nowarn machine(t, multilogiset, y)
+
+# Fit
+MLJ.fit!(mach, rows=train_idxs)
+
+yhat = MLJ.predict_mode(mach, rows=test_idxs)
+acc = sum(yhat .== y[test_idxs])/length(yhat)
+MLJ.kappa(yhat, y[test_idxs]) > 0.5
 
 @test_nowarn prune(fitted_params(mach).rawmodel, simplify=true)
 @test_nowarn prune(fitted_params(mach).rawmodel, simplify=true, min_samples_leaf = 20)

@@ -41,12 +41,13 @@ test_suites = [
         # "regression/random.jl",
     ]),
     ("Miscellaneous", [
-        "multimodal-datasets.jl"
-        "multiformulas-construction.jl"
+        "multimodal-datasets-multiformulas-construction.jl"
     ]),
     ("Other", [
         "other/parse-and-translate.jl"
     ]),
+
+    ("Pluto Demo", ["$(dirname(dirname(pathof(ModalDecisionTrees))))/pluto-demo.jl", ]),
 ]
 
 @testset "ModalDecisionTrees.jl" begin

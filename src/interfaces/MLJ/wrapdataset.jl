@@ -18,6 +18,14 @@ function wrapdataset(
     force_var_grouping::Union{Nothing,AbstractVector{<:AbstractVector}} = nothing;
     passive_mode = false
 )
+    if X isa MultiLogiset
+        if !isnothing(force_var_grouping)
+            @warn "Ignoring var_grouping $(force_var_grouping) (a MultiLogiset was provided)."
+        end
+        multimodal_X, var_grouping = X, nothing
+        return multimodal_X, var_grouping
+    end
+
     # Vector of instance values
     # Matrix instance x variable -> Matrix variable x instance
     if X isa AbstractVector

@@ -4,14 +4,14 @@ function parse_tree(
     check_format = true,
     _depth = 0,
     offset = 0,
-    openbr  = SoleModels.UVF_OPENING_BRACKET,
-    closebr = SoleModels.UVF_CLOSING_BRACKET,
+    openpar  = SoleModels.UVF_OPENING_PARENTHESIS,
+    closepar = SoleModels.UVF_CLOSING_PARENTHESIS,
     varprefix = SoleModels.UVF_VARPREFIX,
     worldtypes = Type{SL.AbstractWorld}[],
     initconditions = MDT.InitialCondition[],
 )
-    @assert openbr in ["[", "("] "Unexpected opening bracket: $(openbr)"
-    @assert closebr in ["]", ")"] "Unexpected closing bracket: $(closebr)"
+    @assert openpar in ["[", "("] "Unexpected opening bracket: $(openpar)"
+    @assert closepar in ["]", ")"] "Unexpected closing bracket: $(closepar)"
 
     @assert length(worldtypes) > 0 "Please, provide argument `worldtypes`."
     @assert length(initconditions) > 0 "Please, provide argument `initconditions`."
@@ -28,8 +28,8 @@ function _parse_tree(
     _depth = 0,
     offset = 0,
     varprefix = SoleModels.UVF_VARPREFIX,
-    openbr = SoleModels.UVF_OPENING_BRACKET,
-    closebr = SoleModels.UVF_CLOSING_BRACKET,
+    openpar = SoleModels.UVF_OPENING_PARENTHESIS,
+    closepar = SoleModels.UVF_CLOSING_PARENTHESIS,
 )
     ########################################################################################
     ########################################################################################
@@ -45,7 +45,7 @@ function _parse_tree(
     _indentation_ex = "[ │]*[✔✘]"
     _metrics_ex = "\\(\\S*.*\\)"
     _feature_ex             = "(?:\\S+)\\s+(?:(?:⫹|⫺|⪳|⪴|⪵|⪶|↗|↘|>|<|=|≤|≥|<=|>=))"
-    _normal_feature_ex_capturing    = "^(\\S*)\\$openbr$V(\\d+)\\$closebr\\s+((?:>|<|=|≤|≥|<=|>=))\$"
+    _normal_feature_ex_capturing    = "^(\\S*)\\$openpar$V(\\d+)\\$closepar\\s+((?:>|<|=|≤|≥|<=|>=))\$"
     _propositional_feature_ex_capturing    = "^$V(\\d+)\\s+((?:>|<|=|≤|≥|<=|>=))\$"
     _special_feature_ex_capturing   = "^$V(\\d+)\\s+((?:⫹|⫺|⪳|⪴|⪵|⪶|↗|↘))\$"
     _decision_ex            = "$(_feature_ex)\\s+(?:$(_threshold_ex))"
