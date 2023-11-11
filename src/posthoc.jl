@@ -60,7 +60,7 @@ function prune(node::DTInternal{L}; depth = nothing, kwargs...) where {L}
     end
 
     function _allpredictions(n)
-        @warn "Couldn't simplify tree with node of type $(typeof(n))"
+        @warn "Could not simplify tree with node of type $(typeof(n))"
     end
     _allpredictions(l::DTLeaf) = [prediction(l)]
     _allpredictions(n::DTInternal) = [_allpredictions(left(n))..., _allpredictions(right(n))...]

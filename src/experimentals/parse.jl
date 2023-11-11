@@ -207,7 +207,7 @@ function _parse_tree(
             # println(match(Regex("^\\s*($(_indentation_ex)\\s+)?({(\\d+)}\\s+)?$(decision_ex)"), _line))
             # println(match(Regex("^\\s*($(_indentation_ex)\\s+)?({(\\d+)}\\s+)?$(decision_ex)\\s+$(leaf_ex)"), _line))
             
-            @assert xor(is_blank, is_split, is_leaf) "Couldn't parse line $(i_line+offset): \"$(line)\". $((is_blank, is_split, is_leaf))"
+            @assert xor(is_blank, is_split, is_leaf) "Could not parse line $(i_line+offset): \"$(line)\". $((is_blank, is_split, is_leaf))"
         end
     end 
 

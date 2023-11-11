@@ -331,7 +331,7 @@ Base.@propagate_inbounds @inline function split_node!(
         if (
             # If all instances belong to the same class, make this a leaf
                 (nc[node.prediction]       == nt)
-            # No binary split can honor min_samples_leaf if there aren't as many as
+            # No binary split can honor min_samples_leaf if there are not as many as
             #  min_samples_leaf*2 instances in the first place
              || (min_samples_leaf * 2 >  _ninstances)
             # If the node is pure enough, avoid splitting # TODO rename purity to loss
@@ -354,7 +354,7 @@ Base.@propagate_inbounds @inline function split_node!(
         end
     else
         if (
-            # No binary split can honor min_samples_leaf if there aren't as many as
+            # No binary split can honor min_samples_leaf if there are not as many as
             #  min_samples_leaf*2 instances in the first place
                 (min_samples_leaf * 2 >  _ninstances)
           # equivalent to old_purity > -1e-7
@@ -589,7 +589,7 @@ Base.@propagate_inbounds @inline function split_node!(
                         # Variance
                         # var = (x)->sum((x.-StatsBase.mean(x)).^2) / (length(x)-1)
                         # purity_times_nt = - (nr * var(rsums)) + nl * var(lsums))
-                        # Simil-variance that is easier to compute but it doesn't work with few samples on the leaves
+                        # Simil-variance that is easier to compute but it does not work with few samples on the leaves
                         # var = (x)->sum((x.-StatsBase.mean(x)).^2)
                         # purity_times_nt = - (var(rsums) + var(lsums))
                         # println("purity_times_nt: $(purity_times_nt)")
@@ -987,17 +987,17 @@ end
     end
 
     if SoleData.hasnans(Xs)
-        error("This algorithm doesn't allow NaN values")
+        error("This algorithm does not allow NaN values")
     end
 
     if nothing in Y
-        error("This algorithm doesn't allow nothing values in Y")
+        error("This algorithm does not allow nothing values in Y")
     elseif eltype(Y) <: Number && any(isnan.(Y))
-        error("This algorithm doesn't allow NaN values in Y")
+        error("This algorithm does not allow NaN values in Y")
     elseif nothing in W
-        error("This algorithm doesn't allow nothing values in W")
+        error("This algorithm does not allow nothing values in W")
     elseif any(isnan.(W))
-        error("This algorithm doesn't allow NaN values in W")
+        error("This algorithm does not allow NaN values in W")
     end
 
 end

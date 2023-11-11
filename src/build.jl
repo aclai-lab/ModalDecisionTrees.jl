@@ -40,7 +40,7 @@ function build_stump(
 ) where {L<:Label,U}
     params = NamedTuple(kwargs)
     @assert !haskey(params, :max_depth) || params.max_depth == 1 "build_stump " *
-        "doesn't allow max_depth != 1."
+        "does not allow max_depth != 1."
     build_tree(X, Y, W; max_depth = 1, kwargs...)
 end
 
