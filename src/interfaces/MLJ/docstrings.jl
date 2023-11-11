@@ -6,14 +6,17 @@
 # "(e.g., images and time-series)." *
 descr   = """
 The symbolic, probabilistic model is able to extract logical descriptions of the data
-in terms of logical formulas (see
-[`SoleLogics.jl`](https://github.com/aclai-lab/SoleLogics.jl)) on atoms that are
+in terms of logical formulas
+(see [SoleLogics.jl](https://github.com/aclai-lab/SoleLogics.jl)) on atoms that are
 scalar conditions on the variables (or features);
 for example, min[V2] ≥ 10, that is, "the minimum of variable 2 is not less than 10".
 As such, the model is suitable for tasks that involve non-scalar data,
 but require some level of interpretable and transparent modeling.
 At the moment, the only loss functions available are Shannon's entropy (classification) and variance (regression).
 """
+
+# TODO link in docstring?
+# [SoleLogics.jl](https://github.com/aclai-lab/SoleLogics.jl)) on atoms that are
 
 const MDT_ref = "" *
     "Manzella et al. (2021). \"Interval Temporal Random Forests with an " *
