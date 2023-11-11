@@ -85,7 +85,7 @@ function modalstep(
         end
 
         for w in acc_worlds
-            if checkcondition(value(value(φ)), X, i_instance, w)
+            if checkcondition(atom(value(φ)), X, i_instance, w)
                 # @logmsg LogDetail " Found world " w ch_readWorld ... ch_readWorld(w, channel)
                 satisfied = true
                 push!(new_worlds, w)
