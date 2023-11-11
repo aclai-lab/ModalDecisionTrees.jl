@@ -10,5 +10,5 @@ Documentation for [ModalDecisionTrees](https://github.com/aclai-lab/ModalDecisio
 ```
 
 ```@autodocs
-Modules = [ModalDecisionTrees]
+Modules = [ModalDecisionTrees, ModalDecisionTrees.MLJInterface, ModalDecisionTrees.experimentals]
 ```

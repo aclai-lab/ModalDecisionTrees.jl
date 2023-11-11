@@ -4,7 +4,7 @@ using Documenter
 DocMeta.setdocmeta!(ModalDecisionTrees, :DocTestSetup, :(using ModalDecisionTrees); recursive=true)
 
 makedocs(;
-    modules=[ModalDecisionTrees],
+    modules=[ModalDecisionTrees, ModalDecisionTrees.MLJInterface, ModalDecisionTrees.experimentals],
     authors="Federico Manzella, Giovanni Pagliarini, Eduard I. Stan",
     repo=Documenter.Remotes.GitHub("aclai-lab", "ModalDecisionTrees.jl"),
     sitename="ModalDecisionTrees.jl",
