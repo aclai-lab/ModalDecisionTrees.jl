@@ -101,7 +101,7 @@ function knowntoimply(t1::SyntaxTree, t2::SyntaxTree)
         false
     end
 end
-function simplify(φ::SyntaxTree)
+function _simplify(φ::SyntaxTree)
     if token(φ) in [CONJUNCTION, DISJUNCTION]
         φ = LeftmostLinearForm(φ)
         chs = children(φ)
@@ -121,9 +121,9 @@ function simplify(φ::SyntaxTree)
     end
 end
 
-simplify.(fsnorm)
+_simplify.(fsnorm)
 
-syntaxstring.(simplify.(fsnorm)) .|> println;
+syntaxstring.(_simplify.(fsnorm)) .|> println;
 
 printmodel.(listrules(report(mach).model); show_metrics = true, threshold_digits = 2);
 mae = MLJ.mae(MLJ.predict_mean(mach, rows=test_idxs), y[test_idxs])

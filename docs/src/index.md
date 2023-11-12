@@ -4,7 +4,7 @@ CurrentModule = ModalDecisionTrees
 
 # ModalDecisionTrees
 
-Documentation for [ModalDecisionTrees](https://github.com/aclai-lab/ModalDecisionTrees.jl).
+Welcome to the documentation for [ModalDecisionTrees](https://github.com/aclai-lab/ModalDecisionTrees.jl).
 
 ```@index
 ```

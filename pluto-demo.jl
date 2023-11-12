@@ -14,7 +14,7 @@ begin
 	using SoleModels
 
 	# Load an example time-series classification dataset as a tuple (DataFrame, Vector{String})
-	X_df2, y2 = SoleModels.load_arff_dataset("NATOPS")
+	X, y = SoleModels.load_arff_dataset("NATOPS")
 end
 
 # ╔═╡ 65141ec2-4da9-11ee-2a0a-8974a3ec37da
@@ -34,18 +34,18 @@ model = ModalDecisionTree(; relations = :IA7)
 # ╔═╡ a00c4abe-5534-4c42-9464-d5a6867b9802
 begin
     # Randomly split the data: 20% training, 80% testing
-    N = nrow(X_df2)
+    N = nrow(X)
     perm = randperm(Random.MersenneTwister(1), N)
     train_idxs, test_idxs = perm[1:round(Int, N*.2)], perm[round(Int, N*.2)+1:end]
 
-    mach = machine(model, X_df2, y2)
+    mach = machine(model, X, y)
 
     # Train.
     @time fit!(mach; rows=train_idxs)
 
     # Compute accuracy
-    yhat = predict_mode(mach, X_df2[test_idxs,:])
-    MLJ.accuracy(yhat, y2[test_idxs])
+    yhat = predict_mode(mach, X[test_idxs,:])
+    MLJ.accuracy(yhat, y[test_idxs])
 end
 
 
@@ -71,25 +71,25 @@ begin
 	ruleset = listrules(tree_train);
 
 	# Print ruleset
-	printmodel.(ruleset; show_metrics = true, threshold_digits = 2, variable_names_map = [names(X_df2)], parenthesize_atoms = false);
+	printmodel.(ruleset; show_metrics = true, threshold_digits = 2, variable_names_map = [names(X)], parenthesize_atoms = false);
 end
 
 # ╔═╡ 00310a1c-c4f4-43bc-a60c-a6113434f242
 begin
 	# Sprinkle the model with the test instances!
-	predictions, tree_test = report(mach).sprinkle(X_df[test_idxs,:], y2[test_idxs]);
+	predictions, tree_test = report(mach).sprinkle(X[test_idxs,:], y[test_idxs]);
 
 	# Extract ruleset and print its metrics
 	ruleset_test = listrules(tree_test)
 
-	printmodel.(ruleset_test; show_metrics = true, threshold_digits = 2, variable_names_map = [names(X_df2)]);
+	printmodel.(ruleset_test; show_metrics = true, threshold_digits = 2, variable_names_map = [names(X)]);
 end
 
 # ╔═╡ b3417b90-c910-407a-939b-5190602c5899
 begin
 	# In the classification scenario, rules for the same class can be joined via logical conjunction (∨)
 	joined_ruleset_test = joinrules(ruleset_test)
-	printmodel.(joined_ruleset_test; show_metrics = true, variable_names_map = [names(X_df2)], threshold_digits = 3);
+	printmodel.(joined_ruleset_test; show_metrics = true, variable_names_map = [names(X)], threshold_digits = 3);
 end
 
 # ╔═╡ 3cdf0a35-edd0-4a02-9410-94e828d0f519
@@ -100,24 +100,6 @@ evaluate!(mach,
         verbosity=0,
         check_measure=false
 )
-
-
-# ╔═╡ a900782f-0d2a-47ed-a44d-569acf87c280
-
-
-# ╔═╡ 1ea1d21e-d2c8-40f1-8b81-fe99504c2eed
-begin
-	# Create a random formula
-	φ4 = randformula(Random.MersenneTwister(107), 3, [p,q], SoleLogics.BASE_PROPOSITIONAL_OPERATORS)
-
-	φ4 |> syntaxstring |> println
-
-	# Minimize the formula (according to pre-defined, simple rules, e.g., De Morgan)
-	normalize(φ4) |> syntaxstring |> println
-end
-
-# ╔═╡ bdc69bff-78c2-4e0b-b77b-64d0468af2d6
-
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1323,6 +1305,5 @@ version = "17.4.0+0"
 # ╠═00310a1c-c4f4-43bc-a60c-a6113434f242
 # ╠═b3417b90-c910-407a-939b-5190602c5899
 # ╠═3cdf0a35-edd0-4a02-9410-94e828d0f519
-# ╠═1ea1d21e-d2c8-40f1-8b81-fe99504c2eed
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
