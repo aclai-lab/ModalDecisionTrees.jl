@@ -321,7 +321,7 @@ ModalRandomForest
 # See also
 # [DecisionTree.jl](https://github.com/bensadeghi/DecisionTree.jl) and
 # the unwrapped model type
-# [`MLJDecisionTreeInterface.DecisionTree.DecisionTreeRegressor`](@ref).
+# [MLJDecisionTreeInterface.DecisionTree.DecisionTreeRegressor](@ref).
 # """
 # DecisionTreeRegressor
 
@@ -339,4 +339,4 @@ ModalRandomForest
 # See also
 # [DecisionTree.jl](https://github.com/bensadeghi/DecisionTree.jl) and
 # the unwrapped model type
-# [`MLJDecisionTreeInterface.DecisionTree.RandomForestRegressor`](@ref).
+# [MLJDecisionTreeInterface.DecisionTree.RandomForestRegressor](@ref).
