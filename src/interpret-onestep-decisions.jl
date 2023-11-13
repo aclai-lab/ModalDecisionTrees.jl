@@ -246,7 +246,7 @@ Base.@propagate_inbounds @resumable function generate_modal_feasible_decisions(
     _relations = relations(X)
     _features = features(X)
     
-    # For each relational operator
+    # For each relational connective
     for i_relation in modal_relations_inds
         relation = _relations[i_relation]
         @logmsg LogDebug "Relation $(relation)..."

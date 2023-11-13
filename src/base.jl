@@ -33,7 +33,7 @@ function initialworldset(::AbstractMultiModalFrame{W}, initcond::StartAtWorld{W}
 end
 
 anchor(φ::AbstractSyntaxStructure, ::StartWithoutWorld) = φ
-anchor(φ::AbstractSyntaxStructure, ::StartAtCenter) = DiamondRelationalOperator(SoleLogics.tocenterrel)(φ)
+anchor(φ::AbstractSyntaxStructure, ::StartAtCenter) = DiamondRelationalConnective(SoleLogics.tocenterrel)(φ)
 anchor(φ::AbstractSyntaxStructure, cm::StartAtWorld) = error("TODO expand code")
 
 function initialworldset(

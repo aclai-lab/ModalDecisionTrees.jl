@@ -79,8 +79,8 @@ fsnorm = map(f->normalize(modforms(f)[1]; allow_atom_flipping = true), fs)
 function knowntoimply(t1::SyntaxTree, t2::SyntaxTree)
     # @show t1
     # @show t2
-    _diamg = SoleLogics.DiamondRelationalOperator(globalrel)
-    _boxg = SoleLogics.BoxRelationalOperator(globalrel)
+    _diamg = SoleLogics.DiamondRelationalConnective(globalrel)
+    _boxg = SoleLogics.BoxRelationalConnective(globalrel)
     @assert arity(_diamg) == 1
     @assert arity(_boxg) == 1
     if token(t1) == _boxg && token(t2) == _diamg

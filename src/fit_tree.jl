@@ -151,7 +151,7 @@ end
 #   # end
 
 
-#   # Binary relations (= unary modal operators)
+#   # Binary relations (= unary modal connectives)
 #   # Note: the identity relation is the first, and it is the one representing
 #   #  propositional splits.
 

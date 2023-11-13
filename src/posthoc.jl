@@ -416,7 +416,7 @@ end
 ############################################################################################
 
 """
-Squashes a vector of `DTNode`'s into a single leaf using `bestguess`.
+Squashes a vector of `DTNode`s into a single leaf using `bestguess`.
 """
 function squashtoleaf(nodes::AbstractVector{<:DTNode})
     squashtoleaf(map((n)->(n isa AbstractDecisionLeaf ? n : this(n)), nodes))
