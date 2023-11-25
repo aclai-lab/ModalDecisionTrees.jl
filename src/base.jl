@@ -34,7 +34,7 @@ end
 
 anchor(φ::AbstractSyntaxStructure, ::StartWithoutWorld) = φ
 anchor(φ::AbstractSyntaxStructure, ::StartAtCenter) = DiamondRelationalConnective(SoleLogics.tocenterrel)(φ)
-anchor(φ::AbstractSyntaxStructure, cm::StartAtWorld) = error("TODO expand code")
+anchor(φ::AbstractSyntaxStructure, cm::StartAtWorld) = DiamondRelationalConnective(SoleLogics.AtWorldRelation(cm.w))(φ)
 
 function initialworldset(
     X,
