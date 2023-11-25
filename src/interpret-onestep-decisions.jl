@@ -85,7 +85,7 @@ function modalstep(
         end
 
         for w in acc_worlds
-            if checkcondition(value(value(φ)), X, i_instance, w)
+            if checkcondition(value(atom(φ)), X, i_instance, w)
                 # @logmsg LogDetail " Found world " w ch_readWorld ... ch_readWorld(w, channel)
                 satisfied = true
                 push!(new_worlds, w)
@@ -246,7 +246,7 @@ Base.@propagate_inbounds @resumable function generate_modal_feasible_decisions(
     _relations = relations(X)
     _features = features(X)
     
-    # For each relational operator
+    # For each relational connective
     for i_relation in modal_relations_inds
         relation = _relations[i_relation]
         @logmsg LogDebug "Relation $(relation)..."

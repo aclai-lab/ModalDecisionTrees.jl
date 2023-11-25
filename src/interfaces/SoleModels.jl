@@ -150,11 +150,11 @@ function get_atom_inv(φ::ScalarExistentialFormula)
 end
 
 function get_diamond_op(φ::ScalarExistentialFormula)
-    return DiamondRelationalOperator{typeof(relation(φ))}()
+    return DiamondRelationalConnective{typeof(relation(φ))}()
 end
 
 function get_box_op(φ::ScalarExistentialFormula)
-    return BoxRelationalOperator{typeof(relation(φ))}()
+    return BoxRelationalConnective{typeof(relation(φ))}()
 end
 
 
@@ -259,7 +259,7 @@ end
 # function isimplicative(f::Formula)
 #     t = tree(f)
 #     return token(t) == → ||
-#         (any(isa.(token(t), [BoxRelationalOperator, □])) && first(children(t)) == →)
+#         (any(isa.(token(t), [BoxRelationalConnective, □])) && first(children(t)) == →)
 # end
 
 # function pathformula(ancestors::Vector{<:DTInternal{L,<:DoubleEdgedDecision}}, leaf::DTNode{L}) where {L}
@@ -292,9 +292,9 @@ end
 #         else
 #             relation = relation(_lambda)
 #             if !xor(agreement, !isimplicative(f2))
-#                 DiamondRelationalOperator(relation)()(f1 ∧ f2)
+#                 DiamondRelationalConnective(relation)()(f1 ∧ f2)
 #             else
-#                 BoxRelationalOperator(relation)()(f1 → f2)
+#                 BoxRelationalConnective(relation)()(f1 → f2)
 #             end
 #         end
 #     end

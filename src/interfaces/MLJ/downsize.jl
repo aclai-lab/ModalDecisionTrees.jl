@@ -66,12 +66,16 @@ function make_downsizing_function(::ForestModel)
     end
 end
 
+_mean(::Type{T}, vals::AbstractArray{T}) where {T<:Number} = mean(vals)
+_mean(::Type{T1}, vals::AbstractArray{T2}) where {T1<:AbstractFloat,T2<:Integer} = T1(mean(vals))
+_mean(::Type{T1}, vals::AbstractArray{T2}) where {T1<:Integer,T2<:AbstractFloat} = round(T1, mean(vals))
+
 function moving_average(
     X::AbstractArray{T,1};
     kwargs...
 ) where {T}
     npoints = length(X)
-    return [mean(X[idxs]) for idxs in movingwindow(npoints; kwargs...)]
+    return [_mean(T, X[idxs]) for idxs in movingwindow(npoints; kwargs...)]
 end
 
 function moving_average(
@@ -80,7 +84,7 @@ function moving_average(
     relative_overlap::AbstractFloat = .5,
 ) where {T}
     npoints = length(X)
-    return [mean(X[idxs]) for idxs in movingwindow(npoints; nwindows = nwindows, relative_overlap = relative_overlap)]
+    return [_mean(T, X[idxs]) for idxs in movingwindow(npoints; nwindows = nwindows, relative_overlap = relative_overlap)]
 end
 
 function moving_average(
@@ -92,7 +96,7 @@ function moving_average(
     new_X = similar(X, (nwindows, n_variables, n_instances))
     for i_instance in 1:n_instances
         for i_variable in 1:n_variables
-            new_X[:, i_variable, i_instance] .= [mean(X[idxs, i_variable, i_instance]) for idxs in movingwindow(npoints; nwindows = nwindows, relative_overlap = relative_overlap)]
+            new_X[:, i_variable, i_instance] .= [_mean(T, X[idxs, i_variable, i_instance]) for idxs in movingwindow(npoints; nwindows = nwindows, relative_overlap = relative_overlap)]
         end
     end
     return new_X
@@ -109,7 +113,7 @@ function moving_average(
     new_X = similar(X, (new_channelsize..., n_variables, n_instances))
     for i_instance in 1:n_instances
         for i_variable in 1:n_variables
-            new_X[:, :, i_variable, i_instance] .= [mean(X[idxs1, idxs2, i_variable, i_instance]) for idxs1 in windows_1, idxs2 in windows_2]
+            new_X[:, :, i_variable, i_instance] .= [_mean(T, X[idxs1, idxs2, i_variable, i_instance]) for idxs1 in windows_1, idxs2 in windows_2]
         end
     end
     return new_X
