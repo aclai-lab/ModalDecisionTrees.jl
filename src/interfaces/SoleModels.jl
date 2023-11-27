@@ -55,7 +55,6 @@ function translate(
     ancestors::Vector{<:DTInternal} = DTInternal[],
     info = (;),
     shortform::Union{Nothing,MultiFormula} = nothing,
-    isleft::Bool = true,
 )
     new_ancestors = [ancestors..., node]
     φl = pathformula(new_ancestors, left(node), false)
@@ -83,12 +82,10 @@ function translate(
         ))
     end
 
-    passed_ancestors = isleft ? new_ancestors : ancestors
-    φn = isleft ? φl : φr
     SoleModels.Branch(
-        build_antecedent(φn, initconditions),
-        translate(left(node), initconditions, passed_ancestors, (;), pos_shortform, true),
-        translate(right(node), initconditions, passed_ancestors, (;), neg_shortform, false),
+        build_antecedent(φl, initconditions),
+        translate(left(node), initconditions, new_ancestors, (;), pos_shortform),
+        translate(right(node), initconditions, ancestors, (;), neg_shortform),
         info
     )
 end
@@ -99,7 +96,6 @@ function translate(
     ancestors::Vector{<:DTInternal} = DTInternal[],
     info = (;),
     shortform = nothing,
-    isleft::Bool = true,
 )
     info = merge(info, (;
         supporting_labels      = ModalDecisionTrees.supp_labels(tree),
@@ -119,7 +115,6 @@ function translate(
     ancestors::Vector{<:DTInternal} = DTInternal[],
     info = (;),
     shortform = nothing,
-    isleft::Bool = true,
 )
     info = merge(info, (;
         supporting_labels      = ModalDecisionTrees.supp_labels(tree),
