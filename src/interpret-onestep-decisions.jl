@@ -151,6 +151,34 @@ Base.@propagate_inbounds @resumable function generate_feasible_decisions(
     end
 end
 
+function compute_thresh_domain(testop, aggr_thresholds::AbstractVector{U}) where {U}
+    # @show testop
+    # @show aggr_thresholds
+    thresh_domain = begin
+        thresh_domain = unique(aggr_thresholds)
+        if length(thresh_domain) == 1 # Always zero entropy
+            U[]
+        elseif testop in [≥, <] # Remove edge-case with zero entropy
+            _m = minimum(thresh_domain)
+            filter(x->x != _m, thresh_domain)
+        elseif testop in [≤, >] # Remove edge-case with zero entropy
+            _m = maximum(thresh_domain)
+            filter(x->x != _m, thresh_domain)
+        else
+            thresh_domain
+        end
+    end
+    # thresh_domain = begin
+    #     if U <: Bool
+    #         aggr_thresholds
+    #     else
+    #         setdiff(Set(aggr_thresholds),Set([typemin(U), typemax(U)]))
+    #     end
+    # end
+    # @show thresh_domain
+    return thresh_domain
+end
+
 ############################################################################################
 
 Base.@propagate_inbounds @resumable function generate_propositional_feasible_decisions(
@@ -209,15 +237,11 @@ Base.@propagate_inbounds @resumable function generate_propositional_feasible_dec
         # For each aggregator
         for (i_aggregator,aggregator) in enumerate(aggregators)
             aggr_thresholds = thresholds[i_aggregator,:]
-            aggr_domain = begin
-                if U <: Bool
-                    aggr_thresholds
-                else
-                    setdiff(Set(aggr_thresholds),Set([typemin(U), typemax(U)]))
-                end
-            end
 
             for metacondition in aggrsnops[aggregator]
+                testop = SoleModels.test_operator(metacondition)
+                thresh_domain = compute_thresh_domain(testop, aggr_thresholds)
+
                 # TODO figure out a solution to this issue: ≥ and ≤ in a propositional condition can find more or less the same optimum, so no need to check both; but which one of them should be the one on the left child, the one that makes the modal step?
                 # if dual_metacondition(metacondition) in tested_metacondition
                 #   error("Double-check this part of the code: there's a foundational issue here to settle!")
@@ -226,7 +250,7 @@ Base.@propagate_inbounds @resumable function generate_propositional_feasible_dec
                 # end
                 # @logmsg LogDetail " Test operator $(metacondition)"
                 # Look for the best threshold 'a', as in atoms like "feature >= a"
-                for threshold in aggr_domain
+                for threshold in thresh_domain
                     decision = SimpleDecision(ScalarExistentialFormula(relation, ScalarCondition(metacondition, threshold)))
                     # @logmsg LogDebug " Testing decision: $(displaydecision(decision))"
                     @yield decision, aggr_thresholds
@@ -313,20 +337,14 @@ Base.@propagate_inbounds @resumable function generate_modal_feasible_decisions(
             for (i_aggregator,(_,aggregator)) in enumerate(aggregators_with_ids)
 
                 aggr_thresholds = thresholds[i_aggregator,:]
-                aggr_domain = begin
-                    if U <: Bool
-                        aggr_thresholds
-                    else
-                        setdiff(Set(aggr_thresholds),Set([typemin(U), typemax(U)]))
-                    end
-                end
-
 
                 for metacondition in aggrsnops[aggregator]
                     # @logmsg LogDetail " Test operator $(metacondition)"
+                    testop = SoleModels.test_operator(metacondition)
+                    thresh_domain = compute_thresh_domain(testop, aggr_thresholds)
 
                     # Look for the best threshold 'a', as in atoms like "feature >= a"
-                    for threshold in aggr_domain
+                    for threshold in thresh_domain
                         decision = SimpleDecision(ScalarExistentialFormula(relation, ScalarCondition(metacondition, threshold)))
                         # @logmsg LogDebug " Testing decision: $(displaydecision(decision))"
                         @yield decision, aggr_thresholds
@@ -416,24 +434,18 @@ Base.@propagate_inbounds @resumable function generate_global_feasible_decisions(
         for (i_aggregator,(_,aggregator)) in enumerate(aggregators_with_ids)
 
             # println(aggregator)
+            # @show aggregator
 
             aggr_thresholds = thresholds[i_aggregator,:]
-            aggr_domain = begin
-                if U <: Bool
-                    aggr_thresholds
-                else
-                    setdiff(Set(aggr_thresholds),Set([typemin(U), typemax(U)]))
-                end
-            end
-            # @show aggr_thresholds
-            # @show aggr_domain
-            # @show aggrsnops[aggregator]
 
             for metacondition in aggrsnops[aggregator]
+                testop = SoleModels.test_operator(metacondition)
+                thresh_domain = compute_thresh_domain(testop, aggr_thresholds)
+
                 # @logmsg LogDetail " Test operator $(metacondition)"
 
                 # Look for the best threshold 'a', as in atoms like "feature >= a"
-                for threshold in aggr_domain
+                for threshold in thresh_domain
                     decision = SimpleDecision(ScalarExistentialFormula(relation, ScalarCondition(metacondition, threshold)))
                     # @logmsg LogDebug " Testing decision: $(displaydecision(decision))"
                     @yield decision, aggr_thresholds
