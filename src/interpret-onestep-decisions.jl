@@ -209,7 +209,14 @@ Base.@propagate_inbounds @resumable function generate_propositional_feasible_dec
         # For each aggregator
         for (i_aggregator,aggregator) in enumerate(aggregators)
             aggr_thresholds = thresholds[i_aggregator,:]
-            aggr_domain = setdiff(Set(aggr_thresholds),Set([typemin(U), typemax(U)]))
+            aggr_domain = begin
+                if U <: Bool
+                    aggr_thresholds
+                else
+                    setdiff(Set(aggr_thresholds),Set([typemin(U), typemax(U)]))
+                end
+            end
+
             for metacondition in aggrsnops[aggregator]
                 # TODO figure out a solution to this issue: ≥ and ≤ in a propositional condition can find more or less the same optimum, so no need to check both; but which one of them should be the one on the left child, the one that makes the modal step?
                 # if dual_metacondition(metacondition) in tested_metacondition
@@ -306,7 +313,14 @@ Base.@propagate_inbounds @resumable function generate_modal_feasible_decisions(
             for (i_aggregator,(_,aggregator)) in enumerate(aggregators_with_ids)
 
                 aggr_thresholds = thresholds[i_aggregator,:]
-                aggr_domain = setdiff(Set(aggr_thresholds),Set([typemin(U), typemax(U)]))
+                aggr_domain = begin
+                    if U <: Bool
+                        aggr_thresholds
+                    else
+                        setdiff(Set(aggr_thresholds),Set([typemin(U), typemax(U)]))
+                    end
+                end
+
 
                 for metacondition in aggrsnops[aggregator]
                     # @logmsg LogDetail " Test operator $(metacondition)"
@@ -340,6 +354,7 @@ Base.@propagate_inbounds @resumable function generate_global_feasible_decisions(
 
     # For each feature
     for i_feature in features_inds
+
         feature = _features[i_feature]
         @logmsg LogDebug "Feature $(i_feature): $(feature)"
 
@@ -349,7 +364,9 @@ Base.@propagate_inbounds @resumable function generate_global_feasible_decisions(
         # Vector of aggregators
         aggregators_with_ids = grouped_featsnaggrs[i_feature]
         # println(aggregators_with_ids)
-
+        # @show feature
+        # @show aggrsnops
+        # @show aggregators_with_ids
         # dict->vector
         # aggrsnops = [aggrsnops[i_aggregator] for i_aggregator in aggregators]
 
@@ -359,6 +376,7 @@ Base.@propagate_inbounds @resumable function generate_global_feasible_decisions(
         # thresholds = transpose(globmemoset(X)[i_instances, aggregators_ids])
 
         # Initialize thresholds with the bottoms
+        # @show U
         thresholds = Array{U,2}(undef, length(aggregators_with_ids), _ninstances)
         # for (i_aggregator,(_,aggregator)) in enumerate(aggregators_with_ids)
         #     thresholds[i_aggregator,:] .= aggregator_bottom(aggregator, U)
@@ -382,6 +400,7 @@ Base.@propagate_inbounds @resumable function generate_global_feasible_decisions(
                         error("generate_global_feasible_decisions is broken.")
                     end
                 end
+                # @show gamma
 
                 thresholds[i_aggregator,instance_id] = gamma
                 # thresholds[i_aggregator,instance_id] = SoleModels.aggregator_to_binary(aggregator)(gamma, thresholds[i_aggregator,instance_id])
@@ -399,7 +418,16 @@ Base.@propagate_inbounds @resumable function generate_global_feasible_decisions(
             # println(aggregator)
 
             aggr_thresholds = thresholds[i_aggregator,:]
-            aggr_domain = setdiff(Set(aggr_thresholds),Set([typemin(U), typemax(U)]))
+            aggr_domain = begin
+                if U <: Bool
+                    aggr_thresholds
+                else
+                    setdiff(Set(aggr_thresholds),Set([typemin(U), typemax(U)]))
+                end
+            end
+            # @show aggr_thresholds
+            # @show aggr_domain
+            # @show aggrsnops[aggregator]
 
             for metacondition in aggrsnops[aggregator]
                 # @logmsg LogDetail " Test operator $(metacondition)"
