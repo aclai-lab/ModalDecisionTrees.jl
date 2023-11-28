@@ -168,16 +168,22 @@ function compute_thresh_domain(testop, aggr_thresholds::AbstractVector{U}) where
             thresh_domain
         end
     end
-    # thresh_domain = begin
-    #     if U <: Bool
-    #         aggr_thresholds
-    #     else
-    #         setdiff(Set(aggr_thresholds),Set([typemin(U), typemax(U)]))
-    #     end
-    # end
-    # @show thresh_domain
     return thresh_domain
+    # @show thresh_domain
 end
+
+# function compute_thresh_domain(aggr_thresholds::AbstractVector{U}) where {U}
+#     # @show aggr_thresholds
+#     thresh_domain = begin
+#         if U <: Bool
+#             unique(aggr_thresholds)
+#         else
+#             setdiff(Set(aggr_thresholds),Set([typemin(U), typemax(U)]))
+#         end
+#     end
+#     # @show thresh_domain
+#     return thresh_domain
+# end
 
 ############################################################################################
 
@@ -237,6 +243,7 @@ Base.@propagate_inbounds @resumable function generate_propositional_feasible_dec
         # For each aggregator
         for (i_aggregator,aggregator) in enumerate(aggregators)
             aggr_thresholds = thresholds[i_aggregator,:]
+            # thresh_domain = compute_thresh_domain(aggr_thresholds)
 
             for metacondition in aggrsnops[aggregator]
                 testop = SoleModels.test_operator(metacondition)
@@ -337,6 +344,7 @@ Base.@propagate_inbounds @resumable function generate_modal_feasible_decisions(
             for (i_aggregator,(_,aggregator)) in enumerate(aggregators_with_ids)
 
                 aggr_thresholds = thresholds[i_aggregator,:]
+                # thresh_domain = compute_thresh_domain(aggr_thresholds)
 
                 for metacondition in aggrsnops[aggregator]
                     # @logmsg LogDetail " Test operator $(metacondition)"
@@ -437,6 +445,7 @@ Base.@propagate_inbounds @resumable function generate_global_feasible_decisions(
             # @show aggregator
 
             aggr_thresholds = thresholds[i_aggregator,:]
+            # thresh_domain = compute_thresh_domain(aggr_thresholds)
 
             for metacondition in aggrsnops[aggregator]
                 testop = SoleModels.test_operator(metacondition)
