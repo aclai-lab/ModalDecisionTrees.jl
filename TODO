@@ -22,7 +22,7 @@ Cool ideas:
 ☐ minified fwd structures: once computed the fwd, map each unique value to a UInt8/UInt16 value, while mantaining the relative order. Once a tree is learnt, remap the values to the old ones. tables contain a lot of redundance: perhaps use PooledArrays.jl, IndirectArrays.jl, CategoricalArrays.jl for saving space, both for saving to file AND for learing (might be beneficial for caching)?
 
 ☐ feature-importance.jl: mean decreased impurity https://medium.com/the-artificial-impostor/feature-importance-measures-for-tree-models-part-i-47f187c1a2c3
-☐	DATA: Instances with different channel size. find implementation of multi-dimensional array where one can specify that along one axis subArrays have non-uniform size?! Highlight difference between channelsize and maxchannelsize; define NonUniformDimensionalDataset using ArrayOfVectors https://juliaarrays.github.io/ArraysOfArrays.jl/stable/; then fwd can simply be a gigantic table with Inf and -Inf for non-existing worlds!
+☐	DATA: Instances with different channel size. find implementation of multi-dimensional array where one can specify that along one axis subArrays have non-uniform size?! Highlight difference between channelsize and maxchannelsize; define non-uniform DimensionalDataset using ArrayOfVectors https://juliaarrays.github.io/ArraysOfArrays.jl/stable/; then fwd can simply be a gigantic table with Inf and -Inf for non-existing worlds!
 
 ☐	add a parameter controlling how many thresholds are (randomly) considered at each node. Check that this optimization doesn't degrade performances and improves training times
 ☐ test: create a proper test suite, and test reproducibility of the results

@@ -76,6 +76,6 @@ cls_node = DTInternal(2, _decision, cls_leaf, cls_leaf)
 # Mixed tree
 @test_throws AssertionError DTInternal(2, _decision, reg_leaf, cls_leaf)
 
-cls_tree = @test_nowarn DTree(cls_node, [Interval], [ModalDecisionTrees.start_without_world])
+cls_tree = @test_nowarn DTree(cls_node, [ModalDecisionTrees.Interval], [ModalDecisionTrees.start_without_world])
 cls_forest = @test_nowarn DForest([cls_tree, cls_tree, cls_tree])
 

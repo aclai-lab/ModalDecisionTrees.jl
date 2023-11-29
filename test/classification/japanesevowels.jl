@@ -46,8 +46,8 @@ acc = sum(yhat .== y[test_idxs])/length(yhat)
 
 @test_throws BoundsError report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = [["a", "b"]]))
 @test_throws BoundsError report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = ["a", "b"]))
-# @test_logs (:warn,) report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = 'A':('A'+nvars)))
 @test_nowarn report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = 'A':('A'+nvars)))
+@test_nowarn report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = collect('A':('A'+nvars))))
 
 @test_nowarn printmodel(report(mach).model)
 @test_nowarn listrules(report(mach).model)
@@ -117,6 +117,8 @@ MLJ.fit!(mach, rows=train_idxs)
 yhat = MLJ.predict_mode(mach, rows=test_idxs)
 acc = sum(yhat .== y[test_idxs])/length(yhat)
 @test MLJ.kappa(yhat, y[test_idxs]) > 0.5
+
+
 
 mach = @test_logs (:warn,) machine(t, multilogiset, y)
 

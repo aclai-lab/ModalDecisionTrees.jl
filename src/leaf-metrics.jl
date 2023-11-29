@@ -17,6 +17,7 @@ function get_metrics(
     n_tot_inst = nothing,
     rel_confidence_class_counts = nothing,
     train_or_valid = true,
+    silent = false,
 )
     metrics = (;)
 
@@ -125,6 +126,7 @@ function get_metrics(
     n_tot_inst = nothing,
     rel_confidence_class_counts = nothing,
     train_or_valid = true,
+    silent = false,
 )
     @assert isnothing(rel_confidence_class_counts)
 

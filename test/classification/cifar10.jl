@@ -74,7 +74,7 @@ using StatsBase
 
 Xcube
 
-# img = eachslice(Xcube, dims=4)[1]
+# img = eachslice(Xcube; dims=4)[1]
 Xcubergb = mapslices(c->RGB(c...), Xcube, dims=3)
 Xcubehsv = HSV.(Xcubergb)
 # Xcubergb = mapslices(c->(@show c), Xcubehsv, dims=3)

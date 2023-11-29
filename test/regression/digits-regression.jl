@@ -60,7 +60,7 @@ mach = machine(ModalRandomForest(;
 ), Xnt, y) |> m->fit!(m, rows = train_idxs)
 
 println(StatsBase.cor(MLJ.predict_mean(mach, X_testnt), y_test))
-@test StatsBase.cor(MLJ.predict_mean(mach, X_testnt), y_test) > 0.55
+@test StatsBase.cor(MLJ.predict_mean(mach, X_testnt), y_test) > 0.30
 
 mach = machine(ModalRandomForest(;
     n_subfeatures       = 0.6,

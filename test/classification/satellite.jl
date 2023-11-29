@@ -24,11 +24,11 @@ _s = size(samplemap)
 samplemap[[1,end],:] .= 0
 samplemap[:,[1,end]] .= 0
 
-samplemap = cat(moving_average(eachslice(samplemap, dims=1); window_size=2, window_step=1)...; dims=2)'
-samplemap = cat(moving_average(eachslice(samplemap, dims=2); window_size=2, window_step=1)...; dims=2)
+samplemap = cat(moving_average(eachslice(samplemap; dims=1); window_size=2, window_step=1)...; dims=2)'
+samplemap = cat(moving_average(eachslice(samplemap; dims=2); window_size=2, window_step=1)...; dims=2)
 
-samplemap = hcat(eachslice(samplemap, dims=2)..., zeros(size(samplemap, 1)))
-samplemap = hcat(eachslice(samplemap, dims=1)..., zeros(size(samplemap, 2)))'
+samplemap = hcat(eachslice(samplemap; dims=2)..., zeros(size(samplemap, 1)))
+samplemap = hcat(eachslice(samplemap; dims=1)..., zeros(size(samplemap, 2)))'
 
 samplemap = (samplemap .== 1.0)
 

@@ -34,16 +34,20 @@ function wrapdataset(
         X = collect(X')
     end
 
-    X = begin
-        if X isa AbstractArray
-            if !(X isa Union{AbstractVector,AbstractMatrix})
-                @warn "AbstractArray of $(ndims(X)) dimensions and size $(size(X)) encountered. " *
-                    "This will be interpreted as a dataset of $(size(X)[end]) instances, " *
-                    "$(size(X)[end-1]) variables, and channel size $(size(X)[1:end-2])."
-                    # "datasets ($(typeof(X)) encountered)"
-            end
+    if X isa AbstractArray # Cube
+        if !(X isa Union{AbstractVector,AbstractMatrix})
+            @warn "AbstractArray of $(ndims(X)) dimensions and size $(size(X)) encountered. " *
+                "This will be interpreted as a dataset of $(size(X)[end]) instances, " *
+                "$(size(X)[end-1]) variables, and channel size $(size(X)[1:end-2])."
+                # "datasets ($(typeof(X)) encountered)"
+        end
 
-            X = model.downsize(X)
+        X = eachslice(X; dims=ndims(X))
+    end
+
+    X = begin
+        if X isa AbstractDimensionalDataset
+            X = model.downsize.(eachinstance(X))
 
             if !passive_mode
                 @info "Precomputing logiset..."
@@ -56,7 +60,7 @@ function wrapdataset(
                     print_progress = (ninstances(X) > 500)
                 )
             else
-                SoleData.cube2dataframe(X)
+                SoleData.dimensional2dataframe(X)
             end
         elseif X isa SupportedLogiset
             X
@@ -107,9 +111,9 @@ function wrapdataset(
 
             # Downsize
             md = MultiModalDataset([begin
-                mod, varnames = SoleData.dataframe2cube(mod)
-                mod = model.downsize(mod)
-                SoleData.cube2dataframe(mod, varnames)
+                mod, varnames = SoleData.dataframe2dimensional(mod)
+                mod = model.downsize.(eachinstance(mod))
+                SoleData.dimensional2dataframe(mod, varnames)
             end for mod in eachmodality(md)])
 
             md, var_grouping
