@@ -30,7 +30,7 @@ end
 _s = collect(size(Xcube))
 insert!(_s, length(_s), 1)
 Xcube = reshape(Xcube, _s...)
-X = SoleData.cube2dataframe(Xcube, ["white"])
+X = SoleData.cube2dataframe(Xcube, ["black"])
 
 X_train, y_train = X[p,:], y[p]
 X_test, y_test = X[p_test,:], y[p_test]

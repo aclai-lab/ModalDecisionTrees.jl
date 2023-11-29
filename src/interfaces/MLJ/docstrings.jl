@@ -116,7 +116,7 @@ $(n_subfeatures_str)
 
 - `downsize=true` Whether to perform automatic downsizing, by means of moving average. In fact, this algorithm has high complexity
     (both time and space), and can only handle small time-series (< 100 points) & small images (< 10 x 10 pixels).
-    When set to `true`, automatic downsizing is performed; when it is a NTuple of Integers, a downsizing of dimensional data
+    When set to `true`, automatic downsizing is performed; when it is an `NTuple` of `Integer`s, a downsizing of dimensional data
     to match that size is performed.
 
 - `print_progress=false`:  set to `true` for a progress bar

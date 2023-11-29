@@ -427,7 +427,13 @@ function squashtoleaf(leaves::AbstractVector{<:DTLeaf})
         "with different prediction " *
         "types: $(join(unique(predictiontype.(leaves)), ", "))"
     L = Union{predictiontype.(leaves)...}
-    DTLeaf{L}(L.(collect(Iterators.flatten(map((leaf)->supp_labels(leaf), leaves)))))
+    labels = collect(Iterators.flatten(map((leaf)->supp_labels(leaf), leaves)))
+    # @show labels
+    # @show L
+    if length(labels) == 0
+        error("Cannot squash to leaf with empty supporting labels.")
+    end
+    DTLeaf{L}(L.(labels))
 end
 
 function squashtoleaf(leaves::AbstractVector{<:NSDTLeaf})

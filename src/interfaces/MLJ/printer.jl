@@ -52,7 +52,7 @@ function (c::ModelPrinter)(
     end
     # if haskey(kwargs, :variable_names_map) && kwargs.variable_names_map is not multimodal then fix... variable_names_map
     if isnothing(X) && isnothing(y)
-        MDT.printmodel(io, model; more_kwargs..., kwargs...)
+        MDT.printmodel(io, model; silent = true, more_kwargs..., kwargs...)
     elseif !isnothing(X) && !isnothing(y)
         (X, y, var_grouping, classes_seen) = MMI.reformat(c.m, X, y)
         MDT.printapply(io, model, X, y; silent = true, more_kwargs..., kwargs...)

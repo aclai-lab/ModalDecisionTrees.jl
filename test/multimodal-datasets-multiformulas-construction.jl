@@ -214,8 +214,8 @@ _succinct_y = [map(r->SoleModels.apply(r, multilogiset, i_instance), succinct_ru
 
 preds = string.(predict_mode(mach, X_all))
 
-@test_broken redundant_y == succinct_y
-@test_broken _redundant_y == _succinct_y
+@test redundant_y == succinct_y
+@test _redundant_y == _succinct_y
 @test eachcol(hcat(_redundant_y...)) == eachrow(hcat(redundant_y...))
 @test eachcol(hcat(_succinct_y...)) == eachrow(hcat(succinct_y...))
 

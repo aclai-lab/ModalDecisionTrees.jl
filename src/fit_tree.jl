@@ -402,12 +402,13 @@ Base.@propagate_inbounds @inline function split_node!(
     ## Test all decisions
     # For each modality (modal dataset)
     @inbounds for (i_modality,
-                (X,
-                modality_Sf,
-                modality_n_subrelations::Function,
-                modality_n_subfeatures,
-                modality_allow_global_splits,
-                modality_onlyallowglobal)) in enumerate(zip(eachmodality(Xs), Sfs, n_subrelations, n_subfeatures, allow_global_splits, node.onlyallowglobal))
+        (X,
+        modality_Sf,
+        modality_n_subrelations::Function,
+        modality_n_subfeatures,
+        modality_allow_global_splits,
+        modality_onlyallowglobal)
+    ) in enumerate(zip(eachmodality(Xs), Sfs, n_subrelations, n_subfeatures, allow_global_splits, node.onlyallowglobal))
 
         @logmsg LogDetail "  Modality $(best_i_modality)/$(nmodalities(Xs))"
 
@@ -464,18 +465,19 @@ Base.@propagate_inbounds @inline function split_node!(
         ########################################################################
 
         @inbounds for (decision, aggr_thresholds) in generate_feasible_decisions(
-                X,
-                idxs[region],
-                modality_Sf,
-                allow_propositional_decisions,
-                allow_modal_decisions,
-                allow_global_decisions,
-                modal_relations_inds,
-                features_inds,
-                grouped_featsaggrsnopss[i_modality],
-                grouped_featsnaggrss[i_modality],
-            )
-
+            X,
+            idxs[region],
+            modality_Sf,
+            allow_propositional_decisions,
+            allow_modal_decisions,
+            allow_global_decisions,
+            modal_relations_inds,
+            features_inds,
+            grouped_featsaggrsnopss[i_modality],
+            grouped_featsnaggrss[i_modality],
+        )
+            # @show decision
+            # @show aggr_thresholds
             # @logmsg LogDetail " Testing decision: $(displaydecision(decision))"
 
             # println(displaydecision(i_modality, decision))
