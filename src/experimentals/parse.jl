@@ -40,8 +40,13 @@ function _parse_tree(
 
     V = varprefix
 
-    # _threshold_ex = "[-+]?(?:[0-9]+(\.[0-9]*)?|\.[0-9]+)" # TODO use smarter regex (e.g., https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch06s10.html )
-    _threshold_ex = "[^\\)\\s)]+" # TODO use smarter regex (e.g., https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch06s10.html )
+
+    # r"^[-+]?([0-9]+(\.[0-9]*)?|\.[0-9]+)$"
+    # _threshold_ex = "[-+]?(?:[0-9]+(\\.[0-9]*)?|\\.[0-9]+)" # TODO use smarter regex (e.g., https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch06s10.html )
+    # _threshold_ex = "[^\\)\\s)]+" # TODO use smarter regex (e.g., https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch06s10.html )
+    # Regex("[-+]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)") == r"[-+]?([0-9]+(\.[0-9]*)?|\.[0-9]+)"
+    # _threshold_ex = "[-+]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)" # GOOD
+    _threshold_ex = "[-+]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)"
     _indentation_ex = "[ │]*[✔✘]"
     _metrics_ex = "\\(\\S*.*\\)"
     _feature_ex             = "(?:\\S+)\\s+(?:(?:⫹|⫺|⪳|⪴|⪵|⪶|↗|↘|>|<|=|≤|≥|<=|>=))"
@@ -54,11 +59,12 @@ function _parse_tree(
     leaf_ex            = "(?:\\S+)\\s+:\\s+\\d+/\\d+(?:\\s+(?:$(_metrics_ex)))?"
     leaf_ex__capturing = "(\\S+)\\s+:\\s+(\\d+)/(\\d+)(?:\\s+($(_metrics_ex)))?"
     decision_ex            = "(?:⟨(?:\\S+)⟩\\s*)?(?:$(_decision_ex)|\\(\\s*$(_decision_ex)\\s*\\))"
-    decision_ex__capturing = "(?:⟨(\\S+)⟩\\s*)?\\(?\\s*$(_decision_ex__capturing)\\s*\\)?"
+    decision_ex__capturing =   "(?:⟨(\\S+)⟩\\s*)?\\(?\\s*$(_decision_ex__capturing)\\s*\\)?"
+    # decision_ex__capturing =   "(?:⟨(\\S+)⟩\\s*)?\\s*($(_decision_ex__capturing)|\\(\\s*$(_decision_ex__capturing)\\s*\\))"
     
     # TODO default frame to 1
     # split_ex = "(?:\\s*{(\\d+)}\\s+)?($(decision_ex))(?:\\s+($(leaf_ex)))?"
-    split_ex = "\\s*{(\\d+)}\\s+($(decision_ex))(?:\\s+($(leaf_ex)))?"
+    split_ex = "\\s*{(\\d+)}\\s+($(decision_ex))(?:\\s*($(leaf_ex)))?"
     
     blank_line_regex = Regex("^\\s*\$")
     split_line_regex = Regex("^($(_indentation_ex)\\s+)?$(split_ex)\\s*\$")
@@ -260,7 +266,7 @@ function _parse_tree(
         @assert !isnothing(m) && length(m) == 3 "Unexpected format encountered on line $(i_this_line+offset) : \"$(this_line)\". Matches: $(m) Expected matches = 3"
         # println(m)
         i_modality, decision_str, leaf_str = m
-
+        # @show i_modality, decision_str, leaf_str
         i_modality = parse(Int, i_modality)
         decision = _parse_decision((i_this_line, decision_str),) 
 

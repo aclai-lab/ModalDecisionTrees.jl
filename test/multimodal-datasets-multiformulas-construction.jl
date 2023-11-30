@@ -1,6 +1,7 @@
 using ModalDecisionTrees
 using MLJ
 using DataFrames
+using SoleModels
 using SoleData
 using Logging
 using SoleLogics
@@ -8,7 +9,7 @@ using Random
 using Test
 
 N = 5
-y = vcat(fill(true, div(N,2)+1), fill(false, div(N,2)))
+y = [i <= div(N,2)+1 for i in 1:N]
 
 # Split dataset
 p = randperm(Random.MersenneTwister(1), N)
@@ -152,9 +153,9 @@ mach = MLJ.fit!(machine(ModalDecisionTree(; min_samples_leaf = 1), X_all, y), ro
 
 report(mach).printmodel(1000; threshold_digits = 2);
 
-printmodel.(listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true))
+printmodel.(listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true));
 
-printmodel.(joinrules(listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true)))
+printmodel.(joinrules(listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true)));
 
 model = ModalDecisionTree(min_purity_increase = 0.001)
 
@@ -170,6 +171,13 @@ machine(model, X_all, y) |> fit!
 ############################################################################################
 
 using SoleData
+using ModalDecisionTrees
+using MLJ
+using DataFrames
+using SoleModels
+using Random
+
+N = 5
 
 # Multimodal tree:
 X_all = DataFrame(
@@ -179,69 +187,129 @@ X_all = DataFrame(
 )
 
 X_all = MultiModalDataset([X_all])
-@test_broken mach = MLJ.fit!(machine(ModalDecisionTree(; min_samples_leaf = 1), X_all, y), rows=train_idxs)
-
-
-using ModalDecisionTrees
-using MLJ
-using DataFrames
-using SoleData
-using Random
-
-N = 5
-y = vcat(fill(true, div(N,2)+1), fill(false, div(N,2)))
+y = [i <= div(N,2)+1 for i in 1:N]
 
 # Split dataset
 p = randperm(Random.MersenneTwister(1), N)
 train_idxs, test_idxs = p[1:round(Int, N*.8)], p[round(Int, N*.8)+1:end]
 
-
-_size = ((x)->(hasmethod(size, (typeof(x),)) ? size(x) : missing))
+@test_logs min_level=Logging.Error mach = MLJ.fit!(machine(ModalDecisionTree(; min_samples_leaf = 1), X_all, y), rows=train_idxs)
 
 # Very multimodal tree:
 N = 100
 
-redundant_ruleset = (listrules(report(mach).model; use_shortforms=false))
-succinct_ruleset = (listrules(report(mach).model; use_shortforms=true))
+# Multimodal tree:
+# X_all = DataFrame(
+#     mode0 = [min(rand(), 1/i) for i in 1:N],
+#     mode1 = [max.(rand(5), 1/i) for i in 1:N],
+#     mode2 = [begin
+#         a = zeros(5,5)
+#         idx = rand(1:ceil(Int, 4*(i/N)))
+#         a[idx:1+idx,2:3] = max.(rand(2, 2), 1/i)
+#     end for i in 1:N],
+# )
+X_all = DataFrame(
+    mode0 = [rand() for i in 1:N],
+    mode1 = [rand(5) for i in 1:N],
+    mode2 = [rand(5,5) for i in 1:N],
+)
+
+X_all = MultiModalDataset([X_all])
+y = [i <= div(N,2)+1 for i in 1:N]
+
+# Split dataset
+p = randperm(Random.MersenneTwister(1), N)
+train_idxs, test_idxs = p[1:round(Int, N*.8)], p[round(Int, N*.8)+1:end]
 
 multilogiset, var_grouping = ModalDecisionTrees.wrapdataset(X_all, ModalDecisionTree(; min_samples_leaf = 1))
 
-redundant_y = [SoleModels.apply(r, multilogiset) for r in redundant_ruleset]
-succinct_y = [SoleModels.apply(r, multilogiset) for r in succinct_ruleset]
 
-_redundant_y = [map(r->SoleModels.apply(r, multilogiset, i_instance), redundant_ruleset) for i_instance in 1:ninstances(multilogiset)]
-_succinct_y = [map(r->SoleModels.apply(r, multilogiset, i_instance), succinct_ruleset) for i_instance in 1:ninstances(multilogiset)]
+mach = MLJ.fit!(machine(ModalDecisionTree(; max_purity_at_leaf = Inf, min_samples_leaf = 1, min_purity_increase = -Inf), X_all, y), rows=train_idxs)
 
 preds = string.(predict_mode(mach, X_all))
 
-@test redundant_y == succinct_y
-@test _redundant_y == _succinct_y
-@test eachcol(hcat(_redundant_y...)) == eachrow(hcat(redundant_y...))
-@test eachcol(hcat(_succinct_y...)) == eachrow(hcat(succinct_y...))
+report(mach).model
+report(mach).solemodel
+printmodel(report(mach).solemodel; show_shortforms = true)
 
-m1 = hcat(redundant_y...)
-m2 = hcat(succinct_y...)
+longform_ruleset = (listrules(report(mach).model; use_shortforms=false));
+shortform_ruleset = (listrules(report(mach).model; use_shortforms=true));
 
-@test_broken map(r->count(!isnothing, r) == 1, eachrow(m1))
-@test_broken map(r->count(!isnothing, r) == 1, eachrow(m2))
+longform_ruleset .|> antecedent .|> x->syntaxstring(x; threshold_digits = 2) .|> println;
+shortform_ruleset .|> antecedent .|> x->syntaxstring(x; threshold_digits = 2) .|> println;
 
-@test_broken map(r->count(!isnothing, r) == 1, eachcol(m1))
-@test_broken map(r->count(!isnothing, r) == 1, eachcol(m2))
 
-preds
-filter.(!isnothing, eachrow(hcat(redundant_y...)))
-filter.(!isnothing, eachcol(hcat(redundant_y...)))
-filter.(!isnothing, eachrow(hcat(succinct_y...)))
-filter.(!isnothing, eachcol(hcat(succinct_y...)))
+as = (longform_ruleset .|> antecedent);
+as = as .|> (x->normalize(x; allow_atom_flipping=true, prefer_implications = true))
+bs = (shortform_ruleset .|> antecedent);
+bs = bs .|> (x->normalize(x; allow_atom_flipping=true, prefer_implications = true))
 
-@test_broken preds2 = filter.(!isnothing, eachrow(hcat(succinct_y...)))
-@test_broken preds2 = first.(preds2)
-@test_broken preds == preds2
+# (as[2], bs[2]) .|> x->syntaxstring(x; threshold_digits = 2) .|> println
+# (as[13], bs[13]) .|> x->syntaxstring(x; threshold_digits = 2) .|> println
+# as .|> x->syntaxstring(x; threshold_digits = 2)
+# bs .|> x->syntaxstring(x; threshold_digits = 2)
+
+# @test isequal(as, bs)
+# @test all(((x,y),)->isequal(x,y), collect(zip((longform_ruleset .|> antecedent .|> x->normalize(x; allow_atom_flipping=true)), (shortform_ruleset .|> antecedent .|> x->normalize(x; allow_atom_flipping=true)))))
+
+
+
+
+# Longform set is mutually exclusive & collectively exhaustive
+longform_y_per_rule = [SoleModels.apply(r, multilogiset) for r in longform_ruleset]
+m1 = hcat(longform_y_per_rule...)
+@test all(r->count(!isnothing, r) >= 1, eachrow(m1));
+@test all(r->count(!isnothing, r) < 2, eachrow(m1));
+@test all(r->count(!isnothing, r) == 1, eachrow(m1));
+
+# Path formula CORRECTNESS! Very very important!!
+map(s->filter(!isnothing, s), eachrow(m1))
+longform_y = map(s->filter(!isnothing, s)[1], eachrow(m1))
+@test preds == longform_y
+
+# Shortform set is mutually exclusive & collectively exhaustive
+shortform_y_per_rule = [SoleModels.apply(r, multilogiset) for r in shortform_ruleset]
+m2 = hcat(shortform_y_per_rule...)
+@test all(r->count(!isnothing, r) >= 1, eachrow(m2));
+@test all(r->count(!isnothing, r) < 2, eachrow(m2));
+@test all(r->count(!isnothing, r) == 1, eachrow(m2));
+
+# Path formula CORRECTNESS! Very very important!!
+map(s->filter(!isnothing, s), eachrow(m2))
+shortform_y = map(s->filter(!isnothing, s)[1], eachrow(m2))
+@test shortform_y == preds
+
+# More consistency
+_shortform_y_per_rule = [map(r->SoleModels.apply(r, multilogiset, i_instance), shortform_ruleset) for i_instance in 1:ninstances(multilogiset)]
+for j in 1:size(m1, 1)
+for i in 1:size(m1, 2)
+@test m2[j,i] == hcat(_shortform_y_per_rule...)[i,j]
+end
+end
+@test eachcol(hcat(_shortform_y_per_rule...)) == eachrow(hcat(shortform_y_per_rule...))
+
+# More consistency
+_longform_y_per_rule = [map(r->SoleModels.apply(r, multilogiset, i_instance), longform_ruleset) for i_instance in 1:ninstances(multilogiset)]
+for j in 1:size(m1, 1)
+for i in 1:size(m1, 2)
+@test m1[j,i] == hcat(_longform_y_per_rule...)[i,j]
+end
+end
+@test eachcol(hcat(_longform_y_per_rule...)) == eachrow(hcat(longform_y_per_rule...))
+
+
+@test longform_y_per_rule == shortform_y_per_rule
+@test _longform_y_per_rule == _shortform_y_per_rule
+
+# filter.(!isnothing, eachrow(hcat(longform_y_per_rule...)))
+# # filter.(!isnothing, eachcol(hcat(longform_y_per_rule...)))
+# filter.(!isnothing, eachrow(hcat(shortform_y_per_rule...)))
+# # filter.(!isnothing, eachcol(hcat(shortform_y_per_rule...)))
 
 printmodel.(listrules(report(mach).model; use_shortforms=true));
 printmodel.(listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true));
-printmodel.(joinrules(redundant_ruleset); show_metrics = true);
-printmodel.(joinrules(succinct_ruleset); show_metrics = true);
+printmodel.(joinrules(longform_ruleset); show_metrics = true);
+printmodel.(joinrules(shortform_ruleset); show_metrics = true);
 
 printmodel.(joinrules(listrules(report(mach).model)));
 

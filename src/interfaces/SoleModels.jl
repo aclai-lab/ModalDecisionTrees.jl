@@ -50,33 +50,96 @@ function translate(
 end
 
 function translate(
-    node::DTInternal,
+    node::DTInternal{L,D},
     initconditions,
-    ancestors::Vector{<:DTInternal} = DTInternal[],
+    all_ancestors::Vector{<:DTInternal} = DTInternal[],
+    all_ancestor_formulas::Vector = [],
+    pos_ancestors::Vector{<:DTInternal} = DTInternal[],
     info = (;),
     shortform::Union{Nothing,MultiFormula} = nothing,
-)
-    new_ancestors = [ancestors..., node]
-    φl = pathformula(new_ancestors, left(node), false)
-    φr = pathformula(new_ancestors, right(node), false)
-    pos_shortform, neg_shortform = begin
-        if isnothing(shortform)
-            φl, φr
-        else
-            dl, dr = Dict{Int64,SoleLogics.SyntaxTree}(deepcopy(modforms(shortform))), Dict{Int64,SoleLogics.SyntaxTree}(deepcopy(modforms(shortform)))
+) where {L,D}
+    new_all_ancestors = [all_ancestors..., node]
+    new_pos_ancestors = [pos_ancestors..., node]
+    φl = pathformula(new_pos_ancestors, left(node), false)
+    new_all_ancestor_formulas = [all_ancestor_formulas..., φl]
 
-            dl[i_modality(node)] = modforms(φl)[i_modality(node)]
-            dr[i_modality(node)] = modforms(φr)[i_modality(node)]
-            MultiFormula(dl), MultiFormula(dr)
+    # φr = pathformula(new_pos_ancestors, right(node), true)
+
+    @show syntaxstring(φl)
+    pos_shortform, neg_shortform = begin
+        if length(all_ancestors) == 0
+            (
+                φl,
+                SoleLogics.normalize(¬(φl); allow_atom_flipping=true, prefer_implications = true),
+            )
+        else
+
+            my_conjuncts = [begin
+                (isinleftsubtree(node, anc) ? φ : SoleLogics.normalize(¬(φ); allow_atom_flipping=true, prefer_implications = true))
+            end for (φ, anc) in zip(all_ancestor_formulas, all_ancestors)]
+
+            # Remove nonmaximal positives (for each modality)
+            modalities = unique(i_modality.(all_ancestors))
+            my_filtered_conjuncts = similar(my_conjuncts, 0)
+            for i_mod in modalities
+                this_mod_mask = map((anc)->i_modality(anc) == i_mod, all_ancestors)
+                this_mod_ancestors = all_ancestors[this_mod_mask]
+                this_mod_conjuncts = my_conjuncts[this_mod_mask]
+                ispos = map(anc->isinleftsubtree(node, anc), this_mod_ancestors)
+                lastpos = findlast(x->x, ispos)
+                @show i_mod, ispos
+                if !isnothing(lastpos)
+                    this_mod_conjuncts = [this_mod_conjuncts[lastpos], this_mod_conjuncts[(!).(ispos)]...]
+                end
+                append!(my_filtered_conjuncts, this_mod_conjuncts)
+            end
+            my_conjuncts = my_filtered_conjuncts
+            # my_conjuncts = [begin
+            #     # anc_prefix = new_all_ancestors[1:nprefix]
+            #     # cur_node = new_all_ancestors[nprefix+1]
+            #     anc_prefix = new_all_ancestors[1:(nprefix+1)]
+            #     new_pos_all_ancestors = similar(anc_prefix, 0)
+            #     for i in 1:(length(anc_prefix)-1)
+            #         if isinleftsubtree(anc_prefix[i+1], anc_prefix[i])
+            #             push!(new_pos_all_ancestors, anc_prefix[i])
+            #         end
+            #     end
+            #     φ = pathformula(new_pos_all_ancestors, anc_prefix[end], false)
+            #     (isinleftsubtree(node, anc_prefix[end]) ? φ : ¬φ)
+            # end for nprefix in 1:(length(new_all_ancestors)-1)]
+
+            @show my_conjuncts
+            my_left_conjuncts  = [my_conjuncts..., φl]
+            my_right_conjuncts = [my_conjuncts..., ¬φl]
+
+            ∧(my_left_conjuncts...), ∧(my_right_conjuncts...)
         end
     end
+
+    # pos_conj = pathformula(new_pos_ancestors[1:end-1], new_pos_ancestors[end], false)
+    # @show pos_conj
+    # @show syntaxstring(pos_shortform)
+    # @show syntaxstring(neg_shortform)
+
+    # # shortforms for my children
+    # pos_shortform, neg_shortform = begin
+    #     if isnothing(shortform)
+    #         φl, φr
+    #     else
+    #         dl, dr = Dict{Int64,SoleLogics.SyntaxTree}(deepcopy(modforms(shortform))), Dict{Int64,SoleLogics.SyntaxTree}(deepcopy(modforms(shortform)))
+
+    #         dl[i_modality(node)] = modforms(φl)[i_modality(node)]
+    #         dr[i_modality(node)] = modforms(φr)[i_modality(node)]
+    #         MultiFormula(dl), MultiFormula(dr)
+    #     end
+    # end
+
     info = merge(info, (;
-        this = translate(ModalDecisionTrees.this(node), initconditions, new_ancestors, (;), shortform),
+        this = translate(ModalDecisionTrees.this(node), initconditions, new_all_ancestors, all_ancestor_formulas, new_pos_ancestors, (;), shortform),
         supporting_labels = ModalDecisionTrees.supp_labels(node),
-        # pos_shortform = build_antecedent(pos_shortform, initconditions),
-        # neg_shortform = build_antecedent(neg_shortform, initconditions),
     ))
     if !isnothing(shortform)
+        # @show syntaxstring(shortform)
         info = merge(info, (;
             shortform = build_antecedent(shortform, initconditions),
         ))
@@ -84,8 +147,8 @@ function translate(
 
     SoleModels.Branch(
         build_antecedent(φl, initconditions),
-        translate(left(node), initconditions, new_ancestors, (;), pos_shortform),
-        translate(right(node), initconditions, ancestors, (;), neg_shortform),
+        translate(left(node), initconditions, new_all_ancestors, new_all_ancestor_formulas, new_pos_ancestors, (;), pos_shortform),
+        translate(right(node), initconditions, new_all_ancestors, new_all_ancestor_formulas, pos_ancestors, (;), neg_shortform),
         info
     )
 end
@@ -93,7 +156,9 @@ end
 function translate(
     tree::DTLeaf,
     initconditions,
-    ancestors::Vector{<:DTInternal} = DTInternal[],
+    all_ancestors::Vector{<:DTInternal} = DTInternal[],
+    all_ancestor_formulas::Vector = [],
+    pos_ancestors::Vector{<:DTInternal} = DTInternal[],
     info = (;),
     shortform = nothing,
 )
@@ -112,6 +177,8 @@ end
 function translate(
     tree::NSDTLeaf,
     initconditions,
+    all_pos_ancestors::Vector{<:DTInternal} = DTInternal[],
+    all_ancestor_formulas::Vector = [],
     ancestors::Vector{<:DTInternal} = DTInternal[],
     info = (;),
     shortform = nothing,
@@ -178,47 +245,70 @@ end
 ############################################################################################
 ############################################################################################
 
-# Compute path formula using semantics from TODO cite
-@memoize function pathformula(
-    ancestors::Vector{<:DTInternal{L,<:SimpleDecision{<:ScalarExistentialFormula}}},
+# # Compute path formula using semantics from TODO cite
+# # @memoize function pathformula(
+# function pathformula(
+#     nodes::Vector{<:DTNode{L,<:SimpleDecision{<:ScalarExistentialFormula}}},
+#     multi::Bool,
+#     dontincrease::Bool = true,
+# ) where {L}
+#     return pathformula(nodes[1:(end-1)], nodes[end], nodes, multi, dontincrease)
+# end
+
+function pathformula(
+    pos_ancestors::Vector{<:DTInternal{L,<:SimpleDecision{<:ScalarExistentialFormula}}},
     node::DTNode{LL},
-    multi::Bool
+    multimodal::Bool,
+    dontincrease::Bool = true,
+    addlast = true,
 ) where {L,LL}
 
-    if length(ancestors) == 0
-        return error("pathformula cannot accept 0 ancestors. node = $(node).")
+    if length(pos_ancestors) == 0
+        # return error("pathformula cannot accept 0 pos_ancestors. node = $(node).")
+        # @show get_lambda(node, left(node))
+        return MultiFormula(i_modality(node), get_lambda(node, left(node)))
     else
         # Compute single-modality formula to check.
-        if !multi
-            ancestors = filter(a->i_modality(a) == i_modality(last(ancestors)), ancestors)
-            # @assert length(ancestors) > 0
+        if !multimodal
+            pos_ancestors = filter(a->i_modality(a) == i_modality(last(pos_ancestors)), pos_ancestors)
+            # @assert length(pos_ancestors) > 0
         end
 
-        if length(ancestors) == 1
-            anc = first(ancestors)
+        if length(pos_ancestors) == 1
+            # @show prediction(this(node))
+            anc = first(pos_ancestors)
+            # @show get_lambda(anc, node)
             return MultiFormula(i_modality(anc), get_lambda(anc, node))
         else
-            φ = pathformula(Vector{DTInternal{Union{L,LL},<:SimpleDecision{<:ScalarExistentialFormula}}}(ancestors[2:end]), node, multi)
-
-            nodes = [ancestors..., node]
-
-            # @assert length(unique(anc_mods)) == 1 "At the moment, translate does not work " *
-            #     "for MultiFormula formulas $(unique(anc_mods))."
-
+            nodes = begin
+                if addlast
+                    [pos_ancestors..., node]
+                else
+                    pos_ancestors
+                end
+            end
             f = formula(ModalDecisionTrees.decision(nodes[1]))
             p = MultiFormula(i_modality(nodes[1]), SyntaxTree(get_atom(f)))
             isprop = (relation(f) == identityrel)
 
-            if isinleftsubtree(nodes[end], nodes[end-1])
+            _dontincrease = isprop
+            φ = pathformula(Vector{DTInternal{Union{L,LL},<:SimpleDecision{<:ScalarExistentialFormula}}}(nodes[2:(end-1)]), nodes[end], multimodal, _dontincrease, addlast)
+
+            # @assert length(unique(anc_mods)) == 1 "At the moment, translate does not work " *
+            #     "for MultiFormula formulas $(unique(anc_mods))."
+            # @show addlast
+            if (addlast && isinleftsubtree(nodes[end], nodes[end-1])) || (!addlast && isinleftsubtree(node, nodes[end])) # Remember: don't use isleftchild, because it fails in the multimodal case.
+                # @show "DIAMOND"
                 if isprop
-                    return p ∧ φ
+                    return dontincrease ? φ : (p ∧ φ)
                 else
                     ◊ = get_diamond_op(f)
                     return ◊(p ∧ φ)
                 end
-            elseif isinrightsubtree(nodes[end], nodes[end-1])
+            elseif (addlast && isinrightsubtree(nodes[end], nodes[end-1])) || (!addlast && isinrightsubtree(node, nodes[end])) # Remember: don't use isrightchild, because it fails in the multimodal case.
+                # @show "BOX"
                 if isprop
-                    return p → φ
+                    return dontincrease ? φ : (p → φ)
                 else
                     □ = get_box_op(f)
                     return □(p → φ)
