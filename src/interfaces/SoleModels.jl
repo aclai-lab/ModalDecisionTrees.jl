@@ -65,7 +65,7 @@ function translate(
 
     # φr = pathformula(new_pos_ancestors, right(node), true)
 
-    @show syntaxstring(φl)
+    # @show syntaxstring(φl)
     pos_shortform, neg_shortform = begin
         if length(all_ancestors) == 0
             (
@@ -87,7 +87,7 @@ function translate(
                 this_mod_conjuncts = my_conjuncts[this_mod_mask]
                 ispos = map(anc->isinleftsubtree(node, anc), this_mod_ancestors)
                 lastpos = findlast(x->x, ispos)
-                @show i_mod, ispos
+                # @show i_mod, ispos
                 if !isnothing(lastpos)
                     this_mod_conjuncts = [this_mod_conjuncts[lastpos], this_mod_conjuncts[(!).(ispos)]...]
                 end
@@ -108,7 +108,7 @@ function translate(
             #     (isinleftsubtree(node, anc_prefix[end]) ? φ : ¬φ)
             # end for nprefix in 1:(length(new_all_ancestors)-1)]
 
-            @show my_conjuncts
+            # @show my_conjuncts
             my_left_conjuncts  = [my_conjuncts..., φl]
             my_right_conjuncts = [my_conjuncts..., ¬φl]
 
