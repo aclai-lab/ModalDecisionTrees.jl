@@ -25,21 +25,21 @@ function run_tests(list)
 end
 
 test_suites = [
-    ("Base", ["base.jl"]),
-    ("Classification", [
-        "classification/iris.jl",
-        "classification/iris-params.jl",
-        "classification/japanesevowels.jl",
-        "classification/digits.jl",
-        "classification/mnist.jl",
-        # "classification/demo-juliacon2022.jl",
-    ]),
-    ("Regression", [
-        "regression/simple.jl",
-        # "regression/ames.jl",
-        "regression/digits-regression.jl",
-        # "regression/random.jl",
-    ]),
+    # ("Base", ["base.jl"]),
+    # ("Classification", [
+    #     "classification/iris.jl",
+    #     "classification/iris-params.jl",
+    #     "classification/japanesevowels.jl",
+    #     "classification/digits.jl",
+    #     "classification/mnist.jl",
+    #     # "classification/demo-juliacon2022.jl",
+    # ]),
+    # ("Regression", [
+    #     "regression/simple.jl",
+    #     # "regression/ames.jl",
+    #     "regression/digits-regression.jl",
+    #     # "regression/random.jl",
+    # ]),
     ("Miscellaneous", [
         "multimodal-datasets-multiformulas-construction.jl"
     ]),

@@ -124,7 +124,7 @@ export ModalDecisionTree, ModalRandomForest
 export depth, wrapdataset
 
 # Interfaces
-include("interfaces/SoleModels.jl")
+include("interfaces/Sole.jl")
 include("interfaces/MLJ.jl")
 include("interfaces/AbstractTrees.jl")
 

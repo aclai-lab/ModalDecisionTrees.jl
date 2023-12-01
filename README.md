@@ -156,5 +156,5 @@ This technology also offers a natural extension for *multimodal* learning [[5]](
 
 The package is developed by the [ACLAI Lab](https://aclai.unife.it/en/) @ University of Ferrara.
 
-Thanks to Ben Sadeghi ([@bensadeghi](https://github.com/bensadeghi/)), author of [DecisionTree.jl](https://github.com/bensadeghi/DecisionTree.jl),
+Thanks to Ben Sadeghi ([@bensadeghi](https://github.com/bensadeghi/)), author of [DecisionTree.jl](https://github.com/JuliaAI/DecisionTree.jl),
 which inspired the construction of this package.

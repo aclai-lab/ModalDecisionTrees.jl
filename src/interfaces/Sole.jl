@@ -61,6 +61,7 @@ function translate(
     new_all_ancestors = [all_ancestors..., node]
     new_pos_ancestors = [pos_ancestors..., node]
     φl = pathformula(new_pos_ancestors, left(node), false)
+    φr = SoleLogics.normalize(¬(φl); allow_atom_flipping=true, prefer_implications = true)
     new_all_ancestor_formulas = [all_ancestor_formulas..., φl]
 
     # φr = pathformula(new_pos_ancestors, right(node), true)
@@ -70,30 +71,9 @@ function translate(
         if length(all_ancestors) == 0
             (
                 φl,
-                SoleLogics.normalize(¬(φl); allow_atom_flipping=true, prefer_implications = true),
+                φr,
             )
         else
-
-            my_conjuncts = [begin
-                (isinleftsubtree(node, anc) ? φ : SoleLogics.normalize(¬(φ); allow_atom_flipping=true, prefer_implications = true))
-            end for (φ, anc) in zip(all_ancestor_formulas, all_ancestors)]
-
-            # Remove nonmaximal positives (for each modality)
-            modalities = unique(i_modality.(all_ancestors))
-            my_filtered_conjuncts = similar(my_conjuncts, 0)
-            for i_mod in modalities
-                this_mod_mask = map((anc)->i_modality(anc) == i_mod, all_ancestors)
-                this_mod_ancestors = all_ancestors[this_mod_mask]
-                this_mod_conjuncts = my_conjuncts[this_mod_mask]
-                ispos = map(anc->isinleftsubtree(node, anc), this_mod_ancestors)
-                lastpos = findlast(x->x, ispos)
-                # @show i_mod, ispos
-                if !isnothing(lastpos)
-                    this_mod_conjuncts = [this_mod_conjuncts[lastpos], this_mod_conjuncts[(!).(ispos)]...]
-                end
-                append!(my_filtered_conjuncts, this_mod_conjuncts)
-            end
-            my_conjuncts = my_filtered_conjuncts
             # my_conjuncts = [begin
             #     # anc_prefix = new_all_ancestors[1:nprefix]
             #     # cur_node = new_all_ancestors[nprefix+1]
@@ -108,11 +88,44 @@ function translate(
             #     (isinleftsubtree(node, anc_prefix[end]) ? φ : ¬φ)
             # end for nprefix in 1:(length(new_all_ancestors)-1)]
 
-            # @show my_conjuncts
-            my_left_conjuncts  = [my_conjuncts..., φl]
-            my_right_conjuncts = [my_conjuncts..., ¬φl]
+            my_conjuncts = [begin
+                (isinleftsubtree(node, anc) ? φ : SoleLogics.normalize(¬(φ); allow_atom_flipping=true, prefer_implications = true))
+            end for (φ, anc) in zip(all_ancestor_formulas, all_ancestors)]
 
-            ∧(my_left_conjuncts...), ∧(my_right_conjuncts...)
+            my_left_conjuncts = [my_conjuncts..., φl]
+            my_right_conjuncts = [my_conjuncts..., φr]
+
+            # Remove nonmaximal positives (for each modality)
+            modalities = unique(i_modality.(new_all_ancestors))
+            my_filtered_left_conjuncts = similar(my_left_conjuncts, 0)
+            my_filtered_right_conjuncts = similar(my_right_conjuncts, 0)
+            for i_mod in modalities
+                this_mod_mask = map((anc)->i_modality(anc) == i_mod, new_all_ancestors)
+                this_mod_ancestors = new_all_ancestors[this_mod_mask]
+
+                begin
+                    this_mod_conjuncts = my_left_conjuncts[this_mod_mask]
+                    ispos = map(anc->isinleftsubtree(left(node), anc), this_mod_ancestors)
+                    lastpos = findlast(x->x, ispos)
+                    # @show i_mod, ispos
+                    if !isnothing(lastpos)
+                        this_mod_conjuncts = [this_mod_conjuncts[lastpos], this_mod_conjuncts[(!).(ispos)]...]
+                    end
+                    append!(my_filtered_left_conjuncts, this_mod_conjuncts)
+                end
+                begin
+                    this_mod_conjuncts = my_right_conjuncts[this_mod_mask]
+                    ispos = map(anc->isinleftsubtree(right(node), anc), this_mod_ancestors)
+                    lastpos = findlast(x->x, ispos)
+                    # @show i_mod, ispos
+                    if !isnothing(lastpos)
+                        this_mod_conjuncts = [this_mod_conjuncts[lastpos], this_mod_conjuncts[(!).(ispos)]...]
+                    end
+                    append!(my_filtered_right_conjuncts, this_mod_conjuncts)
+                end
+            end
+
+            ∧(my_filtered_left_conjuncts...), ∧(my_filtered_right_conjuncts...)
         end
     end
 

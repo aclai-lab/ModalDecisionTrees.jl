@@ -319,7 +319,7 @@ ModalRandomForest
 # fitted_params(mach).model # raw tree or stump object from DecisionTree.jl
 # ```
 # See also
-# [DecisionTree.jl](https://github.com/bensadeghi/DecisionTree.jl) and
+# [DecisionTree.jl](https://github.com/JuliaAI/DecisionTree.jl) and
 # the unwrapped model type
 # [MLJDecisionTreeInterface.DecisionTree.DecisionTreeRegressor](@ref).
 # """
@@ -337,6 +337,6 @@ ModalRandomForest
 # fitted_params(mach).forest # raw `Ensemble` object from DecisionTree.jl
 # ```
 # See also
-# [DecisionTree.jl](https://github.com/bensadeghi/DecisionTree.jl) and
+# [DecisionTree.jl](https://github.com/JuliaAI/DecisionTree.jl) and
 # the unwrapped model type
 # [MLJDecisionTreeInterface.DecisionTree.RandomForestRegressor](@ref).
