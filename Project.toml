@@ -3,7 +3,7 @@ uuid = "e54bda2e-c571-11ec-9d64-0242ac120002"
 license = "MIT"
 desc = "Julia implementation of Modal Decision Trees and Random Forest algorithms"
 authors = ["Giovanni PAGLIARINI"]
-version = "0.3.3"
+version = "0.3.2"
 
 [deps]
 AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
@@ -62,7 +62,6 @@ Random = "1"
 Reexport = "1"
 ResumableFunctions = "0.6"
 Revise = "3"
-Sole = "0.3"
 SoleBase = "0.11"
 SoleData = "0.12"
 SoleLogics = "0.6"
