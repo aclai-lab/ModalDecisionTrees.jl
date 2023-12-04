@@ -37,8 +37,7 @@ dataset_name = "NATOPS"
 # dataset_name = "RacketSports"
 # dataset_name = "Libras"
 
-
-
+X_train, y = SoleModels.load_arff_dataset(dataset_name)
 
 fitresult = MMI.fit(model, 0, X_train, Y_train);
 

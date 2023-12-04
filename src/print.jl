@@ -137,6 +137,8 @@ function displaymodel(
     depth=0,
     variable_names_map = nothing,
     max_depth = nothing,
+    hidemodality = false,
+    syntaxstring_kwargs = (;),
     kwargs...,
 )
     metrics = get_metrics(leaf; kwargs...)
@@ -150,6 +152,8 @@ function displaymodel(
     depth=0,
     variable_names_map = nothing,
     max_depth = nothing,
+    hidemodality = false,
+    syntaxstring_kwargs = (;),
     kwargs...,
 )
     train_metrics_str = get_metrics_str(get_metrics(leaf; train_or_valid = true, kwargs...))
@@ -163,12 +167,14 @@ function displaymodel(
     depth=0,
     variable_names_map = nothing,
     max_depth = nothing,
+    hidemodality = false,
+    syntaxstring_kwargs = (;),
     # TODO print_rules = false,
     metrics_kwargs...,
 )
     outstr = ""
     if isnothing(max_depth) || depth < max_depth
-        dec_str = displaydecision(node; variable_names_map = variable_names_map)
+        dec_str = displaydecision(node; variable_names_map = variable_names_map, hidemodality = hidemodality, syntaxstring_kwargs...)
         outstr *= "$(rpad(dec_str, 59-(length(indentation_str) == 0 ? length(indentation_str)-1 : length(indentation_str)))) "
         # outstr *= "$(60-max(length(indentation_str)+1)) "
         outstr *= displaymodel(this(node); indentation_str = "", metrics_kwargs...)
@@ -178,6 +184,8 @@ function displaymodel(
             depth = depth+1,
             variable_names_map = variable_names_map,
             max_depth = max_depth,
+            hidemodality = max_depth,
+            syntaxstring_kwargs = syntaxstring_kwargs,
             metrics_kwargs...,
         )
         outstr *= indentation_str * "✘ " # "╰✘
@@ -186,6 +194,8 @@ function displaymodel(
             depth = depth+1,
             variable_names_map = variable_names_map,
             max_depth = max_depth,
+            hidemodality = max_depth,
+            syntaxstring_kwargs = syntaxstring_kwargs,
             metrics_kwargs...,
         )
     else

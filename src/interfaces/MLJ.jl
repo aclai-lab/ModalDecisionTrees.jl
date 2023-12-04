@@ -241,6 +241,7 @@ for (model, human_name) in [
             ),
         },
         target_scitype = Union{
+            AbstractVector{<:Multiclass},
             AbstractVector{<:Continuous},
             AbstractVector{<:Count},
             AbstractVector{<:Finite},
