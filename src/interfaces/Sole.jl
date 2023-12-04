@@ -64,6 +64,8 @@ function translate(
     φr = SoleLogics.normalize(¬(φl); allow_atom_flipping=true, prefer_implications = true)
     new_all_ancestor_formulas = [all_ancestor_formulas..., φl]
 
+    # @show φl, φr
+
     # φr = pathformula(new_pos_ancestors, right(node), true)
 
     # @show syntaxstring(φl)
