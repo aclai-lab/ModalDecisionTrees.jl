@@ -122,7 +122,7 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
             (Xnew, ynew, var_grouping, classes_seen, w) = MMI.reformat(m, Xnew, ynew; passive_mode = true)
             preds, sprinkledmodel = ModalDecisionTrees.sprinkle(model, Xnew, ynew)
             if simplify
-                sprinkledmodel = MDT.prune(model; simplify = true)
+                sprinkledmodel = MDT.prune(sprinkledmodel; simplify = true)
             end
             preds, translate_function(sprinkledmodel)
         end,
