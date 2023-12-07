@@ -124,8 +124,8 @@ function wrapdataset(
         end
     end
 
-    println(X)
-    println(modality(X, 1))
+    # println(X)
+    # println(modality(X, 1))
     multimodal_X = begin
         if X isa SoleData.AbstractMultiModalDataset
             if !passive_mode || !SoleModels.ismultilogiseed(X)
