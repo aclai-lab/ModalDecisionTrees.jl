@@ -137,6 +137,7 @@ function readconditions(model, dataset)
             "logiset metaconditions $(displaysyntaxvector(MDT.metaconditions(dataset)))."
         conditions
     else
+        # @show typeof(dataset)
         naturalconditions(dataset, conditions, model.featvaltype)
     end
 end

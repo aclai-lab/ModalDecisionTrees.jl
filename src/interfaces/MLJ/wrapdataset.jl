@@ -70,6 +70,8 @@ function wrapdataset(
                 conditions = readconditions(model, X),
                 relations = readrelations(model, X)
             )
+        elseif X isa AbstractMultiModalDataset
+            X
         elseif Tables.istable(X)
             DataFrame(X)
         else
@@ -122,16 +124,20 @@ function wrapdataset(
         end
     end
 
+    println(X)
+    println(modality(X, 1))
     multimodal_X = begin
         if X isa SoleData.AbstractMultiModalDataset
             if !passive_mode || !SoleModels.ismultilogiseed(X)
                 @info "Precomputing logiset..."
                 SoleModels.MultiLogiset([begin
-                        metaconditions = readconditions(model, mod)
-                        features = unique(SoleModels.feature.(metaconditions))
+                        _metaconditions = readconditions(model, mod)
+                        features = unique(SoleModels.feature.(_metaconditions))
+                        # @show _metaconditions
+                        # @show features
                         scalarlogiset(mod, features;
                             use_onestep_memoization = true,
-                            conditions = metaconditions,
+                            conditions = _metaconditions,
                             relations = readrelations(model, mod),
                             print_progress = (ninstances(X) > 500)
                         )
