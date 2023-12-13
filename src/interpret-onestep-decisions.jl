@@ -116,7 +116,7 @@ end
 ############################################################################################
 
 
-Base.@propagate_inbounds @resumable function generate_feasible_decisions(
+Base.@propagate_inbounds @resumable function generate_decisions(
     X::AbstractScalarLogiset{W,U},
     i_instances::AbstractVector{<:Integer},
     Sf::AbstractVector{<:AbstractWorlds{W}},
@@ -130,21 +130,21 @@ Base.@propagate_inbounds @resumable function generate_feasible_decisions(
 ) where {W<:AbstractWorld,U}
     # Propositional splits
     if allow_propositional_decisions
-        for decision in generate_propositional_feasible_decisions(X, i_instances, Sf, features_inds, grouped_featsaggrsnops, grouped_featsnaggrs)
+        for decision in generate_propositional_decisions(X, i_instances, Sf, features_inds, grouped_featsaggrsnops, grouped_featsnaggrs)
             # @logmsg LogDebug " Testing decision: $(displaydecision(decision))"
             @yield decision
         end
     end
     # Global splits
     if allow_global_decisions
-        for decision in generate_global_feasible_decisions(X, i_instances, Sf, features_inds, grouped_featsaggrsnops, grouped_featsnaggrs)
+        for decision in generate_global_decisions(X, i_instances, Sf, features_inds, grouped_featsaggrsnops, grouped_featsnaggrs)
             # @logmsg LogDebug " Testing decision: $(displaydecision(decision))"
             @yield decision
         end
     end
     # Modal splits
     if allow_modal_decisions
-        for decision in generate_modal_feasible_decisions(X, i_instances, Sf, modal_relations_inds, features_inds, grouped_featsaggrsnops, grouped_featsnaggrs)
+        for decision in generate_modal_decisions(X, i_instances, Sf, modal_relations_inds, features_inds, grouped_featsaggrsnops, grouped_featsnaggrs)
             # @logmsg LogDebug " Testing decision: $(displaydecision(decision))"
             @yield decision
         end
@@ -187,7 +187,7 @@ end
 
 ############################################################################################
 
-Base.@propagate_inbounds @resumable function generate_propositional_feasible_decisions(
+Base.@propagate_inbounds @resumable function generate_propositional_decisions(
     X::AbstractScalarLogiset{W,U,FT,FR},
     i_instances::AbstractVector{<:Integer},
     Sf::AbstractVector{<:AbstractWorlds{W}},
@@ -270,7 +270,7 @@ end
 
 ############################################################################################
 
-Base.@propagate_inbounds @resumable function generate_modal_feasible_decisions(
+Base.@propagate_inbounds @resumable function generate_modal_decisions(
     X::AbstractScalarLogiset{W,U,FT,FR},
     i_instances::AbstractVector{<:Integer},
     Sf::AbstractVector{<:AbstractWorlds{W}},
@@ -325,7 +325,7 @@ Base.@propagate_inbounds @resumable function generate_modal_feasible_decisions(
                             # elseif X isa UniformFullDimensionalLogiset
                             #      onestep_aggregation(X, i_instance, w, relation, feature, aggregator, i_metacond, i_relation)
                             else
-                                error("generate_global_feasible_decisions is broken.")
+                                error("generate_global_decisions is broken.")
                             end
                         end
                         thresholds[i_aggregator,instance_id] = SoleModels.aggregator_to_binary(aggregator)(gamma, thresholds[i_aggregator,instance_id])
@@ -365,7 +365,7 @@ end
 
 ############################################################################################
 
-Base.@propagate_inbounds @resumable function generate_global_feasible_decisions(
+Base.@propagate_inbounds @resumable function generate_global_decisions(
     X::AbstractScalarLogiset{W,U,FT,FR},
     i_instances::AbstractVector{<:Integer},
     Sf::AbstractVector{<:AbstractWorlds{W}},
@@ -423,7 +423,7 @@ Base.@propagate_inbounds @resumable function generate_global_feasible_decisions(
                     # elseif X isa UniformFullDimensionalLogiset
                     #     onestep_aggregation(X, i_instance, dummyworldTODO, relation, feature, aggregator, i_metacond)
                     else
-                        error("generate_global_feasible_decisions is broken.")
+                        error("generate_global_decisions is broken.")
                     end
                 end
                 # @show gamma

@@ -51,6 +51,7 @@ function build_tree(
     W                   :: Union{Nothing,AbstractVector{U},Symbol}   = default_weights(ninstances(X));
     ##############################################################################
     loss_function       :: Union{Nothing,Function}            = nothing,
+    lookahead           :: Union{Nothing,Integer}             = nothing,
     max_depth           :: Union{Nothing,Int64}               = nothing,
     min_samples_leaf    :: Int64                              = BOTTOM_MIN_SAMPLES_LEAF,
     min_purity_increase :: AbstractFloat                      = BOTTOM_MIN_PURITY_INCREASE,
@@ -86,6 +87,10 @@ function build_tree(
     if isnothing(loss_function)
         loss_function = default_loss_function(L)
     end
+
+    if isnothing(lookahead)
+        lookahead = 0
+    end
     
     if allow_global_splits isa Bool
         allow_global_splits = fill(allow_global_splits, nmodalities(X))
@@ -106,6 +111,7 @@ function build_tree(
     fit_tree(X, Y, initconditions, W
         ;###########################################################################
         loss_function               = loss_function,
+        lookahead                   = lookahead,
         max_depth                   = max_depth,
         min_samples_leaf            = min_samples_leaf,
         min_purity_increase         = min_purity_increase,
@@ -137,6 +143,7 @@ function build_forest(
     ##############################################################################
     # Tree logic-agnostic parameters
     loss_function       :: Union{Nothing,Function}          = nothing,
+    lookahead           :: Union{Nothing,Integer}           = nothing,
     max_depth           :: Union{Nothing,Int64}             = nothing,
     min_samples_leaf    :: Int64                            = BOTTOM_MIN_SAMPLES_LEAF,
     min_purity_increase :: AbstractFloat                    = BOTTOM_MIN_PURITY_INCREASE,
@@ -223,6 +230,7 @@ function build_forest(
             ;
             ################################################################################
             loss_function        = loss_function,
+            lookahead            = lookahead,
             max_depth            = max_depth,
             min_samples_leaf     = min_samples_leaf,
             min_purity_increase  = min_purity_increase,
