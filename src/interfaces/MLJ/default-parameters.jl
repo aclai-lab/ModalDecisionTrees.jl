@@ -63,7 +63,13 @@ function defaultrelations(dataset, relations)
                     "Dimensionality should be 0, 1 or 2.")
             end
         end
-        AVAILABLE_RELATIONS[symb](dimensionality(dataset))
+
+        d = dimensionality(dataset)
+        if d == 0
+            AVAILABLE_RELATIONS[:none](d)
+        else
+            AVAILABLE_RELATIONS[symb](d)
+        end
     end
 end
 
