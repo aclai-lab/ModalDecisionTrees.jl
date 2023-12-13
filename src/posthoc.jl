@@ -367,7 +367,7 @@ end
 ############################################################################################
 
 function _variable_countmap(leaf::AbstractDecisionLeaf{L}; weighted = false) where {L<:Label}
-    return []
+    return Tuple{ModalityId,Int}[]
 end
 
 function _variable_countmap(node::DTInternal{L}; weighted = false) where {L<:Label}

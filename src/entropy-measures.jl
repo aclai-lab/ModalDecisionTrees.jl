@@ -33,13 +33,9 @@ Base.@propagate_inbounds @inline function _shannon_entropy_mod(ws :: AbstractVec
     return -(log(t) - s / t)
 end
 
-# Double
-Base.@propagate_inbounds @inline function _shannon_entropy_mod(
-    ws_l :: AbstractVector{U}, tl :: U,
-    ws_r :: AbstractVector{U}, tr :: U,
-) where {U<:Real}
-    (tl * _shannon_entropy_mod(ws_l, tl) +
-     tr * _shannon_entropy_mod(ws_r, tr))
+# Multiple
+Base.@propagate_inbounds @inline function _shannon_entropy_mod(wss_n_ts::Tuple{AbstractVector{U},U}...) where {U<:Real}
+    sum(((ws, t),)->t * _shannon_entropy_mod(ws, t), wss_n_ts)
 end
 
 # Correction

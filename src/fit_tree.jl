@@ -13,7 +13,9 @@ mutable struct NodeMeta{L<:Label,P} <: AbstractNode{L}
     region             :: UnitRange{Int}                   # a slice of the instances used to decide the split of the node
     depth              :: Int
     modaldepth         :: Int
-    # worlds      :: AbstractVector{Worlds{W}}           # current set of worlds for each training instance
+
+    # worlds      :: AbstractVector{Worlds{W}}             # current set of worlds for each training instance
+
     purity             :: P                                # purity grade attained at training time
     prediction         :: L                                # most likely label
     is_leaf            :: Bool                             # whether this is a leaf node, or a split one
@@ -60,6 +62,13 @@ function lastrightancestor(node::NodeMeta)
     return n
 end
 
+function makeleaf!(node::NodeMeta)
+    node.is_leaf = true
+    # node.i_modality      = nothing
+    # node.purity_times_nt = nothing
+    # node.decision        = nothing
+    # node.consistency     = nothing
+end
 
 # Conversion: NodeMeta (node + training info) -> DTNode (bare decision tree model)
 function _convert(
@@ -299,7 +308,7 @@ end
 # Split a node
 # Find an optimal local split satisfying the given constraints
 #  (e.g. max_depth, min_samples_leaf, etc.)
-Base.@propagate_inbounds @inline function split_node!(
+Base.@propagate_inbounds @inline function optimize_node!(
     node                      :: NodeMeta{L,P},                                                                               # node to split
     Xs                        :: MultiLogiset,                                                                                # modal dataset
     Ss                        :: AbstractVector{<:AbstractVector{WST} where {WorldType,WST<:Vector{WorldType}}},              # vector of current worlds for each instance and modality
@@ -340,7 +349,7 @@ Base.@propagate_inbounds @inline function split_node!(
     _ninstances = length(region)
     r_start = region.start - 1
 
-    # DEBUGprintln("split_node!"); readline()
+    # DEBUGprintln("optimize_node!"); readline()
 
     # Gather all values needed for the current set of instances
     # TODO also slice the dataset?
@@ -485,12 +494,7 @@ Base.@propagate_inbounds @inline function split_node!(
     ########################################################################################
     ########################################################################################
 
-    function fork!(
-        node,
-        Ss,
-        idxs,
-        region,
-    )
+    function splitnode!(node, Ss, idxs)
         # TODO, actually, when using Shannon entropy, we must correct the purity:
         corrected_this_purity_times_nt = loss_function(node.purity_times_nt)::Float64
 
@@ -515,22 +519,14 @@ Base.@propagate_inbounds @inline function split_node!(
             corrected_this_purity_times_nt == typemin(P)) ||
             dishonor_min_purity_increase(L, min_purity_increase, node.purity, corrected_this_purity_times_nt, nt)
         )
-
-            if isa(_is_classification, Val{true})
-                # @logmsg LogDebug " Leaf" corrected_this_purity_times_nt min_purity_increase (corrected_this_purity_times_nt/nt) node.purity ((corrected_this_purity_times_nt/nt) - node.purity)
-            else
-                # @logmsg LogDebug " Leaf" corrected_this_purity_times_nt tsum node.prediction min_purity_increase nt (corrected_this_purity_times_nt / nt - tsum * node.prediction) (min_purity_increase * nt)
-            end
-            ####################################################################################
-            ####################################################################################
-            ####################################################################################
-            # DEBUGprintln("AFTER LEAF!")
-            # readline()
-            node.is_leaf = true
-            return
+            # if isa(_is_classification, Val{true})
+            #     @logmsg LogDebug " Leaf" corrected_this_purity_times_nt min_purity_increase (corrected_this_purity_times_nt/nt) node.purity ((corrected_this_purity_times_nt/nt) - node.purity)
+            # else
+            #     @logmsg LogDebug " Leaf" corrected_this_purity_times_nt tsum node.prediction min_purity_increase nt (corrected_this_purity_times_nt / nt - tsum * node.prediction) (min_purity_increase * nt)
+            # end
+            makeleaf!(node)
+            return false
         end
-
-        node.purity = corrected_this_purity_times_nt/nt
 
         # Compute new world sets (= take a modal step)
 
@@ -545,16 +541,14 @@ Base.@propagate_inbounds @inline function split_node!(
         for i_instance in 1:_ninstances
             # TODO perform step with an OntologicalModalDataset
 
-            # instance = DimensionalDatasets.get_instance(X, node.i_modality, idxs[i_instance + r_start])
             X = modality(Xs, node.i_modality)
-            Sf = Sfs[node.i_modality]
             # instance = DimensionalDatasets.get_instance(X, idxs[i_instance + r_start])
 
             # println(instance)
-            # println(Sf[i_instance])
-            _sat, _ss = modalstep(X, idxs[i_instance + r_start], Sf[i_instance], node.decision)
+            # println(Sfs[node.i_modality][i_instance])
+            _sat, _ss = modalstep(X, idxs[i_instance + r_start], Sfs[node.i_modality][i_instance], node.decision)
             (issat,Ss[node.i_modality][idxs[i_instance + r_start]]) = _sat, _ss
-            # @logmsg LogDetail " [$issat] Instance $(i_instance)/$(_ninstances)" Sf[i_instance] (if issat Ss[node.i_modality][idxs[i_instance + r_start]] end)
+            # @logmsg LogDetail " [$issat] Instance $(i_instance)/$(_ninstances)" Sfs[node.i_modality][i_instance] (if issat Ss[node.i_modality][idxs[i_instance + r_start]] end)
             # println(issat)
             # println(Ss[node.i_modality][idxs[i_instance + r_start]])
             # readline()
@@ -568,17 +562,17 @@ Base.@propagate_inbounds @inline function split_node!(
 
         @logmsg LogDetail " post_unsatisfied" post_unsatisfied
 
-        if length(unique(post_unsatisfied)) == 1
-            @warn "An uninformative split was reached. Something's off\nPurity: $(node.purity)\nSplit: $(decision_str)\nUnsatisfied flags: $(post_unsatisfied)"
-            node.is_leaf = true
-            return
-        end
+        # if length(unique(post_unsatisfied)) == 1
+        #     @warn "An uninformative split was reached. Something's off\nPurity: $(node.purity)\nSplit: $(decision_str)\nUnsatisfied flags: $(post_unsatisfied)"
+        #     makeleaf!(node)
+        #     return false
+        # end
         @logmsg LogDetail " Branch ($(sum(post_unsatisfied))+$(_ninstances-sum(post_unsatisfied))=$(_ninstances) instances) at modality $(node.i_modality) with decision: $(decision_str), purity $(node.purity)"
 
         # if sum(post_unsatisfied) >= min_samples_leaf && (_ninstances - sum(post_unsatisfied)) >= min_samples_leaf
             # DEBUGprintln("LEAF!")
-        #     node.is_leaf = true
-        #     return
+        #     makeleaf!(node)
+        #     return false
         # end
 
 
@@ -595,57 +589,57 @@ Base.@propagate_inbounds @inline function split_node!(
             end
         end
 
-        @logmsg LogDetail " post_unsatisfied" post_unsatisfied
+        # @logmsg LogDetail " post_unsatisfied" post_unsatisfied
 
-        if !isapprox(node.consistency, consistency; atol=eps(Float16), rtol=eps(Float16))
-            errStr = ""
-            errStr *= "A low-level error occurred. Please open a pull request with the following info."
-            errStr *= "Decision $(node.decision).\n"
-            errStr *= "Possible causes:\n"
-            errStr *= "- feature returning NaNs\n"
-            errStr *= "- erroneous representatives for relation $(relation(node.decision)), aggregator $(existential_aggregator(test_operator(node.decision))) and feature $(feature(node.decision))\n"
-            errStr *= "\n"
-            errStr *= "Branch ($(sum(post_unsatisfied))+$(_ninstances-sum(post_unsatisfied))=$(_ninstances) instances) at modality $(node.i_modality) with decision: $(decision_str), purity $(node.purity)\n"
-            errStr *= "$(length(idxs[region])) Instances: $(idxs[region])\n"
-            errStr *= "Different partition was expected:\n"
-            if (isa(_perform_consistency_check, Val{true}) || (isa(_using_lookahead, Val{true}) && lookahead_depth == lookahead))
-                errStr *= "Actual: $(consistency) ($(sum(consistency)))\n"
-                errStr *= "Expected: $(node.consistency) ($(sum(node.consistency)))\n"
-                diff = node.consistency.-consistency
-                errStr *= "Difference: $(diff) ($(sum(abs.(diff))))\n"
-            else
-                errStr *= "Actual: $(consistency)\n"
-                errStr *= "Expected: $(node.consistency)\n"
-                diff = node.consistency-consistency
-                errStr *= "Difference: $(diff)\n"
-            end
-            errStr *= "post_unsatisfied = $(post_unsatisfied)\n"
+        # if !isapprox(node.consistency, consistency; atol=eps(Float16), rtol=eps(Float16))
+        #     errStr = ""
+        #     errStr *= "A low-level error occurred. Please open a pull request with the following info."
+        #     errStr *= "Decision $(node.decision).\n"
+        #     errStr *= "Possible causes:\n"
+        #     errStr *= "- feature returning NaNs\n"
+        #     errStr *= "- erroneous representatives for relation $(relation(node.decision)), aggregator $(existential_aggregator(test_operator(node.decision))) and feature $(feature(node.decision))\n"
+        #     errStr *= "\n"
+        #     errStr *= "Branch ($(sum(post_unsatisfied))+$(_ninstances-sum(post_unsatisfied))=$(_ninstances) instances) at modality $(node.i_modality) with decision: $(decision_str), purity $(node.purity)\n"
+        #     errStr *= "$(length(idxs[region])) Instances: $(idxs[region])\n"
+        #     errStr *= "Different partition was expected:\n"
+        #     if (isa(_perform_consistency_check, Val{true}) || (isa(_using_lookahead, Val{true}) && lookahead_depth == lookahead))
+        #         errStr *= "Actual: $(consistency) ($(sum(consistency)))\n"
+        #         errStr *= "Expected: $(node.consistency) ($(sum(node.consistency)))\n"
+        #         diff = node.consistency.-consistency
+        #         errStr *= "Difference: $(diff) ($(sum(abs.(diff))))\n"
+        #     else
+        #         errStr *= "Actual: $(consistency)\n"
+        #         errStr *= "Expected: $(node.consistency)\n"
+        #         diff = node.consistency-consistency
+        #         errStr *= "Difference: $(diff)\n"
+        #     end
+        #     errStr *= "post_unsatisfied = $(post_unsatisfied)\n"
 
-            if (isa(_perform_consistency_check, Val{true}) || (isa(_using_lookahead, Val{true}) && lookahead_depth == lookahead))
-                errStr *= "world_refs = $(world_refs)\n"
-                errStr *= "new world_refs = $([Ss[node.i_modality][idxs[i_instance + r_start]] for i_instance in 1:_ninstances])\n"
-            end
+        #     if (isa(_perform_consistency_check, Val{true}) || (isa(_using_lookahead, Val{true}) && lookahead_depth == lookahead))
+        #         errStr *= "world_refs = $(world_refs)\n"
+        #         errStr *= "new world_refs = $([Ss[node.i_modality][idxs[i_instance + r_start]] for i_instance in 1:_ninstances])\n"
+        #     end
 
-            # for i in 1:_ninstances
-                # errStr *= "$(DimensionalDatasets.get_channel(Xs, idxs[i + r_start], feature(node.decision)))\t$(Sf[i])\t$(!(post_unsatisfied[i]==1))\t$(Ss[node.i_modality][idxs[i + r_start]])\n";
-            # end
+        #     # for i in 1:_ninstances
+        #         # errStr *= "$(DimensionalDatasets.get_channel(Xs, idxs[i + r_start], feature(node.decision)))\t$(Sfs[node.i_modality][i])\t$(!(post_unsatisfied[i]==1))\t$(Ss[node.i_modality][idxs[i + r_start]])\n";
+        #     # end
 
-            println("ERROR! " * errStr)
-        end
+        #     println("ERROR! " * errStr)
+        # end
 
-        if length(unique(post_unsatisfied)) == 1
-            # Note: this should always be satisfied, since min_samples_leaf is always > 0 and nl,nr>min_samples_leaf
-            errStr = "An uninformative split was reached."
-            errStr *= "Something's off with this algorithm\n"
-            errStr *= "Purity: $(node.purity)\n"
-            errStr *= "Split: $(decision_str)\n"
-            errStr *= "Unsatisfied flags: $(post_unsatisfied)"
+        # if length(unique(post_unsatisfied)) == 1
+        #     # Note: this should always be satisfied, since min_samples_leaf is always > 0 and nl,nr>min_samples_leaf
+        #     errStr = "An uninformative split was reached."
+        #     errStr *= "Something's off with this algorithm\n"
+        #     errStr *= "Purity: $(node.purity)\n"
+        #     errStr *= "Split: $(decision_str)\n"
+        #     errStr *= "Unsatisfied flags: $(post_unsatisfied)"
 
-            println("ERROR! " * errStr)
-            # error(errStr)
-            node.is_leaf = true
-            return
-        end
+        #     println("ERROR! " * errStr)
+        #     # error(errStr)
+        #     makeleaf!(node)
+        #     return false
+        # end
 
         ########################################################################################
         ########################################################################################
@@ -655,9 +649,9 @@ Base.@propagate_inbounds @inline function split_node!(
 
         # @logmsg LogDetail "pre-partition" region idxs[region] post_unsatisfied
         node.split_at = partition!(idxs, post_unsatisfied, 0, region)
+        node.purity = corrected_this_purity_times_nt/nt
         # @logmsg LogDetail "post-partition" idxs[region] node.split_at
 
-        # @logmsg LogDetail "fork!(...): " node ind region
         ind = node.split_at
         oura = node.onlyallowglobal
         mdepth = node.modaldepth
@@ -682,6 +676,7 @@ Base.@propagate_inbounds @inline function split_node!(
         node.l = typeof(node)(region[    1:ind], node.depth+1, leftmodaldepth, l_oura)
         node.r = typeof(node)(region[ind+1:end], node.depth+1, rightmodaldepth, r_oura)
 
+        return true
     end
 
     ########################################################################################
@@ -816,7 +811,7 @@ Base.@propagate_inbounds @inline function split_node!(
 
         purity_times_nt = begin
             if isa(_is_classification, Val{true})
-                loss_function(ncl, nl, ncr, nr)
+                loss_function((ncl, nl), (ncr, nr))
             else
                 purity = begin
                     if W isa Ones{Int}
@@ -847,7 +842,7 @@ Base.@propagate_inbounds @inline function split_node!(
         if (
             !(isa(_using_lookahead, Val{false}) || (isa(_using_lookahead, Val{true}) && lookahead_depth == lookahead))
             ||
-            (purity_times_nt > node.purity_times_nt ) # && !isapprox(purity_times_nt, node.purity_times_nt))
+            (purity_times_nt > node.purity_times_nt) # && !isapprox(purity_times_nt, node.purity_times_nt))
         )
             # DEBUGprintln((ncl,nl,ncr,nr), purity_times_nt)
             node.i_modality          = i_modality
@@ -866,59 +861,60 @@ Base.@propagate_inbounds @inline function split_node!(
             end
         end
 
-        # In case of lookahead, split, recurse on my children, and evaluate the purity of the subtree
+        # In case of lookahead, temporarily accept the split,
+        #  recurse on my children, and evaluate the purity of the whole subtree
         if (isa(_using_lookahead, Val{true}) && lookahead_depth < lookahead)
-            # unsatisfied
-            fork!(
-                node,
-                Ss,
-                idxs,
-                region,
-            )
-            for childnode in [node.l, node.r]
-                split_node!(
-                    childnode,
-                    Xs,
-                    Ss,
-                    Y,
-                    initconditions,
-                    W,
-                    grouped_featsaggrsnopss,
-                    grouped_featsnaggrss,
-                    lookahead_depth + 1,
-                    ##########################################################################
-                    _is_classification,
-                    _using_lookahead,
-                    _perform_consistency_check
-                    ##########################################################################
-                    ;
-                    loss_function                  = loss_function,
-                    lookahead                      = lookahead,
-                    max_depth                      = max_depth,
-                    min_samples_leaf               = min_samples_leaf,
-                    min_purity_increase            = min_purity_increase,
-                    max_purity_at_leaf             = max_purity_at_leaf,
-                    ##########################################################################
-                    max_modal_depth                = max_modal_depth,
-                    n_subrelations                 = n_subrelations,
-                    n_subfeatures                  = n_subfeatures,
-                    allow_global_splits            = allow_global_splits,
-                    ##########################################################################
-                    idxs                           = idxs,
-                    n_classes                      = n_classes,
-                    rng                            = copy(rng),
-                )
+            Ss_copy = deepcopy(Ss)
+            idxs_copy = deepcopy(idxs) # TODO maybe this reset is not needed?
+            is_leaf = splitnode!(node, Ss_copy, idxs_copy)
+            if is_leaf
+                # TODO: evaluate the goodneess of the leaf?
+            else
+                # node.purity_times_nt
+                # purity_times_nt = loss_function((ncl, nl), (ncr, nr)) ...
+                for childnode in [node.l, node.r]
+                    rng_copy =
+                    optimize_node!(
+                        childnode,
+                        Xs,
+                        Ss_copy,
+                        Y,
+                        initconditions,
+                        W,
+                        grouped_featsaggrsnopss,
+                        grouped_featsnaggrss,
+                        lookahead_depth+1,
+                        ##########################################################################
+                        _is_classification,
+                        _using_lookahead,
+                        _perform_consistency_check
+                        ##########################################################################
+                        ;
+                        loss_function                  = loss_function,
+                        lookahead                      = lookahead,
+                        max_depth                      = max_depth,
+                        min_samples_leaf               = min_samples_leaf,
+                        min_purity_increase            = min_purity_increase,
+                        max_purity_at_leaf             = max_purity_at_leaf,
+                        ##########################################################################
+                        max_modal_depth                = max_modal_depth,
+                        n_subrelations                 = n_subrelations,
+                        n_subfeatures                  = n_subfeatures,
+                        allow_global_splits            = allow_global_splits,
+                        ##########################################################################
+                        idxs                           = deepcopy(idxs_copy),
+                        n_classes                      = n_classes,
+                        rng                            = copy(rng),
+                    )
+                end
+                # TODO: evaluate the goodneess of the subtree?
             end
         end
     end
 
+    # Finally accept the split.
     if (isa(_using_lookahead, Val{false}) || (isa(_using_lookahead, Val{true}) && lookahead_depth == lookahead))
-        fork!(
-            node,
-            Ss,
-            idxs,
-            region,
-        )
+        splitnode!(node, Ss, idxs)
     end
 
     # println("END split!")
@@ -1005,10 +1001,10 @@ end
 
     # Process nodes recursively, using multi-threading
     function process_node!(node, rng)
-        # Note: better to spawn rng's beforehand, to preserve reproducibility independently from split_node!
+        # Note: better to spawn rng's beforehand, to preserve reproducibility independently from optimize_node!
         rng_l = spawn(rng)
         rng_r = spawn(rng)
-        @inbounds split_node!(
+        @inbounds optimize_node!(
             node,
             Xs,
             Ss,
