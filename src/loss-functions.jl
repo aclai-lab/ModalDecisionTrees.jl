@@ -27,6 +27,8 @@ default_loss_function(::Type{<:RLabel}) = variance
 # (ps = normalize(ws, 1); return -sum(ps.*log.(ps)))
 # Source: _shannon_entropy from https://github.com/bensadeghi/DecisionTree.jl/blob/master/src/util.jl, with inverted sign
 
+struct ShannonEntropy <: ClassificationLoss end;
+
 # Single
 Base.@propagate_inbounds @inline function (::ShannonEntropy)(ws :: AbstractVector{U}, t :: U) where {U<:Real}
     s = 0.0
@@ -47,8 +49,6 @@ end
 Base.@propagate_inbounds @inline function (::ShannonEntropy)(e :: AbstractFloat)
     e
 end
-
-struct ShannonEntropy <: ClassificationLoss end;
 
 ############################################################################################
 # Classification: Shannon (second untested version)
