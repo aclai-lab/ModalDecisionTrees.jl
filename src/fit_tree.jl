@@ -282,7 +282,7 @@ function generate_relevant_decisions(
             allow_propositional_decisions, allow_modal_decisions, allow_global_decisions, modal_relations_inds, features_inds
         end
 
-        @inbounds for (decision, aggr_thresholds) in generate_decisions(
+        @inbounds for (relation, metacondition, test_op, aggr_thresholds) in generate_decisions(
             X,
             idxs[region],
             modality_Sf,
@@ -294,8 +294,8 @@ function generate_relevant_decisions(
             grouped_featsaggrsnopss[i_modality],
             grouped_featsnaggrss[i_modality],
         )
-            push!(out, (i_modality, decision, aggr_thresholds))
-            # @yield i_modality, decision, aggr_thresholds
+            push!(out, (i_modality, relation, metacondition, test_op, aggr_thresholds))
+            # @yield i_modality, relation, metacondition, test_op, aggr_thresholds
         end # END decisions
     end # END modality
     return out
@@ -325,7 +325,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
     ##########################################################################
     ;
     # Logic-agnostic training parameters
-    loss_function             :: Union{Nothing,Loss},
+    loss_function             :: Loss,
     lookahead                 :: Integer,                                                                                     # maximum depth of the tree to locally optimize for
     max_depth                 :: Union{Nothing,Int},                                                                          # maximum depth of the resultant tree
     min_samples_leaf          :: Int,                                                                                         # minimum number of instancs each leaf needs to have
@@ -494,6 +494,8 @@ Base.@propagate_inbounds @inline function optimize_node!(
     ########################################################################################
     ########################################################################################
 
+    is_lookahead_basecase = (isa(_using_lookahead, Val{true}) && lookahead_depth == lookahead)
+
     function splitnode!(node, Ss, idxs)
         # TODO, actually, when using Shannon entropy, we must correct the purity:
         corrected_this_purity_times_nt = loss_function(node.purity_times_nt)::Float64
@@ -535,7 +537,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
 
         # TODO instead of using memory, here, just use two opposite indices and perform substitutions. indj = _ninstances
         post_unsatisfied = fill(1, _ninstances)
-        if (isa(_perform_consistency_check, Val{true}) || (isa(_using_lookahead, Val{true}) && lookahead_depth == lookahead))
+        if (isa(_perform_consistency_check, Val{true}) || is_lookahead_basecase)
             world_refs = []
         end
         for i_instance in 1:_ninstances
@@ -555,7 +557,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
 
             # I'm using unsatisfied because sorting puts YES instances first, but TODO use the inverse sorting and use issat flag instead
             post_unsatisfied[i_instance] = !issat
-            if (isa(_perform_consistency_check, Val{true}) || (isa(_using_lookahead, Val{true}) && lookahead_depth == lookahead))
+            if (isa(_perform_consistency_check, Val{true}) || is_lookahead_basecase)
                 push!(world_refs, _ss)
             end
         end
@@ -582,7 +584,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
 
         # Check consistency
         consistency = begin
-            if (isa(_perform_consistency_check, Val{true}) || (isa(_using_lookahead, Val{true}) && lookahead_depth == lookahead))
+            if (isa(_perform_consistency_check, Val{true}) || is_lookahead_basecase)
                 post_unsatisfied
             else
                 sum(Wf[BitVector(post_unsatisfied)])
@@ -602,7 +604,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
         #     errStr *= "Branch ($(sum(post_unsatisfied))+$(_ninstances-sum(post_unsatisfied))=$(_ninstances) instances) at modality $(node.i_modality) with decision: $(decision_str), purity $(node.purity)\n"
         #     errStr *= "$(length(idxs[region])) Instances: $(idxs[region])\n"
         #     errStr *= "Different partition was expected:\n"
-        #     if (isa(_perform_consistency_check, Val{true}) || (isa(_using_lookahead, Val{true}) && lookahead_depth == lookahead))
+        #     if (isa(_perform_consistency_check, Val{true}) || is_lookahead_basecase)
         #         errStr *= "Actual: $(consistency) ($(sum(consistency)))\n"
         #         errStr *= "Expected: $(node.consistency) ($(sum(node.consistency)))\n"
         #         diff = node.consistency.-consistency
@@ -615,7 +617,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
         #     end
         #     errStr *= "post_unsatisfied = $(post_unsatisfied)\n"
 
-        #     if (isa(_perform_consistency_check, Val{true}) || (isa(_using_lookahead, Val{true}) && lookahead_depth == lookahead))
+        #     if (isa(_perform_consistency_check, Val{true}) || is_lookahead_basecase)
         #         errStr *= "world_refs = $(world_refs)\n"
         #         errStr *= "new world_refs = $([Ss[node.i_modality][idxs[i_instance + r_start]] for i_instance in 1:_ninstances])\n"
         #     end
@@ -687,7 +689,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
     #################################### Find best split ###################################
     ########################################################################################
 
-    if (isa(_perform_consistency_check, Val{true}) || (isa(_using_lookahead, Val{true}) && lookahead_depth == lookahead))
+    if (isa(_perform_consistency_check, Val{true}) || is_lookahead_basecase)
         unsatisfied = Vector{Bool}(undef, _ninstances)
     end
 
@@ -698,7 +700,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
     # node.consistency = nothing
 
     ## Test all decisions or each modality
-    for (i_modality, decision, aggr_thresholds) in generate_relevant_decisions(
+    for (i_modality, relation, metacondition, test_op, aggr_thresholds) in generate_relevant_decisions(
         Xs,
         Sfs,
         n_subrelations,
@@ -712,208 +714,215 @@ Base.@propagate_inbounds @inline function optimize_node!(
         grouped_featsaggrsnopss,
         grouped_featsnaggrss,
     )
-        # @show decision
-        # @show aggr_thresholds
-        # @logmsg LogDetail " Testing decision: $(displaydecision(decision))"
+        thresh_domain = limit_threshold_domain(aggr_thresholds, Yf, loss_function, test_op, is_lookahead_basecase)
 
-        # println(displaydecision(i_modality, decision))
+        # Look for the best threshold 'a', as in atoms like "feature >= a"
+        for _threshold in thresh_domain
+            decision = SimpleDecision(ScalarExistentialFormula(relation, ScalarCondition(metacondition, _threshold)))
 
-        # TODO avoid ugly unpacking and figure out a different way of achieving this
-        (_test_operator, _threshold) = (test_operator(decision), threshold(decision))
-        ########################################################################
-        # Apply decision to all instances
-        ########################################################################
-        # Note: unsatisfied is also changed
-        if isa(_is_classification, Val{true})
-            (ncr, nr, ncl, nl) = begin
-                # Re-initialize right counts
-                nr = zero(U)
-                ncr = fill(zero(U), n_classes)
-                if (isa(_perform_consistency_check, Val{true}) || (isa(_using_lookahead, Val{true}) && lookahead_depth == lookahead))
-                    unsatisfied .= 1
-                end
-                for i_instance in 1:_ninstances
-                    gamma = aggr_thresholds[i_instance]
-                    issat = SoleModels.apply_test_operator(_test_operator, gamma, _threshold)
-                    # @logmsg LogDetail " instance $i_instance/$_ninstances: (f=$(gamma)) -> issat = $(issat)"
+            # @show decision
+            # @show aggr_thresholds
+            # @logmsg LogDetail " Testing decision: $(displaydecision(decision))"
 
-                    # Note: in a fuzzy generalization, `issat` becomes a [0-1] value
-                    if !issat
-                        nr += Wf[i_instance]
-                        ncr[Yf[i_instance]] += Wf[i_instance]
-                    else
-                        if (isa(_perform_consistency_check, Val{true}) || (isa(_using_lookahead, Val{true}) && lookahead_depth == lookahead))
-                            unsatisfied[i_instance] = 0
-                        end
-                    end
-                end
-                # Calculate left counts
-                ncl = Vector{U}(undef, n_classes)
-                ncl .= nc .- ncr
-                nl = nt - nr
+            # println(displaydecision(i_modality, decision))
 
-                (ncr, nr, ncl, nl)
-            end
-        else
-            (rsums, nr, lsums, nl, rsum, lsum) = begin
-                # Initialize right counts
-                # rssq = zero(U)
-                rsum = zero(U)
-                nr   = zero(U)
-                # TODO experiment with running mean instead, because this may cause a lot of memory inefficiency
-                # https://it.wikipedia.org/wiki/Algoritmi_per_il_calcolo_della_varianza
-                rsums = Float64[] # Vector{U}(undef, _ninstances)
-                lsums = Float64[] # Vector{U}(undef, _ninstances)
-
-                if (isa(_perform_consistency_check, Val{true}) || (isa(_using_lookahead, Val{true}) && lookahead_depth == lookahead))
-                    unsatisfied .= 1
-                end
-                for i_instance in 1:_ninstances
-                    gamma = aggr_thresholds[i_instance]
-                    issat = SoleModels.apply_test_operator(_test_operator, gamma, _threshold)
-                    # @logmsg LogDetail " instance $i_instance/$_ninstances: (f=$(gamma)) -> issat = $(issat)"
-
-                    # TODO make this satisfied a fuzzy value
-                    if !issat
-                        push!(rsums, sums[i_instance])
-                        # rsums[i_instance] = sums[i_instance]
-                        nr   += Wf[i_instance]
-                        rsum += sums[i_instance]
-                        # rssq += ssqs[i_instance]
-                    else
-                        push!(lsums, sums[i_instance])
-                        # lsums[i_instance] = sums[i_instance]
-                        if (isa(_perform_consistency_check, Val{true}) || (isa(_using_lookahead, Val{true}) && lookahead_depth == lookahead))
-                            unsatisfied[i_instance] = 0
-                        end
-                    end
-                end
-
-                # Calculate left counts
-                lsum = tsum - rsum
-                # lssq = tssq - rssq
-                nl   = nt - nr
-
-                (rsums, nr, lsums, nl, rsum, lsum)
-            end
-        end
-
-        ####################################################################################
-        ####################################################################################
-        ####################################################################################
-
-        # @logmsg LogDebug "  (n_left,n_right) = ($nl,$nr)"
-
-        # Honor min_samples_leaf
-        if !(nl >= min_samples_leaf && (_ninstances - nl) >= min_samples_leaf)
-            continue
-        end
-
-        purity_times_nt = begin
+            # TODO avoid ugly unpacking and figure out a different way of achieving this
+            # (test_op, _threshold) = (test_operator(decision), threshold(decision))
+            ########################################################################
+            # Apply decision to all instances
+            ########################################################################
+            # Note: unsatisfied is also changed
             if isa(_is_classification, Val{true})
-                loss_function((ncl, nl), (ncr, nr))
+                (ncr, nr, ncl, nl) = begin
+                    # Re-initialize right counts
+                    nr = zero(U)
+                    ncr = fill(zero(U), n_classes)
+                    if (isa(_perform_consistency_check, Val{true}) || is_lookahead_basecase)
+                        unsatisfied .= 1
+                    end
+                    for i_instance in 1:_ninstances
+                        gamma = aggr_thresholds[i_instance]
+                        issat = SoleModels.apply_test_operator(test_op, gamma, _threshold)
+                        # @logmsg LogDetail " instance $i_instance/$_ninstances: (f=$(gamma)) -> issat = $(issat)"
+
+                        # Note: in a fuzzy generalization, `issat` becomes a [0-1] value
+                        if !issat
+                            nr += Wf[i_instance]
+                            ncr[Yf[i_instance]] += Wf[i_instance]
+                        else
+                            if (isa(_perform_consistency_check, Val{true}) || is_lookahead_basecase)
+                                unsatisfied[i_instance] = 0
+                            end
+                        end
+                    end
+                    # Calculate left counts
+                    ncl = Vector{U}(undef, n_classes)
+                    ncl .= nc .- ncr
+                    nl = nt - nr
+
+                    (ncr, nr, ncl, nl)
+                end
             else
-                purity = begin
-                    if W isa Ones{Int}
-                        loss_function(lsums, lsum, nl, rsums, rsum, nr)
+                (rsums, nr, lsums, nl, rsum, lsum) = begin
+                    # Initialize right counts
+                    # rssq = zero(U)
+                    rsum = zero(U)
+                    nr   = zero(U)
+                    # TODO experiment with running mean instead, because this may cause a lot of memory inefficiency
+                    # https://it.wikipedia.org/wiki/Algoritmi_per_il_calcolo_della_varianza
+                    rsums = Float64[] # Vector{U}(undef, _ninstances)
+                    lsums = Float64[] # Vector{U}(undef, _ninstances)
+
+                    if (isa(_perform_consistency_check, Val{true}) || is_lookahead_basecase)
+                        unsatisfied .= 1
+                    end
+                    for i_instance in 1:_ninstances
+                        gamma = aggr_thresholds[i_instance]
+                        issat = SoleModels.apply_test_operator(test_op, gamma, _threshold)
+                        # @logmsg LogDetail " instance $i_instance/$_ninstances: (f=$(gamma)) -> issat = $(issat)"
+
+                        # TODO make this satisfied a fuzzy value
+                        if !issat
+                            push!(rsums, sums[i_instance])
+                            # rsums[i_instance] = sums[i_instance]
+                            nr   += Wf[i_instance]
+                            rsum += sums[i_instance]
+                            # rssq += ssqs[i_instance]
+                        else
+                            push!(lsums, sums[i_instance])
+                            # lsums[i_instance] = sums[i_instance]
+                            if (isa(_perform_consistency_check, Val{true}) || is_lookahead_basecase)
+                                unsatisfied[i_instance] = 0
+                            end
+                        end
+                    end
+
+                    # Calculate left counts
+                    lsum = tsum - rsum
+                    # lssq = tssq - rssq
+                    nl   = nt - nr
+
+                    (rsums, nr, lsums, nl, rsum, lsum)
+                end
+            end
+
+            ####################################################################################
+            ####################################################################################
+            ####################################################################################
+
+            # @logmsg LogDebug "  (n_left,n_right) = ($nl,$nr)"
+
+            # Honor min_samples_leaf
+            if !(nl >= min_samples_leaf && (_ninstances - nl) >= min_samples_leaf)
+                continue
+            end
+
+            purity_times_nt = begin
+                if isa(_is_classification, Val{true})
+                    loss_function((ncl, nl), (ncr, nr))
+                else
+                    purity = begin
+                        if W isa Ones{Int}
+                            loss_function(lsums, lsum, nl, rsums, rsum, nr)
+                        else
+                            error("TODO expand regression code to weigthed version!")
+                            loss_function(lsums, ws_l, nl, rsums, ws_r, nr)
+                        end
+                    end
+
+                    # TODO use loss_function instead
+                    # ORIGINAL: TODO understand how it works
+                    # purity_times_nt = (rsum * rsum / nr) + (lsum * lsum / nl)
+                    # Variance with ssqs
+                    # purity_times_nt = (rmean, lmean = rsum/nr, lsum/nl; - (nr * (rssq - 2*rmean*rsum + (rmean^2*nr)) / (nr-1) + (nl * (lssq - 2*lmean*lsum + (lmean^2*nl)) / (nl-1))))
+                    # Variance
+                    # var = (x)->sum((x.-StatsBase.mean(x)).^2) / (length(x)-1)
+                    # purity_times_nt = - (nr * var(rsums)) + nl * var(lsums))
+                    # Simil-variance that is easier to compute but it does not work with few samples on the leaves
+                    # var = (x)->sum((x.-StatsBase.mean(x)).^2)
+                    # purity_times_nt = - (var(rsums) + var(lsums))
+                    # println("purity_times_nt: $(purity_times_nt)")
+                end
+            end::P
+
+            # If don't need to use lookahead, then I adopt the split only if it's better than the current one
+            # Otherwise, I adopt it.
+            if (
+                !(isa(_using_lookahead, Val{false}) || is_lookahead_basecase)
+                ||
+                (purity_times_nt > node.purity_times_nt) # && !isapprox(purity_times_nt, node.purity_times_nt))
+            )
+                # DEBUGprintln((ncl,nl,ncr,nr), purity_times_nt)
+                node.i_modality          = i_modality
+                node.purity_times_nt     = purity_times_nt
+                node.decision            = decision
+                # print(decision)
+                # println(" NEW BEST $node.i_modality, $node.purity_times_nt/nt")
+                # @logmsg LogDetail "  Found new optimum in modality $(node.i_modality): " (node.purity_times_nt/nt) node.decision
+                #################################
+                node.consistency = begin
+                    if (isa(_perform_consistency_check, Val{true}) || is_lookahead_basecase)
+                        unsatisfied[1:_ninstances]
                     else
-                        error("TODO expand regression code to weigthed version!")
-                        loss_function(lsums, ws_l, nl, rsums, ws_r, nr)
+                        nr
                     end
                 end
-
-                # TODO use loss_function instead
-                # ORIGINAL: TODO understand how it works
-                # purity_times_nt = (rsum * rsum / nr) + (lsum * lsum / nl)
-                # Variance with ssqs
-                # purity_times_nt = (rmean, lmean = rsum/nr, lsum/nl; - (nr * (rssq - 2*rmean*rsum + (rmean^2*nr)) / (nr-1) + (nl * (lssq - 2*lmean*lsum + (lmean^2*nl)) / (nl-1))))
-                # Variance
-                # var = (x)->sum((x.-StatsBase.mean(x)).^2) / (length(x)-1)
-                # purity_times_nt = - (nr * var(rsums)) + nl * var(lsums))
-                # Simil-variance that is easier to compute but it does not work with few samples on the leaves
-                # var = (x)->sum((x.-StatsBase.mean(x)).^2)
-                # purity_times_nt = - (var(rsums) + var(lsums))
-                # println("purity_times_nt: $(purity_times_nt)")
             end
-        end::P
 
-        # If don't need to use lookahead, then I adopt the split only if it's better than the current one
-        # Otherwise, I adopt it.
-        if (
-            !(isa(_using_lookahead, Val{false}) || (isa(_using_lookahead, Val{true}) && lookahead_depth == lookahead))
-            ||
-            (purity_times_nt > node.purity_times_nt) # && !isapprox(purity_times_nt, node.purity_times_nt))
-        )
-            # DEBUGprintln((ncl,nl,ncr,nr), purity_times_nt)
-            node.i_modality          = i_modality
-            node.purity_times_nt     = purity_times_nt
-            node.decision            = decision
-            # print(decision)
-            # println(" NEW BEST $node.i_modality, $node.purity_times_nt/nt")
-            # @logmsg LogDetail "  Found new optimum in modality $(node.i_modality): " (node.purity_times_nt/nt) node.decision
-            #################################
-            node.consistency = begin
-                if (isa(_perform_consistency_check, Val{true}) || (isa(_using_lookahead, Val{true}) && lookahead_depth == lookahead))
-                    unsatisfied[1:_ninstances]
+            # In case of lookahead, temporarily accept the split,
+            #  recurse on my children, and evaluate the purity of the whole subtree
+            if (isa(_using_lookahead, Val{true}) && lookahead_depth < lookahead)
+                Ss_copy = deepcopy(Ss)
+                idxs_copy = deepcopy(idxs) # TODO maybe this reset is not needed?
+                is_leaf = splitnode!(node, Ss_copy, idxs_copy)
+                if is_leaf
+                    # TODO: evaluate the goodneess of the leaf?
                 else
-                    nr
+                    # node.purity_times_nt
+                    # purity_times_nt = loss_function((ncl, nl), (ncr, nr)) ...
+                    for childnode in [node.l, node.r]
+                        rng_copy =
+                        optimize_node!(
+                            childnode,
+                            Xs,
+                            Ss_copy,
+                            Y,
+                            initconditions,
+                            W,
+                            grouped_featsaggrsnopss,
+                            grouped_featsnaggrss,
+                            lookahead_depth+1,
+                            ##########################################################################
+                            _is_classification,
+                            _using_lookahead,
+                            _perform_consistency_check
+                            ##########################################################################
+                            ;
+                            loss_function                  = loss_function,
+                            lookahead                      = lookahead,
+                            max_depth                      = max_depth,
+                            min_samples_leaf               = min_samples_leaf,
+                            min_purity_increase            = min_purity_increase,
+                            max_purity_at_leaf             = max_purity_at_leaf,
+                            ##########################################################################
+                            max_modal_depth                = max_modal_depth,
+                            n_subrelations                 = n_subrelations,
+                            n_subfeatures                  = n_subfeatures,
+                            allow_global_splits            = allow_global_splits,
+                            ##########################################################################
+                            idxs                           = deepcopy(idxs_copy),
+                            n_classes                      = n_classes,
+                            rng                            = copy(rng),
+                        )
+                    end
+                    # TODO: evaluate the goodneess of the subtree?
                 end
-            end
-        end
-
-        # In case of lookahead, temporarily accept the split,
-        #  recurse on my children, and evaluate the purity of the whole subtree
-        if (isa(_using_lookahead, Val{true}) && lookahead_depth < lookahead)
-            Ss_copy = deepcopy(Ss)
-            idxs_copy = deepcopy(idxs) # TODO maybe this reset is not needed?
-            is_leaf = splitnode!(node, Ss_copy, idxs_copy)
-            if is_leaf
-                # TODO: evaluate the goodneess of the leaf?
-            else
-                # node.purity_times_nt
-                # purity_times_nt = loss_function((ncl, nl), (ncr, nr)) ...
-                for childnode in [node.l, node.r]
-                    rng_copy =
-                    optimize_node!(
-                        childnode,
-                        Xs,
-                        Ss_copy,
-                        Y,
-                        initconditions,
-                        W,
-                        grouped_featsaggrsnopss,
-                        grouped_featsnaggrss,
-                        lookahead_depth+1,
-                        ##########################################################################
-                        _is_classification,
-                        _using_lookahead,
-                        _perform_consistency_check
-                        ##########################################################################
-                        ;
-                        loss_function                  = loss_function,
-                        lookahead                      = lookahead,
-                        max_depth                      = max_depth,
-                        min_samples_leaf               = min_samples_leaf,
-                        min_purity_increase            = min_purity_increase,
-                        max_purity_at_leaf             = max_purity_at_leaf,
-                        ##########################################################################
-                        max_modal_depth                = max_modal_depth,
-                        n_subrelations                 = n_subrelations,
-                        n_subfeatures                  = n_subfeatures,
-                        allow_global_splits            = allow_global_splits,
-                        ##########################################################################
-                        idxs                           = deepcopy(idxs_copy),
-                        n_classes                      = n_classes,
-                        rng                            = copy(rng),
-                    )
-                end
-                # TODO: evaluate the goodneess of the subtree?
             end
         end
     end
 
     # Finally accept the split.
-    if (isa(_using_lookahead, Val{false}) || (isa(_using_lookahead, Val{true}) && lookahead_depth == lookahead))
+    if (isa(_using_lookahead, Val{false}) || is_lookahead_basecase)
         splitnode!(node, Ss, idxs)
     end
 

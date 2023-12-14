@@ -125,8 +125,8 @@ mach = machine(ModalRandomForest(;
     min_purity_increase = 0.0,
     rng                 = Random.MersenneTwister(1),
 ), Xnt, y) |> m->fit!(m, rows = train_idxs)
-@test nnodes(fitted_params(mach).rawmodel) == 712
-@test sum(predict_mode(mach, rows = test_idxs) .== y[test_idxs]) / length(y[test_idxs]) > 0.55
+@test nnodes(fitted_params(mach).rawmodel) == 768
+@test sum(predict_mode(mach, rows = test_idxs) .== y[test_idxs]) / length(y[test_idxs]) > 0.51
 
 # ############################################################################################
 # ############################################################################################

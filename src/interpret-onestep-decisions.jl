@@ -151,28 +151,53 @@ Base.@propagate_inbounds @resumable function generate_decisions(
     end
 end
 
-function compute_thresh_domain(testop, aggr_thresholds::AbstractVector{U}) where {U}
-    # @show testop
-    # @show aggr_thresholds
-    thresh_domain = begin
-        thresh_domain = unique(aggr_thresholds)
-        if length(thresh_domain) == 1 # Always zero entropy
-            U[]
-        elseif testop in [≥, <] # Remove edge-case with zero entropy
-            _m = minimum(thresh_domain)
-            filter(x->x != _m, thresh_domain)
-        elseif testop in [≤, >] # Remove edge-case with zero entropy
-            _m = maximum(thresh_domain)
-            filter(x->x != _m, thresh_domain)
-        else
-            thresh_domain
+"""
+References:
+- "Generalizing Boundary Points"
+- "Multi-Interval Discretization of Continuous-Valued Attributes for Classification Learning"
+"""
+function limit_threshold_domain(
+    aggr_thresholds::AbstractVector{U},
+    Y::AbstractVector{L},
+    loss_function::Loss,
+    test_op::TestOperator,
+    is_lookahead_basecase::Bool,
+) where {L<:_Label,U}
+    if loss_function isa ShannonEntropy
+        # @show test_op
+        # @show aggr_thresholds
+        thresh_domain = begin
+            thresh_domain = unique(aggr_thresholds)
+            if length(thresh_domain) == 1 # Always zero entropy
+                U[]
+            elseif test_op in [≥, <, ≤, >]
+                # p = sortperm(aggr_thresholds)
+                # Y[p]
+                # unique(aggr_thresholds[p])
+                # thresh_domain
+                if test_op in [≥, <] # Remove edge-case with zero entropy
+                    # thresh_domain = thresh_domain[2:end]
+                    _m = minimum(thresh_domain)
+                    filter(x->x != _m, thresh_domain)
+                elseif test_op in [≤, >] # Remove edge-case with zero entropy
+                    # thresh_domain = thresh_domain[1:(end-1)]
+                    _m = maximum(thresh_domain)
+                    filter(x->x != _m, thresh_domain)
+                else
+                    thresh_domain
+                end
+            else
+                thresh_domain
+            end
         end
+        return thresh_domain
+        # @show thresh_domain
+    else
+        return unique(aggr_thresholds)
     end
-    return thresh_domain
-    # @show thresh_domain
 end
 
-# function compute_thresh_domain(aggr_thresholds::AbstractVector{U}) where {U}
+# function limit_threshold_domain(loss_function::Loss, aggr_thresholds::AbstractVector{U}) where {U}
 #     # @show aggr_thresholds
 #     thresh_domain = begin
 #         if U <: Bool
@@ -243,26 +268,10 @@ Base.@propagate_inbounds @resumable function generate_propositional_decisions(
         # For each aggregator
         for (i_aggregator,aggregator) in enumerate(aggregators)
             aggr_thresholds = thresholds[i_aggregator,:]
-            # thresh_domain = compute_thresh_domain(aggr_thresholds)
 
             for metacondition in aggrsnops[aggregator]
-                testop = SoleModels.test_operator(metacondition)
-                thresh_domain = compute_thresh_domain(testop, aggr_thresholds)
-
-                # TODO figure out a solution to this issue: ≥ and ≤ in a propositional condition can find more or less the same optimum, so no need to check both; but which one of them should be the one on the left child, the one that makes the modal step?
-                # if dual_metacondition(metacondition) in tested_metacondition
-                #   error("Double-check this part of the code: there's a foundational issue here to settle!")
-                #   println("Found $(metacondition)'s dual $(dual_metacondition(metacondition)) in tested_metacondition = $(tested_metacondition)")
-                #   continue
-                # end
-                # @logmsg LogDetail " Test operator $(metacondition)"
-                # Look for the best threshold 'a', as in atoms like "feature >= a"
-                for threshold in thresh_domain
-                    decision = SimpleDecision(ScalarExistentialFormula(relation, ScalarCondition(metacondition, threshold)))
-                    # @logmsg LogDebug " Testing decision: $(displaydecision(decision))"
-                    @yield decision, aggr_thresholds
-                end # for threshold
-                # push!(tested_metacondition, metacondition)
+                test_op = SoleModels.test_operator(metacondition)
+                @yield relation, metacondition, test_op, aggr_thresholds
             end # for metacondition
         end # for aggregator
     end # for feature
@@ -344,19 +353,11 @@ Base.@propagate_inbounds @resumable function generate_modal_decisions(
             for (i_aggregator,(_,aggregator)) in enumerate(aggregators_with_ids)
 
                 aggr_thresholds = thresholds[i_aggregator,:]
-                # thresh_domain = compute_thresh_domain(aggr_thresholds)
 
                 for metacondition in aggrsnops[aggregator]
                     # @logmsg LogDetail " Test operator $(metacondition)"
-                    testop = SoleModels.test_operator(metacondition)
-                    thresh_domain = compute_thresh_domain(testop, aggr_thresholds)
-
-                    # Look for the best threshold 'a', as in atoms like "feature >= a"
-                    for threshold in thresh_domain
-                        decision = SimpleDecision(ScalarExistentialFormula(relation, ScalarCondition(metacondition, threshold)))
-                        # @logmsg LogDebug " Testing decision: $(displaydecision(decision))"
-                        @yield decision, aggr_thresholds
-                    end # for threshold
+                    test_op = SoleModels.test_operator(metacondition)
+                    @yield relation, metacondition, test_op, aggr_thresholds
                 end # for metacondition
             end # for aggregator
         end # for feature
@@ -445,20 +446,10 @@ Base.@propagate_inbounds @resumable function generate_global_decisions(
             # @show aggregator
 
             aggr_thresholds = thresholds[i_aggregator,:]
-            # thresh_domain = compute_thresh_domain(aggr_thresholds)
 
             for metacondition in aggrsnops[aggregator]
-                testop = SoleModels.test_operator(metacondition)
-                thresh_domain = compute_thresh_domain(testop, aggr_thresholds)
-
-                # @logmsg LogDetail " Test operator $(metacondition)"
-
-                # Look for the best threshold 'a', as in atoms like "feature >= a"
-                for threshold in thresh_domain
-                    decision = SimpleDecision(ScalarExistentialFormula(relation, ScalarCondition(metacondition, threshold)))
-                    # @logmsg LogDebug " Testing decision: $(displaydecision(decision))"
-                    @yield decision, aggr_thresholds
-                end # for threshold
+                test_op = SoleModels.test_operator(metacondition)
+                @yield relation, metacondition, test_op, aggr_thresholds
             end # for metacondition
         end # for aggregator
     end # for feature
