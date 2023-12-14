@@ -714,7 +714,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
         grouped_featsaggrsnopss,
         grouped_featsnaggrss,
     )
-        thresh_domain = limit_threshold_domain(aggr_thresholds, Yf, loss_function, test_op, is_lookahead_basecase)
+        thresh_domain = limit_threshold_domain(aggr_thresholds, Yf, loss_function, test_op, min_samples_leaf, is_lookahead_basecase)
 
         # Look for the best threshold 'a', as in atoms like "feature >= a"
         for _threshold in thresh_domain

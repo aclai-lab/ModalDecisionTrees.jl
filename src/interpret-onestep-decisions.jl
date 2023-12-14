@@ -20,6 +20,8 @@ import SoleModels.DimensionalDatasets: nfeatures, features
 using SoleModels: Aggregator, TestOperator, ScalarMetaCondition
 using SoleModels: ScalarExistentialFormula
 
+using DataStructures
+
 """
 Logical datasets with scalar features.
 """
@@ -161,6 +163,7 @@ function limit_threshold_domain(
     Y::AbstractVector{L},
     loss_function::Loss,
     test_op::TestOperator,
+    min_samples_leaf::Integer,
     is_lookahead_basecase::Bool,
 ) where {L<:_Label,U}
     if loss_function isa ShannonEntropy
@@ -171,20 +174,57 @@ function limit_threshold_domain(
             if length(thresh_domain) == 1 # Always zero entropy
                 U[]
             elseif test_op in [≥, <, ≤, >]
-                # p = sortperm(aggr_thresholds)
-                # Y[p]
-                # unique(aggr_thresholds[p])
-                # thresh_domain
-                if test_op in [≥, <] # Remove edge-case with zero entropy
-                    # thresh_domain = thresh_domain[2:end]
-                    _m = minimum(thresh_domain)
-                    filter(x->x != _m, thresh_domain)
-                elseif test_op in [≤, >] # Remove edge-case with zero entropy
-                    # thresh_domain = thresh_domain[1:(end-1)]
-                    _m = maximum(thresh_domain)
-                    filter(x->x != _m, thresh_domain)
+                if is_lookahead_basecase
+                    if test_op in [≥, <] # Remove edge-case with zero entropy
+                        _m = minimum(thresh_domain)
+                        filter(x->x != _m, thresh_domain)
+                    elseif test_op in [≤, >] # Remove edge-case with zero entropy
+                        _m = maximum(thresh_domain)
+                        filter(x->x != _m, thresh_domain)
+                    else
+                        thresh_domain
+                    end
                 else
-                    thresh_domain
+                    p = sortperm(aggr_thresholds)
+                    _aggr_thresholds = aggr_thresholds[p]
+                    _Y = Y[p]
+
+                    thresh_domain = unique(_aggr_thresholds)
+                    # sort!(thresh_domain)
+
+                    ps = pairs(SoleBase._groupby(first, zip(_aggr_thresholds, _Y) |> collect))
+                    groupedY = map(((k,v),)->(k=>unique(map(last, v))), collect(ps))
+                    sort!(groupedY; by=first)
+                    groupedY = OrderedDict(groupedY)
+
+                    # unique(_aggr_thresholds)
+                    # thresh_domain
+                    if test_op in [≥, <]
+                        is_boundary_point = map(((i, threshold),)->begin
+                            first = (i == 1)
+                            (
+                                ((i-1) >= min_samples_leaf && length(Y)-(i-1) >= min_samples_leaf)
+                                # ((i-1) >= min_samples_leaf && length(Y)-(i-1) >= min_samples_leaf) &&
+                                # (!first &&
+                                # !issubset(groupedY[threshold], groupedY[thresh_domain[i-1]]))
+                            )
+                            end, enumerate(thresh_domain))
+
+                        thresh_domain[is_boundary_point]
+                    elseif test_op in [≤, >]
+                        is_boundary_point = map(((i, threshold),)->begin
+                            last = (i == length(thresh_domain))
+                            (
+                                ((i >= min_samples_leaf && length(Y)-i >= min_samples_leaf)) &&
+                                (!last &&
+                                !issubset(groupedY[threshold], groupedY[thresh_domain[i+1]]))
+                            )
+                            end, enumerate(thresh_domain))
+
+                        thresh_domain[is_boundary_point]
+                    else
+                        thresh_domain
+                    end
                 end
             else
                 thresh_domain
