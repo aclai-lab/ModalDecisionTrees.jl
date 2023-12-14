@@ -112,6 +112,7 @@ mach = @time machine(ModalDecisionTree(;
     min_samples_leaf    = 1,
     min_samples_split   = 2,
     min_purity_increase = 0.0,
+    rng                 = Random.MersenneTwister(1),
 ), Xnt, y) |> m->fit!(m, rows = train_idxs)
 
 mach = machine(ModalRandomForest(;
@@ -122,8 +123,9 @@ mach = machine(ModalRandomForest(;
     min_samples_leaf    = 1,
     min_samples_split   = 2,
     min_purity_increase = 0.0,
+    rng                 = Random.MersenneTwister(1),
 ), Xnt, y) |> m->fit!(m, rows = train_idxs)
-@test nnodes(fitted_params(mach).rawmodel) == 730
+@test nnodes(fitted_params(mach).rawmodel) == 712
 @test sum(predict_mode(mach, rows = test_idxs) .== y[test_idxs]) / length(y[test_idxs]) > 0.55
 
 # ############################################################################################
