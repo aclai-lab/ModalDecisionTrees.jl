@@ -58,6 +58,7 @@ function defaultrelations(dataset, relations)
                 :IA7
             elseif dimensionality(dataset) == 2
                 :IA7
+                # :RCC8
             else
                 error("Cannot infer relation set for dimensionality $(repr(dimensionality(dataset))). " *
                     "Dimensionality should be 0, 1 or 2.")

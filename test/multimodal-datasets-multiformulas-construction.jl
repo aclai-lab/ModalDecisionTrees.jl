@@ -180,19 +180,20 @@ using Random
 N = 5
 
 # Multimodal tree:
-X_all = DataFrame(
+_X_all = DataFrame(
     mode0 = [1.0, 0.0, 0.0, 0.0, 0.0],
     mode1 = [zeros(5), ones(5), zeros(5), zeros(5), zeros(5)],
     mode2 = [zeros(5,5), zeros(5,5), ones(5,5), zeros(5,5), zeros(5,5)],
 )
 
-X_all = MultiModalDataset([X_all])
+X_all = MultiModalDataset(_X_all)
 y = [i <= div(N,2)+1 for i in 1:N]
 
 # Split dataset
 p = randperm(Random.MersenneTwister(1), N)
 train_idxs, test_idxs = p[1:round(Int, N*.8)], p[round(Int, N*.8)+1:end]
 
+@test_logs min_level=Logging.Error wrapdataset(X_all, ModalDecisionTree(;))
 @test_logs min_level=Logging.Error mach = MLJ.fit!(machine(ModalDecisionTree(; min_samples_leaf = 1), X_all, y), rows=train_idxs)
 
 # Very multimodal tree:
@@ -214,7 +215,7 @@ X_all = DataFrame(
     mode2 = [rand(5,5) for i in 1:N],
 )
 
-X_all = MultiModalDataset([X_all])
+X_all = MultiModalDataset(X_all)
 y = [i <= div(N,2)+1 for i in 1:N]
 
 # Split dataset

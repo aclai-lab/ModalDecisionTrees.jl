@@ -16,7 +16,7 @@ begin
     X = SoleData.cube2dataframe(Xcube)
     model = ModalDecisionTree()
 
-    mach = machine(model, X_train, y_train) |> fit!
+    mach = @time machine(model, X_train, y_train) |> fit!
 
     report(mach).printmodel(1000; threshold_digits = 2);
 
@@ -38,7 +38,7 @@ X_test, y_test = X[p_test,:], y[p_test]
 begin
     model = ModalDecisionTree()
 
-    mach = machine(model, X_train, y_train) |> fit!
+    mach = @time machine(model, X_train, y_train) |> fit!
 
     report(mach).printmodel(1000; threshold_digits = 2);
 
@@ -52,7 +52,7 @@ end
 begin
     model = ModalDecisionTree(; relations = :IA7)
 
-    mach = machine(model, X_train, y_train) |> fit!
+    mach = @time machine(model, X_train, y_train) |> fit!
 
     report(mach).printmodel(1000; threshold_digits = 2);
 
@@ -72,7 +72,7 @@ begin
         featvaltype = Float32,
     )
 
-    mach1 = machine(model, X_train, y_train) |> fit!
+    mach1 = @time machine(model, X_train, y_train) |> fit!
 
     model = ModalDecisionTree(;
         relations = :IA7,
@@ -80,7 +80,7 @@ begin
         featvaltype = Float32,
     )
 
-    mach2 = machine(model, X_train, y_train) |> fit!
+    mach2 = @time machine(model, X_train, y_train) |> fit!
 
     report(mach1).printmodel(1000; threshold_digits = 2);
     report(mach2).printmodel(1000; threshold_digits = 2);
@@ -104,7 +104,7 @@ begin
         # features = [minimum, maximum, UnivariateFeature{Float32}(1, recheight), UnivariateFeature{Float32}(1, recwidth)],
     )
 
-    mach = machine(model, X_train, y_train) |> fit!
+    mach = @time machine(model, X_train, y_train) |> fit!
 
     report(mach).printmodel(1000; threshold_digits = 2);
 
@@ -124,7 +124,7 @@ begin
         # features = [minimum, maximum, UnivariateFeature{Float32}(1, recheight), UnivariateFeature{Float32}(1, recwidth)],
     )
 
-    mach = machine(model, X_train, y_train) |> fit!
+    mach = @time machine(model, X_train, y_train) |> fit!
 
     report(mach).printmodel(1000; threshold_digits = 2);
 
@@ -143,7 +143,7 @@ begin
         downsize = (x)->ModalDecisionTrees.moving_average(x, (10,10)),
     )
 
-    mach = machine(model, X_train, y_train) |> fit!
+    mach = @time machine(model, X_train, y_train) |> fit!
 
     model = ModalDecisionTree(;
         relations = :IA7,
@@ -154,7 +154,7 @@ begin
         # features = [minimum, maximum, UnivariateFeature{Float32}(1, recheight), UnivariateFeature{Float32}(1, recwidth)],
     )
 
-    mach = machine(model, X_train, y_train) |> fit!
+    mach = @time machine(model, X_train, y_train) |> fit!
 
     report(mach).printmodel(1000; threshold_digits = 2);
 

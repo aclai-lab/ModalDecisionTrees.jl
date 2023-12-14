@@ -32,7 +32,7 @@ p = randperm(Random.MersenneTwister(1), N)
 train_idxs, test_idxs = p[1:round(Int, N*.8)], p[round(Int, N*.8)+1:end]
 
 # Fit
-MLJ.fit!(mach, rows=train_idxs)
+@time MLJ.fit!(mach, rows=train_idxs)
 
 # Perform predictions, compute accuracy
 yhat = MLJ.predict(mach, rows=test_idxs)
@@ -61,7 +61,7 @@ acc = sum(yhat .== y[test_idxs])/length(yhat)
 fitted_params(mach).rawmodel;
 report(mach).printmodel(3);
 
-MLJ.fit!(mach)
+@time MLJ.fit!(mach)
 
 @test_nowarn feature_importances(mach)
 
@@ -69,13 +69,13 @@ MLJ.fit!(mach)
 ############################################################################################
 ############################################################################################
 
-mach = machine(ModalDecisionTree(post_prune = true), X, y) |> MLJ.fit!
-mach = machine(ModalDecisionTree(post_prune = true, max_modal_depth = 2), X, y) |> MLJ.fit!
-mach = machine(ModalDecisionTree(min_samples_split=100, post_prune = true, merge_purity_threshold = 0.4), X, y) |> MLJ.fit!
-mach = machine(ModalDecisionTree(n_subfeatures = 0.2,), X, y) |> MLJ.fit!
-mach = machine(ModalDecisionTree(n_subfeatures = 2,), X, y) |> MLJ.fit!
-mach = machine(ModalDecisionTree(n_subfeatures = x->ceil(Int64, div(x, 2)),), X, y) |> MLJ.fit!
-mach = machine(ModalDecisionTree(downsize = false,), X, y) |> MLJ.fit!
+mach = @time machine(ModalDecisionTree(post_prune = true), X, y) |> MLJ.fit!
+mach = @time machine(ModalDecisionTree(post_prune = true, max_modal_depth = 2), X, y) |> MLJ.fit!
+mach = @time machine(ModalDecisionTree(min_samples_split=100, post_prune = true, merge_purity_threshold = 0.4), X, y) |> MLJ.fit!
+mach = @time machine(ModalDecisionTree(n_subfeatures = 0.2,), X, y) |> MLJ.fit!
+mach = @time machine(ModalDecisionTree(n_subfeatures = 2,), X, y) |> MLJ.fit!
+mach = @time machine(ModalDecisionTree(n_subfeatures = x->ceil(Int64, div(x, 2)),), X, y) |> MLJ.fit!
+mach = @time machine(ModalDecisionTree(downsize = false,), X, y) |> MLJ.fit!
 
 ############################################################################################
 ############################################################################################
@@ -88,7 +88,7 @@ for i in 1:4
     c = rand(rng, 1:length(Xwithnans))
     r = rand(rng, 1:length(Xwithnans[c]))
     Xwithnans[c][r][rand(1:length(Xwithnans[c][r]))] = NaN
-    @test_throws ErrorException machine(ModalDecisionTree(), Xwithnans, y) |> MLJ.fit!
+    @test_throws ErrorException @time machine(ModalDecisionTree(), Xwithnans, y) |> MLJ.fit!
 end
 
 ############################################################################################
@@ -112,7 +112,7 @@ train_idxs, test_idxs = p[1:round(Int, N*.8)], p[round(Int, N*.8)+1:end]
 
 mach = @test_logs (:warn,) machine(t, modality(multilogiset, 1), y)
 
-MLJ.fit!(mach, rows=train_idxs)
+@time MLJ.fit!(mach, rows=train_idxs)
 
 yhat = MLJ.predict_mode(mach, rows=test_idxs)
 acc = sum(yhat .== y[test_idxs])/length(yhat)
@@ -123,7 +123,7 @@ acc = sum(yhat .== y[test_idxs])/length(yhat)
 mach = @test_logs (:warn,) machine(t, multilogiset, y)
 
 # Fit
-MLJ.fit!(mach, rows=train_idxs)
+@time MLJ.fit!(mach, rows=train_idxs)
 
 yhat = MLJ.predict_mode(mach, rows=test_idxs)
 acc = sum(yhat .== y[test_idxs])/length(yhat)
