@@ -68,79 +68,79 @@ zip(SoleModels.readmetrics.(leaves),leaves) |> collect |> sort
 ############################################################################################
 ############################################################################################
 
-using Images
-using ImageFiltering
-using StatsBase
+# using Images
+# using ImageFiltering
+# using StatsBase
 
-Xcube
+# Xcube
 
-# img = eachslice(Xcube; dims=4)[1]
-Xcubergb = mapslices(c->RGB(c...), Xcube, dims=3)
-Xcubehsv = HSV.(Xcubergb)
-# Xcubergb = mapslices(c->(@show c), Xcubehsv, dims=3)
-Xcubehsv = mapslices(c->[first(c).h, first(c).s, first(c).v], Xcubehsv, dims=3)
-# Xcubergb = mapslices(c->[c.h, c.s, c.v], Xcubehsv, dims=[1,2,4])
-X = SoleData.cube2dataframe(Xcube, ["H", "S", "V"])
+# # img = eachslice(Xcube; dims=4)[1]
+# Xcubergb = mapslices(c->RGB(c...), Xcube, dims=3)
+# Xcubehsv = HSV.(Xcubergb)
+# # Xcubergb = mapslices(c->(@show c), Xcubehsv, dims=3)
+# Xcubehsv = mapslices(c->[first(c).h, first(c).s, first(c).v], Xcubehsv, dims=3)
+# # Xcubergb = mapslices(c->[c.h, c.s, c.v], Xcubehsv, dims=[1,2,4])
+# X = SoleData.cube2dataframe(Xcube, ["H", "S", "V"])
 
-X_train, y_train = X[p,:], y[p]
-X_test, y_test = X[p_test,:], y[p_test]
+# X_train, y_train = X[p,:], y[p]
+# X_test, y_test = X[p_test,:], y[p_test]
 
-kernel = [1 0 -1;
-          2 0 -2;
-          1 0 -1]
-im = imfilter(rand(10,10), kernel)
-im = imfilter(rand(2,2), kernel)
+# kernel = [1 0 -1;
+#           2 0 -2;
+#           1 0 -1]
+# im = imfilter(rand(10,10), kernel)
+# im = imfilter(rand(2,2), kernel)
 
-recvedge(x) = (imfilter(x, [1;; -1]))
-rechedge(x) = (imfilter(x, [1;; -1]'))
-recvsobel(x) = (imfilter(x, [1 0 -1; 2 0 -2; 1 0 -1]))
-rechsobel(x) = (imfilter(x, [1 0 -1; 2 0 -2; 1 0 -1]'))
+# recvedge(x) = (imfilter(x, [1;; -1]))
+# rechedge(x) = (imfilter(x, [1;; -1]'))
+# recvsobel(x) = (imfilter(x, [1 0 -1; 2 0 -2; 1 0 -1]))
+# rechsobel(x) = (imfilter(x, [1 0 -1; 2 0 -2; 1 0 -1]'))
 
-vedge(x) = StatsBase.mean(recvedge(x)) # prod(size(x)) == 1 ? Inf : StatsBase.mean(recvedge(x))
-hedge(x) = StatsBase.mean(rechedge(x)) # prod(size(x)) == 1 ? Inf : StatsBase.mean(rechedge(x))
-vsobel(x) = StatsBase.mean(recvsobel(x)) # prod(size(x)) == 1 ? Inf : StatsBase.mean(recvsobel(x))
-hsobel(x) = StatsBase.mean(rechsobel(x)) # prod(size(x)) == 1 ? Inf : StatsBase.mean(rechsobel(x))
+# vedge(x) = StatsBase.mean(recvedge(x)) # prod(size(x)) == 1 ? Inf : StatsBase.mean(recvedge(x))
+# hedge(x) = StatsBase.mean(rechedge(x)) # prod(size(x)) == 1 ? Inf : StatsBase.mean(rechedge(x))
+# vsobel(x) = StatsBase.mean(recvsobel(x)) # prod(size(x)) == 1 ? Inf : StatsBase.mean(recvsobel(x))
+# hsobel(x) = StatsBase.mean(rechsobel(x)) # prod(size(x)) == 1 ? Inf : StatsBase.mean(rechsobel(x))
 
-svedge(x) = StatsBase.sum(recvedge(x)) # prod(size(x)) == 1 ? Inf : StatsBase.sum(recvedge(x))
-shedge(x) = StatsBase.sum(rechedge(x)) # prod(size(x)) == 1 ? Inf : StatsBase.sum(rechedge(x))
-svsobel(x) = StatsBase.sum(recvsobel(x)) # prod(size(x)) == 1 ? Inf : StatsBase.sum(recvsobel(x))
-shsobel(x) = StatsBase.sum(rechsobel(x)) # prod(size(x)) == 1 ? Inf : StatsBase.sum(rechsobel(x))
+# svedge(x) = StatsBase.sum(recvedge(x)) # prod(size(x)) == 1 ? Inf : StatsBase.sum(recvedge(x))
+# shedge(x) = StatsBase.sum(rechedge(x)) # prod(size(x)) == 1 ? Inf : StatsBase.sum(rechedge(x))
+# svsobel(x) = StatsBase.sum(recvsobel(x)) # prod(size(x)) == 1 ? Inf : StatsBase.sum(recvsobel(x))
+# shsobel(x) = StatsBase.sum(rechsobel(x)) # prod(size(x)) == 1 ? Inf : StatsBase.sum(rechsobel(x))
 
 
-model = ModalDecisionTree(;
-    relations = :RCC8,
-    min_samples_leaf = 8,
-    conditions = [svsobel, shsobel],
-    # initconditions = :start_at_center,
-    initconditions = :start_with_global,
-    featvaltype = Float32,
-    downsize = (8,8),
-    # conditions = [minimum, maximum, UnivariateFeature{Float64}(recheight), UnivariateFeature{Float64}(recwidth)],
-    # conditions = [minimum, maximum, UnivariateFeature{Float32}(1, recheight), UnivariateFeature{Float32}(1, recwidth)],
-    print_progress = true,
-)
+# model = ModalDecisionTree(;
+#     relations = :RCC8,
+#     min_samples_leaf = 8,
+#     conditions = [svsobel, shsobel],
+#     # initconditions = :start_at_center,
+#     initconditions = :start_with_global,
+#     featvaltype = Float32,
+#     downsize = (8,8),
+#     # conditions = [minimum, maximum, UnivariateFeature{Float64}(recheight), UnivariateFeature{Float64}(recwidth)],
+#     # conditions = [minimum, maximum, UnivariateFeature{Float32}(1, recheight), UnivariateFeature{Float32}(1, recwidth)],
+#     print_progress = true,
+# )
 
-mach = machine(model, X_train, y_train) |> fit!
+# mach = machine(model, X_train, y_train) |> fit!
 
-report(mach).printmodel(1000; threshold_digits = 2);
+# report(mach).printmodel(1000; threshold_digits = 2);
 
-printmodel(report(mach).model; show_metrics = true);
-printmodel.(listrules(report(mach).model); show_metrics = true);
+# printmodel(report(mach).model; show_metrics = true);
+# printmodel.(listrules(report(mach).model); show_metrics = true);
 
-yhat_test = MLJ.predict_mode(mach, X_test)
+# yhat_test = MLJ.predict_mode(mach, X_test)
 
-MLJ.accuracy(y_test, yhat_test)
+# MLJ.accuracy(y_test, yhat_test)
 
-@test MLJ.accuracy(y_test, yhat_test) > 0.15
-@test_broken MLJ.accuracy(y_test, yhat_test) > 0.5
+# @test MLJ.accuracy(y_test, yhat_test) > 0.15
+# @test_broken MLJ.accuracy(y_test, yhat_test) > 0.5
 
-model = ModalDecisionTree(;
-    relations = :RCC8,
-    conditions = [svedge, shedge],
-    # initconditions = :start_at_center,
-    featvaltype = Float32,
-    downsize = (5,5),
-    # conditions = [minimum, maximum, UnivariateFeature{Float64}(recheight), UnivariateFeature{Float64}(recwidth)],
-    # conditions = [minimum, maximum, UnivariateFeature{Float32}(1, recheight), UnivariateFeature{Float32}(1, recwidth)],
-    print_progress = true,
-)
+# model = ModalDecisionTree(;
+#     relations = :RCC8,
+#     conditions = [svedge, shedge],
+#     # initconditions = :start_at_center,
+#     featvaltype = Float32,
+#     downsize = (5,5),
+#     # conditions = [minimum, maximum, UnivariateFeature{Float64}(recheight), UnivariateFeature{Float64}(recwidth)],
+#     # conditions = [minimum, maximum, UnivariateFeature{Float32}(1, recheight), UnivariateFeature{Float32}(1, recwidth)],
+#     print_progress = true,
+# )

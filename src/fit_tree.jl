@@ -325,7 +325,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
     ##########################################################################
     ;
     # Logic-agnostic training parameters
-    loss_function             :: Union{Nothing,LossFunction},
+    loss_function             :: Union{Nothing,Loss},
     lookahead                 :: Integer,                                                                                     # maximum depth of the tree to locally optimize for
     max_depth                 :: Union{Nothing,Int},                                                                          # maximum depth of the resultant tree
     min_samples_leaf          :: Int,                                                                                         # minimum number of instancs each leaf needs to have
@@ -342,7 +342,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
     idxs                      :: AbstractVector{Int},
     n_classes                 :: Int,
     rng                       :: Random.AbstractRNG,
-) where{P,L<:_Label,U,LossFunction<:Function,NSubRelationsFunction<:Function}
+) where{P,L<:_Label,U,NSubRelationsFunction<:Function}
 
     # Region of idxs to use to perform the split
     region = node.region
@@ -1051,7 +1051,7 @@ end
     W                       :: AbstractVector{U}
     ;
     ##########################################################################
-    loss_function           :: Function,
+    loss_function           :: Loss,
     lookahead               :: Integer,
     max_depth               :: Union{Nothing,Int},
     min_samples_leaf        :: Int,

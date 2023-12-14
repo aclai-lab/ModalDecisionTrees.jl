@@ -50,7 +50,7 @@ function build_tree(
     Y                   :: AbstractVector{L},
     W                   :: Union{Nothing,AbstractVector{U},Symbol}   = default_weights(ninstances(X));
     ##############################################################################
-    loss_function       :: Union{Nothing,Function}            = nothing,
+    loss_function       :: Union{Nothing,Loss}                = nothing,
     lookahead           :: Union{Nothing,Integer}             = nothing,
     max_depth           :: Union{Nothing,Int64}               = nothing,
     min_samples_leaf    :: Int64                              = BOTTOM_MIN_SAMPLES_LEAF,
@@ -142,7 +142,7 @@ function build_forest(
     partial_sampling    = 0.7,      # portion of sub-sampled samples (without replacement) by each tree
     ##############################################################################
     # Tree logic-agnostic parameters
-    loss_function       :: Union{Nothing,Function}          = nothing,
+    loss_function       :: Union{Nothing,Loss}              = nothing,
     lookahead           :: Union{Nothing,Integer}           = nothing,
     max_depth           :: Union{Nothing,Int64}             = nothing,
     min_samples_leaf    :: Int64                            = BOTTOM_MIN_SAMPLES_LEAF,

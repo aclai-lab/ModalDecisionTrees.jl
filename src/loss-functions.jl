@@ -1,3 +1,8 @@
+abstract type Loss end
+
+abstract type ClassificationLoss <: Loss end;
+abstract type RegressionLoss <: Loss end;
+
 default_loss_function(::Type{<:CLabel}) = entropy
 default_loss_function(::Type{<:RLabel}) = variance
 
@@ -23,7 +28,7 @@ default_loss_function(::Type{<:RLabel}) = variance
 # Source: _shannon_entropy from https://github.com/bensadeghi/DecisionTree.jl/blob/master/src/util.jl, with inverted sign
 
 # Single
-Base.@propagate_inbounds @inline function _shannon_entropy_mod(ws :: AbstractVector{U}, t :: U) where {U<:Real}
+Base.@propagate_inbounds @inline function (::ShannonEntropy)(ws :: AbstractVector{U}, t :: U) where {U<:Real}
     s = 0.0
     @simd for k in ws
         if k > 0
@@ -34,17 +39,16 @@ Base.@propagate_inbounds @inline function _shannon_entropy_mod(ws :: AbstractVec
 end
 
 # Multiple
-Base.@propagate_inbounds @inline function _shannon_entropy_mod(wss_n_ts::Tuple{AbstractVector{U},U}...) where {U<:Real}
-    sum(((ws, t),)->t * _shannon_entropy_mod(ws, t), wss_n_ts)
+Base.@propagate_inbounds @inline function (ent::ShannonEntropy)(wss_n_ts::Tuple{AbstractVector{U},U}...) where {U<:Real}
+    sum(((ws, t),)->t * ShannonEntropy()(ws, t), wss_n_ts)
 end
 
 # Correction
-Base.@propagate_inbounds @inline function _shannon_entropy_mod(e :: AbstractFloat)
+Base.@propagate_inbounds @inline function (::ShannonEntropy)(e :: AbstractFloat)
     e
 end
 
-# ShannonEntropy() = _shannon_entropy
-ShannonEntropy() = _shannon_entropy_mod
+struct ShannonEntropy <: ClassificationLoss end;
 
 ############################################################################################
 # Classification: Shannon (second untested version)

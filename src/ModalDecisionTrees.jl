@@ -87,7 +87,7 @@ ModalityId = Int
 include("utils.jl")
 
 # Loss functions
-include("entropy-measures.jl")
+include("loss-functions.jl")
 
 # Purity helpers
 include("purity.jl")
