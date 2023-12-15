@@ -153,34 +153,55 @@ Base.@propagate_inbounds @resumable function generate_decisions(
     end
 end
 
+using StatsBase
+
+function countmap_with_domain(v::AbstractVector, keyset::AbstractVector = unique(v), eltype = Float64)
+    res = StatsBase.countmap(v)
+    for el in keyset
+        if !haskey(res, el)
+            res[el] = zero(eltype)
+        end
+    end
+    res = Dict(collect(zip(keys(res), eltype.(values(res)))))
+    return res
+end
+
+
 """
 References:
 - "Generalizing Boundary Points"
 - "Multi-Interval Discretization of Continuous-Valued Attributes for Classification Learning"
 """
 function limit_threshold_domain(
-    aggr_thresholds::AbstractVector{U},
+    aggr_thresholds::AbstractVector{T},
     Y::AbstractVector{L},
+    W::AbstractVector{U},
     loss_function::Loss,
     test_op::TestOperator,
     min_samples_leaf::Integer,
-    is_lookahead_basecase::Bool,
-) where {L<:_Label,U}
+    perform_domain_optimization::Bool,
+    n_classes::Integer;
+    nc::AbstractVector{U},
+    nt::U
+) where {T,L<:_Label,U}
     if allequal(aggr_thresholds) # Always zero entropy
-        return U[]
+        return T[], Nothing[]
     end
-    if loss_function isa ShannonEntropy && test_op in [≥, <, ≤, >]
-        if is_lookahead_basecase
+    if loss_function isa ShannonEntropy && test_op in [≥, <, ≤, >] && (W isa Ones) # TODO extendo to allequal(W) # TODO extend to Gini Index, Normalized Distance Measure, Info Gain, Gain Ratio (Ref. [Linear-Time Preprocessing in Optimal Numerical Range Partitioning])
+        if perform_domain_optimization
             thresh_domain = unique(aggr_thresholds)
-            if test_op in [≥, <] # Remove edge-case with zero entropy
-                _m = minimum(thresh_domain)
-                filter(x->x != _m, thresh_domain)
-            elseif test_op in [≤, >] # Remove edge-case with zero entropy
-                _m = maximum(thresh_domain)
-                filter(x->x != _m, thresh_domain)
-            else
-                thresh_domain
+            thresh_domain = begin
+                if test_op in [≥, <] # Remove edge-case with zero entropy
+                    _m = minimum(thresh_domain)
+                    filter(x->x != _m, thresh_domain)
+                elseif test_op in [≤, >] # Remove edge-case with zero entropy
+                    _m = maximum(thresh_domain)
+                    filter(x->x != _m, thresh_domain)
+                else
+                    thresh_domain
+                end
             end
+            return thresh_domain, fill(nothing, length(thresh_domain))
         else
             p = sortperm(aggr_thresholds)
             _ninstances = length(Y)
@@ -197,14 +218,21 @@ function limit_threshold_domain(
                 # footprint = sort(unique(Ys)) # couldn't get it to work.
                 # footprint = countmap(Ys; alg = :dict)
                 footprint = countmap(Ys);
-                # footprint = SortedDict(map(((k,c),)->k=>c/sum(values(footprint)), collect(footprint)))
-                footprint = map(((k,c),)->k=>c/sum(values(footprint)), collect(footprint));
+                footprint = collect(footprint); # footprint = map(((k,c),)->k=>c/sum(values(footprint)), collect(footprint)); # normalized
                 sort!(footprint; by = first)
-                k => (length(Ys), footprint)
+                k => (Ys, footprint)
                 end, collect(ps))
             # groupedY = map(((k,v),)->(k=>sort(map(last, v))), collect(ps))
             # groupedY = map(((k,v),)->(k=>sort(unique(map(last, v)))), collect(ps))
 
+            function is_same_footprint(f1, f2)
+                if f1 == f2
+                    return true
+                end
+                norm_f1 = map(((k,c),)->k=>c/sum(last.(f1)), f1)
+                norm_f2 = map(((k,c),)->k=>c/sum(last.(f2)), f2)
+                return norm_f1 == norm_f2
+            end
             if test_op in [≥, <]
                 sort!(groupedY; by=first, rev = true)
             elseif test_op in [≤, >]
@@ -213,23 +241,22 @@ function limit_threshold_domain(
                 error("Unexpected test_op: $(test_op)")
             end
 
-            thresh_domain, _thresh_ninstances, _thresh_footprint = first.(groupedY), first.(last.(groupedY)), last.(last.(groupedY))
+            thresh_domain, _thresh_Ys, _thresh_footprint = first.(groupedY), first.(last.(groupedY)), last.(last.(groupedY))
 
             # Filter out those that do not comply with min_samples_leaf
             n_left = 0
-            is_boundary_point = map(__thresh_ninstances->begin
-                n_left = n_left + __thresh_ninstances
+            is_boundary_point = map(__thresh_Ys->begin
+                n_left = n_left + length(__thresh_Ys)
                 ((n_left >= min_samples_leaf && _ninstances-n_left >= min_samples_leaf))
-                end, _thresh_ninstances)
+                end, _thresh_Ys)
 
-            # unique(_aggr_thresholds)
             # Reference: ≤
             is_boundary_point = map(((i, honors_min_samples_leaf),)->begin
                 # last = (i == length(is_boundary_point))
                 (
                     (honors_min_samples_leaf &&
                     # (!last &&
-                        !(is_boundary_point[i+1] && ==(_thresh_footprint[i], _thresh_footprint[i+1])))
+                        !(is_boundary_point[i+1] && is_same_footprint(_thresh_footprint[i], _thresh_footprint[i+1])))
                         # !(is_boundary_point[i+1] && isapprox(_thresh_footprint[i], _thresh_footprint[i+1]))) # TODO better..?
                         # !(is_boundary_point[i+1] && issubset(_thresh_footprint[i+1], _thresh_footprint[i]))) # Probably doesn't work
                         # !(is_boundary_point[i+1] && issubset(_thresh_footprint[i], _thresh_footprint[i+1]))) # Probably doesn't work
@@ -237,14 +264,48 @@ function limit_threshold_domain(
                 )
                 end, enumerate(is_boundary_point))
 
+            thresh_domain = thresh_domain[is_boundary_point]
+
+            # NOTE: pretending that these are the right counts, when they are actually the left counts!!! It doesn't matter, it's symmetric.
+            # cur_left_counts = countmap_with_domain(L[], UnitRange{L}(1:n_classes), U)
+            cur_left_counts = fill(zero(U), n_classes)
+            additional_info = map(Ys->begin
+                # addcounts!(cur_left_counts, Ys)
+                # f = collect(values(cur_left_counts))
+                # weight = first(W) # when allequal(W)
+                weight = one(U)
+                [cur_left_counts[y] += weight for y in Ys]
+                f = cur_left_counts
+                if test_op in [≥, ≤]
+                    # These are left counts
+                    ncl, nl = copy(f), sum(f)
+                    # ncr = Vector{U}(undef, n_classes)
+                    # ncr .= nc .- ncl
+                    ncr = nc .- ncl
+                    nr = nt - nl
+                else
+                    # These are right counts
+                    ncr, nr = copy(f), sum(f)
+                    # ncl = Vector{U}(undef, n_classes)
+                    # ncl .= nc .- ncr
+                    ncl = nc .- ncr
+                    nl = nt - nr
+                end
+                threshold_info = (ncr, nr, ncl, nl)
+                threshold_info
+            end, _thresh_Ys)[is_boundary_point]
+
+            # @show typeof(additional_info)
+            # @show typeof(additional_info[1])
+
             # @show test_op, min_samples_leaf
             # @show groupedY
             # @show sum(is_boundary_point), length(thresh_domain), sum(is_boundary_point)/length(thresh_domain)
-            thresh_domain[is_boundary_point]
+            return thresh_domain, additional_info
         end
     else
         thresh_domain = unique(aggr_thresholds)
-        return thresh_domain
+        return thresh_domain, fill(nothing, length(thresh_domain))
     end
 end
 

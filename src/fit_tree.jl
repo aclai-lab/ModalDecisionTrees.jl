@@ -368,8 +368,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
     # Prepare counts
     ############################################################################
     if isa(_is_classification, Val{true})
-        (nc, nt),
-        (node.purity, node.prediction) = begin
+        (nc, nt), (node.purity, node.prediction) = begin
             nc = fill(zero(U), n_classes)
             @inbounds @simd for i in 1:_ninstances
                 nc[Yf[i]] += Wf[i]
@@ -495,6 +494,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
     ########################################################################################
 
     is_lookahead_basecase = (isa(_using_lookahead, Val{true}) && lookahead_depth == lookahead)
+    performing_consistency_check = (isa(_perform_consistency_check, Val{true}) || is_lookahead_basecase)
 
     function splitnode!(node, Ss, idxs)
         # TODO, actually, when using Shannon entropy, we must correct the purity:
@@ -537,7 +537,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
 
         # TODO instead of using memory, here, just use two opposite indices and perform substitutions. indj = _ninstances
         post_unsatisfied = fill(1, _ninstances)
-        if (isa(_perform_consistency_check, Val{true}) || is_lookahead_basecase)
+        if performing_consistency_check
             world_refs = []
         end
         for i_instance in 1:_ninstances
@@ -557,7 +557,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
 
             # I'm using unsatisfied because sorting puts YES instances first, but TODO use the inverse sorting and use issat flag instead
             post_unsatisfied[i_instance] = !issat
-            if (isa(_perform_consistency_check, Val{true}) || is_lookahead_basecase)
+            if performing_consistency_check
                 push!(world_refs, _ss)
             end
         end
@@ -584,7 +584,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
 
         # Check consistency
         consistency = begin
-            if (isa(_perform_consistency_check, Val{true}) || is_lookahead_basecase)
+            if performing_consistency_check
                 post_unsatisfied
             else
                 sum(Wf[BitVector(post_unsatisfied)])
@@ -604,7 +604,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
         #     errStr *= "Branch ($(sum(post_unsatisfied))+$(_ninstances-sum(post_unsatisfied))=$(_ninstances) instances) at modality $(node.i_modality) with decision: $(decision_str), purity $(node.purity)\n"
         #     errStr *= "$(length(idxs[region])) Instances: $(idxs[region])\n"
         #     errStr *= "Different partition was expected:\n"
-        #     if (isa(_perform_consistency_check, Val{true}) || is_lookahead_basecase)
+        #     if performing_consistency_check
         #         errStr *= "Actual: $(consistency) ($(sum(consistency)))\n"
         #         errStr *= "Expected: $(node.consistency) ($(sum(node.consistency)))\n"
         #         diff = node.consistency.-consistency
@@ -617,7 +617,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
         #     end
         #     errStr *= "post_unsatisfied = $(post_unsatisfied)\n"
 
-        #     if (isa(_perform_consistency_check, Val{true}) || is_lookahead_basecase)
+        #     if performing_consistency_check
         #         errStr *= "world_refs = $(world_refs)\n"
         #         errStr *= "new world_refs = $([Ss[node.i_modality][idxs[i_instance + r_start]] for i_instance in 1:_ninstances])\n"
         #     end
@@ -689,7 +689,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
     #################################### Find best split ###################################
     ########################################################################################
 
-    if (isa(_perform_consistency_check, Val{true}) || is_lookahead_basecase)
+    if performing_consistency_check
         unsatisfied = Vector{Bool}(undef, _ninstances)
     end
 
@@ -698,6 +698,8 @@ Base.@propagate_inbounds @inline function optimize_node!(
     # node.i_modality = -1
     # node.decision = SimpleDecision(ScalarExistentialFormula{Float64}())
     # node.consistency = nothing
+
+    perform_domain_optimization = is_lookahead_basecase && !performing_consistency_check
 
     ## Test all decisions or each modality
     for (i_modality, relation, metacondition, test_op, aggr_thresholds) in generate_relevant_decisions(
@@ -714,10 +716,13 @@ Base.@propagate_inbounds @inline function optimize_node!(
         grouped_featsaggrsnopss,
         grouped_featsnaggrss,
     )
-        thresh_domain = limit_threshold_domain(aggr_thresholds, Yf, loss_function, test_op, min_samples_leaf, is_lookahead_basecase)
-
+        if isa(_is_classification, Val{true})
+            thresh_domain, additional_info = limit_threshold_domain(aggr_thresholds, Yf, Wf, loss_function, test_op, min_samples_leaf, perform_domain_optimization, n_classes; nc = nc, nt = nt)
+        else
+            thresh_domain, additional_info = limit_threshold_domain(aggr_thresholds, Yf, Wf, loss_function, test_op, min_samples_leaf, perform_domain_optimization, n_classes)
+        end
         # Look for the best threshold 'a', as in atoms like "feature >= a"
-        for _threshold in thresh_domain
+        for (_threshold, threshold_info) in zip(thresh_domain, additional_info)
             decision = SimpleDecision(ScalarExistentialFormula(relation, ScalarCondition(metacondition, _threshold)))
 
             # @show decision
@@ -734,33 +739,50 @@ Base.@propagate_inbounds @inline function optimize_node!(
             # Note: unsatisfied is also changed
             if isa(_is_classification, Val{true})
                 (ncr, nr, ncl, nl) = begin
-                    # Re-initialize right counts
-                    nr = zero(U)
-                    ncr = fill(zero(U), n_classes)
-                    if (isa(_perform_consistency_check, Val{true}) || is_lookahead_basecase)
-                        unsatisfied .= 1
-                    end
-                    for i_instance in 1:_ninstances
-                        gamma = aggr_thresholds[i_instance]
-                        issat = SoleModels.apply_test_operator(test_op, gamma, _threshold)
-                        # @logmsg LogDetail " instance $i_instance/$_ninstances: (f=$(gamma)) -> issat = $(issat)"
+                    if !isnothing(threshold_info) && !performing_consistency_check
+                        threshold_info
+                    else
+                        # Re-initialize right counts
+                        nr = zero(U)
+                        ncr = fill(zero(U), n_classes)
+                        if performing_consistency_check
+                            unsatisfied .= 1
+                        end
+                        for i_instance in 1:_ninstances
+                            gamma = aggr_thresholds[i_instance]
+                            issat = SoleModels.apply_test_operator(test_op, gamma, _threshold)
+                            # @logmsg LogDetail " instance $i_instance/$_ninstances: (f=$(gamma)) -> issat = $(issat)"
 
-                        # Note: in a fuzzy generalization, `issat` becomes a [0-1] value
-                        if !issat
-                            nr += Wf[i_instance]
-                            ncr[Yf[i_instance]] += Wf[i_instance]
-                        else
-                            if (isa(_perform_consistency_check, Val{true}) || is_lookahead_basecase)
-                                unsatisfied[i_instance] = 0
+                            # Note: in a fuzzy generalization, `issat` becomes a [0-1] value
+                            if !issat
+                                nr += Wf[i_instance]
+                                ncr[Yf[i_instance]] += Wf[i_instance]
+                            else
+                                if performing_consistency_check
+                                    unsatisfied[i_instance] = 0
+                                end
                             end
                         end
+                        # ncl = Vector{U}(undef, n_classes)
+                        # ncl .= nc .- ncr
+                        ncl = nc .- ncr
+                        nl = nt - nr
+                        threshold_info_new = (ncr, nr, ncl, nl)
+                        # if !isnothing(threshold_info) && !performing_consistency_check
+                        #     if threshold_info != threshold_info_new
+                        #         @show nc
+                        #         @show nt
+                        #         @show Yf
+                        #         @show Wf
+                        #         @show test_op
+                        #         @show _threshold
+                        #         @show threshold_info
+                        #         @show threshold_info_new
+                        #         readline()
+                        #     end
+                        # end
+                        threshold_info_new
                     end
-                    # Calculate left counts
-                    ncl = Vector{U}(undef, n_classes)
-                    ncl .= nc .- ncr
-                    nl = nt - nr
-
-                    (ncr, nr, ncl, nl)
                 end
             else
                 (rsums, nr, lsums, nl, rsum, lsum) = begin
@@ -773,7 +795,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
                     rsums = Float64[] # Vector{U}(undef, _ninstances)
                     lsums = Float64[] # Vector{U}(undef, _ninstances)
 
-                    if (isa(_perform_consistency_check, Val{true}) || is_lookahead_basecase)
+                    if performing_consistency_check
                         unsatisfied .= 1
                     end
                     for i_instance in 1:_ninstances
@@ -791,7 +813,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
                         else
                             push!(lsums, sums[i_instance])
                             # lsums[i_instance] = sums[i_instance]
-                            if (isa(_perform_consistency_check, Val{true}) || is_lookahead_basecase)
+                            if performing_consistency_check
                                 unsatisfied[i_instance] = 0
                             end
                         end
@@ -861,7 +883,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
                 # @logmsg LogDetail "  Found new optimum in modality $(node.i_modality): " (node.purity_times_nt/nt) node.decision
                 #################################
                 node.consistency = begin
-                    if (isa(_perform_consistency_check, Val{true}) || is_lookahead_basecase)
+                    if performing_consistency_check
                         unsatisfied[1:_ninstances]
                     else
                         nr

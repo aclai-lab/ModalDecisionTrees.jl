@@ -6,6 +6,8 @@ abstract type RegressionLoss <: Loss end;
 default_loss_function(::Type{<:CLabel}) = entropy
 default_loss_function(::Type{<:RLabel}) = variance
 
+istoploss(::Loss, purity) = false
+
 ############################################################################################
 # Loss functions for regression and classification
 # These functions return the additive inverse of entropy measures
