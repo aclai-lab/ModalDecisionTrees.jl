@@ -207,8 +207,8 @@ function limit_threshold_domain(
                     end
                     # n_left = (i-1)
                     (
-                        (n_left >= min_samples_leaf && length(Y)-n_left >= min_samples_leaf) # &&
-                        # (!first && !issubset(_groupedY[i], _groupedY[i-1]))
+                        (n_left >= min_samples_leaf && length(Y)-n_left >= min_samples_leaf) &&
+                        (!first && issubset(_groupedY[i], _groupedY[i-1]))
                     )
                     end, enumerate(thresh_domain))
 
@@ -220,8 +220,8 @@ function limit_threshold_domain(
                     n_left = n_left + length(_groupedY[i])
                     # n_left = i
                     (
-                        ((n_left >= min_samples_leaf && length(Y)-n_left >= min_samples_leaf)) # &&
-                        # (!last && !issubset(_groupedY[i], _groupedY[i+1]))
+                        ((n_left >= min_samples_leaf && length(Y)-n_left >= min_samples_leaf)) &&
+                        (!last && !issubset(_groupedY[i], _groupedY[i+1]))
                     )
                     end, enumerate(thresh_domain))
 
