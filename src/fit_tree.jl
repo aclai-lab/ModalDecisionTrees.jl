@@ -717,9 +717,9 @@ Base.@propagate_inbounds @inline function optimize_node!(
         grouped_featsnaggrss,
     )
         if isa(_is_classification, Val{true})
-            thresh_domain, additional_info = limit_threshold_domain(aggr_thresholds, Yf, Wf, loss_function, test_op, min_samples_leaf, perform_domain_optimization, n_classes; nc = nc, nt = nt)
+            thresh_domain, additional_info = limit_threshold_domain(aggr_thresholds, Yf, Wf, loss_function, test_op, min_samples_leaf, perform_domain_optimization; n_classes = n_classes, nc = nc, nt = nt)
         else
-            thresh_domain, additional_info = limit_threshold_domain(aggr_thresholds, Yf, Wf, loss_function, test_op, min_samples_leaf, perform_domain_optimization, n_classes)
+            thresh_domain, additional_info = limit_threshold_domain(aggr_thresholds, Yf, Wf, loss_function, test_op, min_samples_leaf, perform_domain_optimization)
         end
         # Look for the best threshold 'a', as in atoms like "feature >= a"
         for (_threshold, threshold_info) in zip(thresh_domain, additional_info)

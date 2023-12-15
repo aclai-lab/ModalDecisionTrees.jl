@@ -179,10 +179,10 @@ function limit_threshold_domain(
     loss_function::Loss,
     test_op::TestOperator,
     min_samples_leaf::Integer,
-    perform_domain_optimization::Bool,
-    n_classes::Integer;
-    nc::AbstractVector{U},
-    nt::U
+    perform_domain_optimization::Bool;
+    n_classes::Union{Nothing,Integer} = nothing,
+    nc::Union{Nothing,AbstractVector{U}} = nothing,
+    nt::Union{Nothing,U} = nothing,
 ) where {T,L<:_Label,U}
     if allequal(aggr_thresholds) # Always zero entropy
         return T[], Nothing[]
