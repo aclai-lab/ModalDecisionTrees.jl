@@ -183,6 +183,7 @@ function limit_threshold_domain(
             end
         else
             p = sortperm(aggr_thresholds)
+            _ninstances = length(Y)
             _aggr_thresholds = aggr_thresholds[p]
             _Y = Y[p]
 
@@ -190,45 +191,56 @@ function limit_threshold_domain(
             # sort!(thresh_domain)
 
             ps = pairs(SoleBase._groupby(first, zip(_aggr_thresholds, _Y) |> collect))
-            groupedY = map(((k,v),)->(k=>unique(map(last, v))), collect(ps))
-            sort!(groupedY; by=first)
-            groupedY = OrderedDict(groupedY)
-            thresh_domain = collect(keys(groupedY))
-            _groupedY = collect(values(groupedY))
+            groupedY = map(((k,v),)->begin
+                Ys = map(last, v)
+                # footprint = sort((Ys)) # associated with ==, it works
+                # footprint = sort(unique(Ys)) # couldn't get it to work.
+                # footprint = countmap(Ys; alg = :dict)
+                footprint = countmap(Ys);
+                # footprint = SortedDict(map(((k,c),)->k=>c/sum(values(footprint)), collect(footprint)))
+                footprint = map(((k,c),)->k=>c/sum(values(footprint)), collect(footprint));
+                sort!(footprint; by = first)
+                k => (length(Ys), footprint)
+                end, collect(ps))
+            # groupedY = map(((k,v),)->(k=>sort(map(last, v))), collect(ps))
+            # groupedY = map(((k,v),)->(k=>sort(unique(map(last, v)))), collect(ps))
+
+            if test_op in [≥, <]
+                sort!(groupedY; by=first, rev = true)
+            elseif test_op in [≤, >]
+                sort!(groupedY; by=first)
+            else
+                error("Unexpected test_op: $(test_op)")
+            end
+
+            thresh_domain, _thresh_ninstances, _thresh_footprint = first.(groupedY), first.(last.(groupedY)), last.(last.(groupedY))
+
+            # Filter out those that do not comply with min_samples_leaf
+            n_left = 0
+            is_boundary_point = map(__thresh_ninstances->begin
+                n_left = n_left + __thresh_ninstances
+                ((n_left >= min_samples_leaf && _ninstances-n_left >= min_samples_leaf))
+                end, _thresh_ninstances)
 
             # unique(_aggr_thresholds)
-            # thresh_domain
-            if test_op in [≥, <]
-                n_left = 0
-                is_boundary_point = map(((i, threshold),)->begin
-                    first = (i == 1)
-                    if !first
-                        n_left = n_left + length(_groupedY[i-1])
-                    end
-                    # n_left = (i-1)
-                    (
-                        (n_left >= min_samples_leaf && length(Y)-n_left >= min_samples_leaf) &&
-                        (!first && issubset(_groupedY[i], _groupedY[i-1]))
-                    )
-                    end, enumerate(thresh_domain))
+            # Reference: ≤
+            is_boundary_point = map(((i, honors_min_samples_leaf),)->begin
+                # last = (i == length(is_boundary_point))
+                (
+                    (honors_min_samples_leaf &&
+                    # (!last &&
+                        !(is_boundary_point[i+1] && ==(_thresh_footprint[i], _thresh_footprint[i+1])))
+                        # !(is_boundary_point[i+1] && isapprox(_thresh_footprint[i], _thresh_footprint[i+1]))) # TODO better..?
+                        # !(is_boundary_point[i+1] && issubset(_thresh_footprint[i+1], _thresh_footprint[i]))) # Probably doesn't work
+                        # !(is_boundary_point[i+1] && issubset(_thresh_footprint[i], _thresh_footprint[i+1]))) # Probably doesn't work
+                        # true)
+                )
+                end, enumerate(is_boundary_point))
 
-                thresh_domain[is_boundary_point]
-            elseif test_op in [≤, >]
-                # n_left = 0
-                is_boundary_point = map(((i, threshold),)->begin
-                    last = (i == length(thresh_domain))
-                    n_left = n_left + length(_groupedY[i])
-                    # n_left = i
-                    (
-                        ((n_left >= min_samples_leaf && length(Y)-n_left >= min_samples_leaf)) &&
-                        (!last && !issubset(_groupedY[i], _groupedY[i+1]))
-                    )
-                    end, enumerate(thresh_domain))
-
-                thresh_domain[is_boundary_point]
-            else
-                thresh_domain
-            end
+            # @show test_op, min_samples_leaf
+            # @show groupedY
+            # @show sum(is_boundary_point), length(thresh_domain), sum(is_boundary_point)/length(thresh_domain)
+            thresh_domain[is_boundary_point]
         end
     else
         thresh_domain = unique(aggr_thresholds)

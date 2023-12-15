@@ -14,6 +14,10 @@ p_test = 101:1000 # N
 
 begin
     X = SoleData.cube2dataframe(Xcube)
+
+    X_train, y_train = X[p,:], y[p]
+    X_test, y_test = X[p_test,:], y[p_test]
+
     model = ModalDecisionTree()
 
     mach = @time machine(model, X_train, y_train) |> fit!

@@ -29,6 +29,8 @@ default_loss_function(::Type{<:RLabel}) = variance
 
 struct ShannonEntropy <: ClassificationLoss end
 
+istoploss(::ShannonEntropy, purity) = iszero(purity)
+
 # Single
 Base.@propagate_inbounds @inline function (::ShannonEntropy)(ws :: AbstractVector{U}, t :: U) where {U<:Real}
     s = 0.0

@@ -867,6 +867,12 @@ Base.@propagate_inbounds @inline function optimize_node!(
                         nr
                     end
                 end
+
+                # Short-circuit if you don't lookahead, and this is a perfect split
+                if (isa(_using_lookahead, Val{false}) || is_lookahead_basecase) && istoploss(loss_function, purity_times_nt)
+                    # @show "Threshold shortcircuit!"
+                    break
+                end
             end
 
             # In case of lookahead, temporarily accept the split,
