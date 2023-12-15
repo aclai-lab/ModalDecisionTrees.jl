@@ -166,74 +166,73 @@ function limit_threshold_domain(
     min_samples_leaf::Integer,
     is_lookahead_basecase::Bool,
 ) where {L<:_Label,U}
-    if loss_function isa ShannonEntropy
-        # @show test_op
-        # @show aggr_thresholds
-        thresh_domain = begin
+    if allequal(aggr_thresholds) # Always zero entropy
+        return U[]
+    end
+    if loss_function isa ShannonEntropy && test_op in [≥, <, ≤, >]
+        if is_lookahead_basecase
             thresh_domain = unique(aggr_thresholds)
-            if length(thresh_domain) == 1 # Always zero entropy
-                U[]
-            elseif test_op in [≥, <, ≤, >]
-                if is_lookahead_basecase
-                    if test_op in [≥, <] # Remove edge-case with zero entropy
-                        _m = minimum(thresh_domain)
-                        filter(x->x != _m, thresh_domain)
-                    elseif test_op in [≤, >] # Remove edge-case with zero entropy
-                        _m = maximum(thresh_domain)
-                        filter(x->x != _m, thresh_domain)
-                    else
-                        thresh_domain
+            if test_op in [≥, <] # Remove edge-case with zero entropy
+                _m = minimum(thresh_domain)
+                filter(x->x != _m, thresh_domain)
+            elseif test_op in [≤, >] # Remove edge-case with zero entropy
+                _m = maximum(thresh_domain)
+                filter(x->x != _m, thresh_domain)
+            else
+                thresh_domain
+            end
+        else
+            p = sortperm(aggr_thresholds)
+            _aggr_thresholds = aggr_thresholds[p]
+            _Y = Y[p]
+
+            # thresh_domain = unique(_aggr_thresholds)
+            # sort!(thresh_domain)
+
+            ps = pairs(SoleBase._groupby(first, zip(_aggr_thresholds, _Y) |> collect))
+            groupedY = map(((k,v),)->(k=>unique(map(last, v))), collect(ps))
+            sort!(groupedY; by=first)
+            groupedY = OrderedDict(groupedY)
+            thresh_domain = collect(keys(groupedY))
+            _groupedY = collect(values(groupedY))
+
+            # unique(_aggr_thresholds)
+            # thresh_domain
+            if test_op in [≥, <]
+                n_left = 0
+                is_boundary_point = map(((i, threshold),)->begin
+                    first = (i == 1)
+                    if !first
+                        n_left = n_left + length(_groupedY[i-1])
                     end
-                else
-                    p = sortperm(aggr_thresholds)
-                    _aggr_thresholds = aggr_thresholds[p]
-                    _Y = Y[p]
+                    # n_left = (i-1)
+                    (
+                        (n_left >= min_samples_leaf && length(Y)-n_left >= min_samples_leaf) # &&
+                        # (!first && !issubset(_groupedY[i], _groupedY[i-1]))
+                    )
+                    end, enumerate(thresh_domain))
 
-                    thresh_domain = unique(_aggr_thresholds)
-                    # sort!(thresh_domain)
+                thresh_domain[is_boundary_point]
+            elseif test_op in [≤, >]
+                # n_left = 0
+                is_boundary_point = map(((i, threshold),)->begin
+                    last = (i == length(thresh_domain))
+                    n_left = n_left + length(_groupedY[i])
+                    # n_left = i
+                    (
+                        ((n_left >= min_samples_leaf && length(Y)-n_left >= min_samples_leaf)) # &&
+                        # (!last && !issubset(_groupedY[i], _groupedY[i+1]))
+                    )
+                    end, enumerate(thresh_domain))
 
-                    ps = pairs(SoleBase._groupby(first, zip(_aggr_thresholds, _Y) |> collect))
-                    groupedY = map(((k,v),)->(k=>unique(map(last, v))), collect(ps))
-                    sort!(groupedY; by=first)
-                    groupedY = OrderedDict(groupedY)
-
-                    # unique(_aggr_thresholds)
-                    # thresh_domain
-                    if test_op in [≥, <]
-                        is_boundary_point = map(((i, threshold),)->begin
-                            first = (i == 1)
-                            (
-                                ((i-1) >= min_samples_leaf && length(Y)-(i-1) >= min_samples_leaf)
-                                # ((i-1) >= min_samples_leaf && length(Y)-(i-1) >= min_samples_leaf) &&
-                                # (!first &&
-                                # !issubset(groupedY[threshold], groupedY[thresh_domain[i-1]]))
-                            )
-                            end, enumerate(thresh_domain))
-
-                        thresh_domain[is_boundary_point]
-                    elseif test_op in [≤, >]
-                        is_boundary_point = map(((i, threshold),)->begin
-                            last = (i == length(thresh_domain))
-                            (
-                                ((i >= min_samples_leaf && length(Y)-i >= min_samples_leaf)) &&
-                                (!last &&
-                                !issubset(groupedY[threshold], groupedY[thresh_domain[i+1]]))
-                            )
-                            end, enumerate(thresh_domain))
-
-                        thresh_domain[is_boundary_point]
-                    else
-                        thresh_domain
-                    end
-                end
+                thresh_domain[is_boundary_point]
             else
                 thresh_domain
             end
         end
-        return thresh_domain
-        # @show thresh_domain
     else
-        return unique(aggr_thresholds)
+        thresh_domain = unique(aggr_thresholds)
+        return thresh_domain
     end
 end
 
