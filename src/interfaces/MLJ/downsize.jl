@@ -11,8 +11,8 @@ end
 
 function make_downsizing_function(::TreeModel)
     function downsize(instance)
-        channelsize = SoleData.instance_channelsize(instance)
-        nvariables = SoleData.instance_nvariables(instance)
+        channelsize = MultiData.instance_channelsize(instance)
+        nvariables = MultiData.instance_nvariables(instance)
         channelndims = length(channelsize)
         if channelndims == 1
             n_points = channelsize[1]
@@ -40,8 +40,8 @@ end
 
 function make_downsizing_function(::ForestModel)
     function downsize(instance)
-        channelsize = SoleData.instance_channelsize(instance)
-        nvariables = SoleData.instance_nvariables(instance)
+        channelsize = MultiData.instance_channelsize(instance)
+        nvariables = MultiData.instance_nvariables(instance)
         channelndims = length(channelsize)
         if channelndims == 1
             n_points = channelsize[1]

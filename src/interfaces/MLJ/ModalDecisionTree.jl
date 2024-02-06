@@ -25,17 +25,17 @@ mutable struct ModalDecisionTree <: MMI.Probabilistic
     # Condition set
     features             :: Union{
         Nothing,                                                                     # defaults to scalar conditions (with ≥ and <) on well-known feature functions (e.g., minimum, maximum), applied to all variables;
-        Vector{<:Union{SoleModels.VarFeature,Base.Callable}},                        # scalar conditions with ≥ and <, on an explicitly specified feature set (callables to be applied to each variable, or VarFeature objects);
+        Vector{<:Union{SoleData.VarFeature,Base.Callable}},                        # scalar conditions with ≥ and <, on an explicitly specified feature set (callables to be applied to each variable, or VarFeature objects);
         Vector{<:Tuple{Base.Callable,Integer}},                                      # scalar conditions with ≥ and <, on a set of features specified as a set of callables to be applied to a set of variables each;
-        Vector{<:Tuple{TestOperator,<:Union{SoleModels.VarFeature,Base.Callable}}},  # explicitly specify the pairs (test operator, feature);
-        Vector{<:SoleModels.ScalarMetaCondition},                                    # explicitly specify the scalar condition set.
+        Vector{<:Tuple{TestOperator,<:Union{SoleData.VarFeature,Base.Callable}}},  # explicitly specify the pairs (test operator, feature);
+        Vector{<:SoleData.ScalarMetaCondition},                                    # explicitly specify the scalar condition set.
     }
     conditions             :: Union{
         Nothing,                                                                     # defaults to scalar conditions (with ≥ and <) on well-known feature functions (e.g., minimum, maximum), applied to all variables;
-        Vector{<:Union{SoleModels.VarFeature,Base.Callable}},                        # scalar conditions with ≥ and <, on an explicitly specified feature set (callables to be applied to each variable, or VarFeature objects);
+        Vector{<:Union{SoleData.VarFeature,Base.Callable}},                        # scalar conditions with ≥ and <, on an explicitly specified feature set (callables to be applied to each variable, or VarFeature objects);
         Vector{<:Tuple{Base.Callable,Integer}},                                      # scalar conditions with ≥ and <, on a set of features specified as a set of callables to be applied to a set of variables each;
-        Vector{<:Tuple{TestOperator,<:Union{SoleModels.VarFeature,Base.Callable}}},  # explicitly specify the pairs (test operator, feature);
-        Vector{<:SoleModels.ScalarMetaCondition},                                    # explicitly specify the scalar condition set.
+        Vector{<:Tuple{TestOperator,<:Union{SoleData.VarFeature,Base.Callable}}},  # explicitly specify the pairs (test operator, feature);
+        Vector{<:SoleData.ScalarMetaCondition},                                    # explicitly specify the scalar condition set.
     }
     # Type for the extracted feature values
     featvaltype            :: Type

@@ -115,16 +115,16 @@ function MMI.clean!(m::SymbolicModel)
     end
 
     if !(isnothing(m.conditions) ||
-        m.conditions isa Vector{<:Union{SoleModels.VarFeature,Base.Callable}} ||
+        m.conditions isa Vector{<:Union{SoleData.VarFeature,Base.Callable}} ||
         m.conditions isa Vector{<:Tuple{Base.Callable,Integer}} ||
-        m.conditions isa Vector{<:Tuple{TestOperator,<:Union{SoleModels.VarFeature,Base.Callable}}} ||
-        m.conditions isa Vector{<:SoleModels.ScalarMetaCondition}
+        m.conditions isa Vector{<:Tuple{TestOperator,<:Union{SoleData.VarFeature,Base.Callable}}} ||
+        m.conditions isa Vector{<:SoleData.ScalarMetaCondition}
     )
         warning *= "conditions should be either:" *
-            "a) a vector of features (i.e., callables to be associated to all variables, or SoleModels.VarFeature objects);\n" *
+            "a) a vector of features (i.e., callables to be associated to all variables, or SoleData.VarFeature objects);\n" *
             "b) a vector of tuples (callable,var_id);\n" *
             "c) a vector of tuples (test_operator,features);\n" *
-            "d) a vector of SoleModels.ScalarMetaCondition;\n" *
+            "d) a vector of SoleData.ScalarMetaCondition;\n" *
             "but $(m.conditions) " *
             "was provided. Defaulting to $(mlj_default_conditions_str).\n"
         m.conditions = nothing

@@ -1,6 +1,6 @@
 using Revise
 using ModalDecisionTrees
-using SoleModels.DimensionalDatasets
+using SoleData.DimensionalDatasets
 
 using Random
 using BenchmarkTools
@@ -12,7 +12,7 @@ n_feats = n_vars*2
 n_pts = 5
 
 using SoleModels
-using SoleModels: UnivariateMin, UnivariateMax
+using SoleData: UnivariateMin, UnivariateMax
 
 features  = []
 featsnops = []

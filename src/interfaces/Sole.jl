@@ -2,10 +2,12 @@ using Revise
 
 using SoleLogics
 using SoleModels
-using SoleModels: info, ScalarCondition, ScalarMetaCondition
+using SoleModels: info
 
-using SoleModels: AbstractFeature
-using SoleModels: relation, feature, test_operator, threshold, inverse_test_operator
+using SoleData
+using SoleData: ScalarCondition, ScalarMetaCondition
+using SoleData: AbstractFeature
+using SoleData: relation, feature, test_operator, threshold, inverse_test_operator
 
 using ModalDecisionTrees: DTInternal, DTNode, DTLeaf, NSDTLeaf
 using ModalDecisionTrees: isleftchild, isrightchild, isinleftsubtree, isinrightsubtree

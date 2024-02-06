@@ -750,7 +750,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
                         end
                         for i_instance in 1:_ninstances
                             gamma = aggr_thresholds[i_instance]
-                            issat = SoleModels.apply_test_operator(test_op, gamma, _threshold)
+                            issat = SoleData.apply_test_operator(test_op, gamma, _threshold)
                             # @logmsg LogDetail " instance $i_instance/$_ninstances: (f=$(gamma)) -> issat = $(issat)"
 
                             # Note: in a fuzzy generalization, `issat` becomes a [0-1] value
@@ -800,7 +800,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
                     end
                     for i_instance in 1:_ninstances
                         gamma = aggr_thresholds[i_instance]
-                        issat = SoleModels.apply_test_operator(test_op, gamma, _threshold)
+                        issat = SoleData.apply_test_operator(test_op, gamma, _threshold)
                         # @logmsg LogDetail " instance $i_instance/$_ninstances: (f=$(gamma)) -> issat = $(issat)"
 
                         # TODO make this satisfied a fuzzy value
@@ -1004,7 +1004,7 @@ end
             _features = features(X)
             _metaconditions = metaconditions(X)
 
-            _grouped_metaconditions = SoleModels.grouped_metaconditions(_metaconditions, _features)
+            _grouped_metaconditions = SoleData.grouped_metaconditions(_metaconditions, _features)
 
             # _grouped_metaconditions::AbstractVector{<:AbstractVector{Tuple{<:ScalarMetaCondition}}}
             # [[(i_metacond, aggregator, metacondition)...]...]

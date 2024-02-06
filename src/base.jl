@@ -1,4 +1,4 @@
-using SoleModels: AbstractLogiset
+using SoleData: AbstractLogiset
 import SoleModels: printmodel, displaymodel
 import SoleModels: ninstances, height, nnodes
 
@@ -101,10 +101,10 @@ isinrightsubtree(node::DTNode, parent::AbstractDecisionLeaf) = false
 ############################################################################################
 using SoleLogics
 using SoleLogics: identityrel, globalrel
-using SoleModels.DimensionalDatasets: alpha
-using SoleModels: ScalarOneStepFormula,
-                  ScalarExistentialFormula,
-                  ScalarUniversalFormula
+using SoleData.DimensionalDatasets: alpha
+using SoleData: ScalarOneStepFormula,
+                ScalarExistentialFormula,
+                ScalarUniversalFormula
 
 
 function displaydecision(
@@ -126,10 +126,10 @@ function displaydecision_inverse(i_modality::ModalityId, decision::AbstractDecis
 end
 
 
-is_propositional_decision(d::ScalarOneStepFormula) = (SoleModels.relation(d) == identityrel)
-is_global_decision(d::ScalarOneStepFormula) = (SoleModels.relation(d) == globalrel)
+is_propositional_decision(d::ScalarOneStepFormula) = (SoleData.relation(d) == identityrel)
+is_global_decision(d::ScalarOneStepFormula) = (SoleData.relation(d) == globalrel)
 
-import SoleModels: relation, atom, metacond, feature, test_operator, threshold
+import SoleData: relation, atom, metacond, feature, test_operator, threshold
 
 struct SimpleDecision{F<:ScalarExistentialFormula} <: AbstractDecision
     formula  :: F

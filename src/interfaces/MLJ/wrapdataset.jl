@@ -1,6 +1,9 @@
 
 using SoleData
-using SoleModels: AbstractLogiset, SupportedLogiset
+using SoleData: AbstractLogiset, SupportedLogiset
+
+using MultiData
+using MultiData: dataframe2dimensional
 
 # UNI
 # AbstractArray -> scalarlogiset -> supportedlogiset
@@ -8,7 +11,7 @@ using SoleModels: AbstractLogiset, SupportedLogiset
 # AbstractLogiset -> supportedlogiset
 
 # MULTI
-# SoleData.MultiModalDataset -> multilogiset
+# SoleData.MultiDataset -> multilogiset
 # AbstractDataFrame -> naturalgrouping -> multilogiset
 # MultiLogiset -> multilogiset
 
@@ -52,7 +55,7 @@ function wrapdataset(
             if !passive_mode
                 @info "Precomputing logiset..."
                 metaconditions = readconditions(model, X)
-                features = unique(SoleModels.feature.(metaconditions))
+                features = unique(SoleData.feature.(metaconditions))
                 scalarlogiset(X, features;
                     use_onestep_memoization = true,
                     conditions = metaconditions,
@@ -70,7 +73,7 @@ function wrapdataset(
                 conditions = readconditions(model, X),
                 relations = readrelations(model, X)
             )
-        elseif X isa AbstractMultiModalDataset
+        elseif X isa AbstractMultiDataset
             X
         elseif Tables.istable(X)
             DataFrame(X)
@@ -83,7 +86,7 @@ function wrapdataset(
     # @show collect.(X)
     # readline()
 
-    # DataFrame -> MultiModalDataset + variable grouping (needed for printing)
+    # DataFrame -> MultiDataset + variable grouping (needed for printing)
     X, var_grouping = begin
         if X isa AbstractDataFrame
 
@@ -96,7 +99,7 @@ function wrapdataset(
 
             var_grouping = begin
                 if isnothing(force_var_grouping)
-                    var_grouping = SoleModels.naturalgrouping(X; allow_variable_drop = true)
+                    var_grouping = SoleData.naturalgrouping(X; allow_variable_drop = true)
                     if !(length(var_grouping) == 1 && length(var_grouping[1]) == ncol(X))
                         @info "Using variable grouping:\n" *
                             # join(map(((i_mod,variables),)->"[$i_mod] -> [$(join(string.(variables), ", "))]", enumerate(var_grouping)), "\n")
@@ -109,11 +112,11 @@ function wrapdataset(
                 end
             end
 
-            md = MultiModalDataset(X, var_grouping)
+            md = MultiDataset(X, var_grouping)
 
             # Downsize
-            md = MultiModalDataset([begin
-                mod, varnames = SoleData.dataframe2dimensional(mod)
+            md = MultiDataset([begin
+                mod, varnames = dataframe2dimensional(mod)
                 mod = model.downsize.(eachinstance(mod))
                 SoleData.dimensional2dataframe(mod, varnames)
             end for mod in eachmodality(md)])
@@ -127,12 +130,12 @@ function wrapdataset(
     # println(X)
     # println(modality(X, 1))
     multimodal_X = begin
-        if X isa SoleData.AbstractMultiModalDataset
-            if !passive_mode || !SoleModels.ismultilogiseed(X)
+        if X isa SoleData.AbstractMultiDataset
+            if !passive_mode || !SoleData.ismultilogiseed(X)
                 @info "Precomputing logiset..."
-                SoleModels.MultiLogiset([begin
+                MultiLogiset([begin
                         _metaconditions = readconditions(model, mod)
-                        features = unique(SoleModels.feature.(_metaconditions))
+                        features = unique(SoleData.feature.(_metaconditions))
                         # @show _metaconditions
                         # @show features
                         scalarlogiset(mod, features;
@@ -147,13 +150,13 @@ function wrapdataset(
                 X
             end
         elseif X isa AbstractLogiset
-            SoleModels.MultiLogiset(X)
+            MultiLogiset(X)
         elseif X isa MultiLogiset
             X
         else
             error("Unexpected dataset type: $(typeof(X)). Allowed dataset types are " *
                 "AbstractArray, AbstractDataFrame, " *
-                "SoleData.AbstractMultiModalDataset and SoleModels.AbstractLogiset.")
+                "SoleData.AbstractMultiDataset and SoleData.AbstractLogiset.")
         end
     end
 

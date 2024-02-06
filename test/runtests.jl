@@ -4,7 +4,8 @@ using ModalDecisionTrees
 using MLJ
 using MLJBase
 using SoleModels
-using SoleModels.DimensionalDatasets
+using SoleData
+using SoleData.DimensionalDatasets
 using DataFrames
 
 using Random

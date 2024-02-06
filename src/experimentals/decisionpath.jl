@@ -1,13 +1,13 @@
 using ..ModalDecisionTrees
-using SoleModels
-using SoleModels.DimensionalDatasets
+using SoleData
+using SoleData.DimensionalDatasets
 using ..ModalDecisionTrees: AbstractFeature, TestOperator
 
 using ..ModalDecisionTrees: ModalityId
 
 using ..ModalDecisionTrees: DTLeaf, DTNode, DTInternal
 
-import SoleModels: feature, test_operator, threshold
+import SoleData: feature, test_operator, threshold
 
 export DecisionPath, DecisionPathNode,
             get_path_in_tree, get_internalnode_dirname,

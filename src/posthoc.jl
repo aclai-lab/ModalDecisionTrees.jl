@@ -7,7 +7,7 @@
 export prune
 
 using DataStructures
-using SoleModels.DimensionalDatasets: AbstractUnivariateFeature
+using SoleData.DimensionalDatasets: AbstractUnivariateFeature
 
 function prune(tree::DTree; kwargs...)
     DTree(prune(root(tree); depth = 0, kwargs...), worldtypes(tree), initconditions(tree))

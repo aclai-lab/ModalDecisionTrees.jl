@@ -1,24 +1,24 @@
 
 using ResumableFunctions
 using SoleLogics: AbstractFrame
-using SoleModels: AbstractWorld, AbstractWorlds, AbstractFeature
+using SoleData: AbstractWorld, AbstractWorlds, AbstractFeature
 using Logging: @logmsg
-using SoleModels: AbstractLogiset, SupportedLogiset
+using SoleData: AbstractLogiset, SupportedLogiset
 
-using SoleModels: base, globmemoset
-using SoleModels: featchannel,
+using SoleData: base, globmemoset
+using SoleData: featchannel,
                     featchannel_onestep_aggregation,
                     onestep_aggregation
 
-using SoleModels: SupportedLogiset, ScalarOneStepMemoset, AbstractFullMemoset
-using SoleModels.DimensionalDatasets: UniformFullDimensionalLogiset
+using SoleData: SupportedLogiset, ScalarOneStepMemoset, AbstractFullMemoset
+using SoleData.DimensionalDatasets: UniformFullDimensionalLogiset
 
-import SoleModels: relations, nrelations, metaconditions, nmetaconditions
-import SoleModels: supports
-import SoleModels.DimensionalDatasets: nfeatures, features
+import SoleData: relations, nrelations, metaconditions, nmetaconditions
+import SoleData: supports
+import SoleData.DimensionalDatasets: nfeatures, features
 
-using SoleModels: Aggregator, TestOperator, ScalarMetaCondition
-using SoleModels: ScalarExistentialFormula
+using SoleData: Aggregator, TestOperator, ScalarMetaCondition
+using SoleData: ScalarExistentialFormula
 
 using DataStructures
 
@@ -369,7 +369,7 @@ Base.@propagate_inbounds @resumable function generate_propositional_decisions(
                 # gamma = featvalue(X[i_instance, w, feature) # TODO in general!
                 gamma = featvalue(X, i_instance, w, feature, i_feature)
                 for (i_aggregator,aggregator) in enumerate(aggregators)
-                    thresholds[i_aggregator,instance_idx] = SoleModels.aggregator_to_binary(aggregator)(gamma, thresholds[i_aggregator,instance_idx])
+                    thresholds[i_aggregator,instance_idx] = SoleData.aggregator_to_binary(aggregator)(gamma, thresholds[i_aggregator,instance_idx])
                 end
             end
         end
@@ -382,7 +382,7 @@ Base.@propagate_inbounds @resumable function generate_propositional_decisions(
             aggr_thresholds = thresholds[i_aggregator,:]
 
             for metacondition in aggrsnops[aggregator]
-                test_op = SoleModels.test_operator(metacondition)
+                test_op = SoleData.test_operator(metacondition)
                 @yield relation, metacondition, test_op, aggr_thresholds
             end # for metacondition
         end # for aggregator
@@ -449,7 +449,7 @@ Base.@propagate_inbounds @resumable function generate_modal_decisions(
                                 error("generate_global_decisions is broken.")
                             end
                         end
-                        thresholds[i_aggregator,instance_id] = SoleModels.aggregator_to_binary(aggregator)(gamma, thresholds[i_aggregator,instance_id])
+                        thresholds[i_aggregator,instance_id] = SoleData.aggregator_to_binary(aggregator)(gamma, thresholds[i_aggregator,instance_id])
                     end
                 end
                 
@@ -468,7 +468,7 @@ Base.@propagate_inbounds @resumable function generate_modal_decisions(
 
                 for metacondition in aggrsnops[aggregator]
                     # @logmsg LogDetail " Test operator $(metacondition)"
-                    test_op = SoleModels.test_operator(metacondition)
+                    test_op = SoleData.test_operator(metacondition)
                     @yield relation, metacondition, test_op, aggr_thresholds
                 end # for metacondition
             end # for aggregator
@@ -542,7 +542,7 @@ Base.@propagate_inbounds @resumable function generate_global_decisions(
                 # @show gamma
 
                 thresholds[i_aggregator,instance_id] = gamma
-                # thresholds[i_aggregator,instance_id] = SoleModels.aggregator_to_binary(aggregator)(gamma, thresholds[i_aggregator,instance_id])
+                # thresholds[i_aggregator,instance_id] = SoleData.aggregator_to_binary(aggregator)(gamma, thresholds[i_aggregator,instance_id])
                 # println(gamma)
                 # println(thresholds[i_aggregator,instance_id])
             end
@@ -560,7 +560,7 @@ Base.@propagate_inbounds @resumable function generate_global_decisions(
             aggr_thresholds = thresholds[i_aggregator,:]
 
             for metacondition in aggrsnops[aggregator]
-                test_op = SoleModels.test_operator(metacondition)
+                test_op = SoleData.test_operator(metacondition)
                 @yield relation, metacondition, test_op, aggr_thresholds
             end # for metacondition
         end # for aggregator

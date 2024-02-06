@@ -1,4 +1,5 @@
 using Test
+using SoleData
 using SoleModels
 using ModalDecisionTrees
 using ModalDecisionTrees: DTLeaf, prediction
@@ -50,7 +51,7 @@ using ModalDecisionTrees: DTInternal, decision
 
 # Decision internal node (DTInternal) + Decision Tree & Forest (DTree & DForest)
 
-formula = SoleModels.ScalarExistentialFormula(SoleModels.globalrel, UnivariateMin(1), >=, 10)
+formula = SoleData.ScalarExistentialFormula(SoleData.globalrel, UnivariateMin(1), >=, 10)
 
 _decision = SimpleDecision(formula)
 

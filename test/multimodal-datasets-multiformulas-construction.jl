@@ -186,7 +186,7 @@ _X_all = DataFrame(
     mode2 = [zeros(5,5), zeros(5,5), ones(5,5), zeros(5,5), zeros(5,5)],
 )
 
-X_all = MultiModalDataset(_X_all)
+X_all = MultiDataset(_X_all)
 y = [i <= div(N,2)+1 for i in 1:N]
 
 # Split dataset
@@ -215,7 +215,7 @@ X_all = DataFrame(
     mode2 = [rand(5,5) for i in 1:N],
 )
 
-X_all = MultiModalDataset(X_all)
+X_all = MultiDataset(X_all)
 y = [i <= div(N,2)+1 for i in 1:N]
 
 # Split dataset

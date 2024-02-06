@@ -214,14 +214,14 @@ function build_forest(
     rngs = [spawn(rng) for i_tree in 1:ntrees]
 
     if print_progress
-        p = Progress(ntrees, 1, "Computing Forest...")
+        p = Progress(ntrees; dt = 1, desc = "Computing Forest...")
     end
     Threads.@threads for i_tree in 1:ntrees
         train_idxs = rand(rngs[i_tree], 1:tot_samples, num_samples)
 
         X_slice = SoleData.instances(X, train_idxs, Val(true))
         Y_slice = @view Y[train_idxs]
-        W_slice = SoleModels.slice_weights(W, train_idxs)
+        W_slice = SoleBase.slice_weights(W, train_idxs)
 
         trees[i_tree] = build_tree(
             X_slice
@@ -257,7 +257,7 @@ function build_forest(
         oob_metrics[i_tree] = (;
             actual = Y[oob_instances[i_tree]],
             predicted = tree_preds,
-            weights = collect(SoleModels.slice_weights(W, oob_instances[i_tree]))
+            weights = collect(SoleBase.slice_weights(W, oob_instances[i_tree]))
         )
 
         !print_progress || next!(p)

@@ -4,9 +4,9 @@ function parse_tree(
     check_format = true,
     _depth = 0,
     offset = 0,
-    openpar  = SoleModels.UVF_OPENING_PARENTHESIS,
-    closepar = SoleModels.UVF_CLOSING_PARENTHESIS,
-    varprefix = SoleModels.UVF_VARPREFIX,
+    openpar  = SoleData.UVF_OPENING_PARENTHESIS,
+    closepar = SoleData.UVF_CLOSING_PARENTHESIS,
+    varprefix = SoleData.UVF_VARPREFIX,
     worldtypes = Type{SL.AbstractWorld}[],
     initconditions = MDT.InitialCondition[],
 )
@@ -27,9 +27,9 @@ function _parse_tree(
     check_format = true,
     _depth = 0,
     offset = 0,
-    varprefix = SoleModels.UVF_VARPREFIX,
-    openpar = SoleModels.UVF_OPENING_PARENTHESIS,
-    closepar = SoleModels.UVF_CLOSING_PARENTHESIS,
+    varprefix = SoleData.UVF_VARPREFIX,
+    openpar = SoleData.UVF_OPENING_PARENTHESIS,
+    closepar = SoleData.UVF_CLOSING_PARENTHESIS,
 )
     ########################################################################################
     ########################################################################################
@@ -132,12 +132,12 @@ function _parse_tree(
             elseif !isnothing(m_special) && length(m_special) == 2
                 i_variable, feature_fun_test_operator = m_special
                 feature_fun_test_operator_d = Dict([
-                    "⪴"   => (i_variable)->(SoleModels.UnivariateMin(i_variable), ≥),
-                    "⪴₈₀" => (i_variable)->(SoleModels.UnivariateSoftMin(i_variable, 80), ≥),
-                    "⪳₈₀" => (i_variable)->(SoleModels.UnivariateSoftMax(i_variable, 80), ≤),
-                    "⪳"   => (i_variable)->(SoleModels.UnivariateMax(i_variable), ≤),
-                    "↘"   => (i_variable)->(SoleModels.UnivariateMin(i_variable), ≤),
-                    "↗"   => (i_variable)->(SoleModels.UnivariateMax(i_variable), ≥),
+                    "⪴"   => (i_variable)->(SoleData.UnivariateMin(i_variable), ≥),
+                    "⪴₈₀" => (i_variable)->(SoleData.UnivariateSoftMin(i_variable, 80), ≥),
+                    "⪳₈₀" => (i_variable)->(SoleData.UnivariateSoftMax(i_variable, 80), ≤),
+                    "⪳"   => (i_variable)->(SoleData.UnivariateMax(i_variable), ≤),
+                    "↘"   => (i_variable)->(SoleData.UnivariateMin(i_variable), ≤),
+                    "↗"   => (i_variable)->(SoleData.UnivariateMax(i_variable), ≥),
                 ])
                 feature_fun_test_operator = feature_fun_test_operator_d[feature_fun_test_operator]
                 i_variable = parse(Int, i_variable)
