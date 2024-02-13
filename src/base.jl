@@ -1,4 +1,4 @@
-using SoleData: AbstractLogiset
+using SoleData: AbstractModalLogiset
 import SoleModels: printmodel, displaymodel
 import SoleModels: ninstances, height, nnodes
 

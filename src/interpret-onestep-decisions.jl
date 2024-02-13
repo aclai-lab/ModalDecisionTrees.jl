@@ -3,7 +3,7 @@ using ResumableFunctions
 using SoleLogics: AbstractFrame
 using SoleData: AbstractWorld, AbstractWorlds, AbstractFeature
 using Logging: @logmsg
-using SoleData: AbstractLogiset, SupportedLogiset
+using SoleData: AbstractModalLogiset, SupportedLogiset
 
 using SoleData: base, globmemoset
 using SoleData: featchannel,
@@ -30,7 +30,7 @@ const AbstractScalarLogiset{
     U<:Number,
     FT<:AbstractFeature,
     FR<:AbstractFrame{W}
-} = AbstractLogiset{W,U,FT,FR}
+} = AbstractModalLogiset{W,U,FT,FR}
 
 nrelations(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset}}) where {W,U,FT,FR,L,N} = nrelations(supports(X)[1])
 nrelations(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}}) where {W,U,FT,FR,L,N} = nrelations(supports(X)[1])

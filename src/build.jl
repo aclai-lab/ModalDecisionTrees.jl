@@ -5,15 +5,15 @@ include("fit_tree.jl")
 ############################# Unimodal datasets ################################
 ################################################################################
 
-function build_stump(X::AbstractLogiset, args...; kwargs...)
+function build_stump(X::AbstractModalLogiset, args...; kwargs...)
     build_stump(MultiLogiset(X), args...; kwargs...)
 end
 
-function build_tree(X::AbstractLogiset, args...; kwargs...)
+function build_tree(X::AbstractModalLogiset, args...; kwargs...)
     build_tree(MultiLogiset(X), args...; kwargs...)
 end
 
-function build_forest(X::AbstractLogiset, args...; kwargs...)
+function build_forest(X::AbstractModalLogiset, args...; kwargs...)
     build_forest(MultiLogiset(X), args...; kwargs...)
 end
 

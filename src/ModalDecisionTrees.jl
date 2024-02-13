@@ -27,7 +27,7 @@ using SoleData: nvariables,
 
 using FillArrays
 
-using SoleData: AbstractLogiset
+using SoleData: AbstractModalLogiset
 import SoleData: feature, test_operator, threshold
 
 

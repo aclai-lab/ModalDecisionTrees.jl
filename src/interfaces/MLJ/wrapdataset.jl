@@ -1,6 +1,6 @@
 
 using SoleData
-using SoleData: AbstractLogiset, SupportedLogiset
+using SoleData: AbstractModalLogiset, SupportedLogiset
 
 using MultiData
 using MultiData: dataframe2dimensional
@@ -8,7 +8,7 @@ using MultiData: dataframe2dimensional
 # UNI
 # AbstractArray -> scalarlogiset -> supportedlogiset
 # SupportedLogiset -> supportedlogiset
-# AbstractLogiset -> supportedlogiset
+# AbstractModalLogiset -> supportedlogiset
 
 # MULTI
 # SoleData.MultiDataset -> multilogiset
@@ -67,7 +67,7 @@ function wrapdataset(
             end
         elseif X isa SupportedLogiset
             X
-        elseif X isa AbstractLogiset
+        elseif X isa AbstractModalLogiset
             SupportedLogiset(X;
                 use_onestep_memoization = true,
                 conditions = readconditions(model, X),
@@ -149,14 +149,14 @@ function wrapdataset(
             else
                 X
             end
-        elseif X isa AbstractLogiset
+        elseif X isa AbstractModalLogiset
             MultiLogiset(X)
         elseif X isa MultiLogiset
             X
         else
             error("Unexpected dataset type: $(typeof(X)). Allowed dataset types are " *
                 "AbstractArray, AbstractDataFrame, " *
-                "SoleData.AbstractMultiDataset and SoleData.AbstractLogiset.")
+                "SoleData.AbstractMultiDataset and SoleData.AbstractModalLogiset.")
         end
     end
 
