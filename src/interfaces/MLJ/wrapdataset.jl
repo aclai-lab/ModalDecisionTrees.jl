@@ -63,7 +63,7 @@ function wrapdataset(
                     print_progress = (ninstances(X) > 500)
                 )
             else
-                SoleData.dimensional2dataframe(X)
+                MultiData.dimensional2dataframe(X)
             end
         elseif X isa SupportedLogiset
             X
