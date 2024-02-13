@@ -72,7 +72,7 @@ report(mach).printmodel(1000; threshold_digits = 2);
 
 listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true)
 
-fs = SoleModels.antecedent.(listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true))
+fs = SoleData.antecedent.(listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true))
 fsnorm = map(f->normalize(modforms(f)[1]; allow_atom_flipping = true), fs)
 
 # TODO: expand to implicationstate
@@ -92,11 +92,11 @@ function knowntoimply(t1::SyntaxTree, t2::SyntaxTree)
     elseif token(t1) isa Atom{<:ScalarCondition} && token(t2) isa Atom{<:ScalarCondition}
         c1 = value(token(t1))
         c2 = value(token(t2))
-        # if SoleModels.metacond(c1) == SoleModels.metacond(c2)
+        # if SoleData.metacond(c1) == SoleData.metacond(c2)
         #     @show c1, c2
-        #     @show SoleModels.test_operator(c1)(SoleModels.threshold(c1), SoleModels.threshold(c2))
+        #     @show SoleData.test_operator(c1)(SoleData.threshold(c1), SoleData.threshold(c2))
         # end
-        (SoleModels.metacond(c1) == SoleModels.metacond(c2) && SoleModels.test_operator(c1)(SoleModels.threshold(c1), SoleModels.threshold(c2)))
+        (SoleData.metacond(c1) == SoleData.metacond(c2) && SoleData.test_operator(c1)(SoleData.threshold(c1), SoleData.threshold(c2)))
     else
         false
     end

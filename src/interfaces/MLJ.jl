@@ -17,9 +17,9 @@ using Random: GLOBAL_RNG
 using SoleLogics
 using SoleLogics: AbstractRelation
 using SoleData
+using SoleData.MLJUtils
+using SoleData: TestOperator
 using SoleModels
-using SoleModels.MLJUtils
-using SoleModels: TestOperator
 
 using ModalDecisionTrees
 using ModalDecisionTrees: InitialCondition

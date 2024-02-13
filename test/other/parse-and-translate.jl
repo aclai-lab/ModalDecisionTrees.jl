@@ -74,11 +74,11 @@ tree_str3 = """
   ✔ YES : 39/39 (conf = 1.0000)
   ✘ NO_CLEAN_HISTORY_AND_LOW_PROBABILITY : 1/1 (conf = 1.0000)
 """
-tree1 = parse_tree(tree_str1; worldtypes = [SoleModels.Interval], initconditions = [ModalDecisionTrees.start_without_world])
+tree1 = parse_tree(tree_str1; worldtypes = [SoleData.Interval], initconditions = [ModalDecisionTrees.start_without_world])
 
-tree2 = parse_tree(tree_str2; worldtypes = [SoleModels.Interval], initconditions = [ModalDecisionTrees.start_without_world])
+tree2 = parse_tree(tree_str2; worldtypes = [SoleData.Interval], initconditions = [ModalDecisionTrees.start_without_world])
 
-tree3 = parse_tree(tree_str3; worldtypes = [SoleModels.OneWorld], initconditions = [ModalDecisionTrees.start_without_world])
+tree3 = parse_tree(tree_str3; worldtypes = [SoleData.OneWorld], initconditions = [ModalDecisionTrees.start_without_world])
 
 pure_tree1 = translate(tree1)
 
@@ -129,7 +129,7 @@ tree_str10 = """
   ✔ YES : 39/39 (conf = 1.0000)
   ✘ NO_CLEAN_HISTORY_AND_LOW_PROBABILITY : 1/1 (conf = 1.0000)
 """
-@test_broken tree10 = parse_tree(tree_str10; worldtypes = [SoleModels.Interval], initconditions = [ModalDecisionTrees.start_without_world])
+@test_broken tree10 = parse_tree(tree_str10; worldtypes = [SoleData.Interval], initconditions = [ModalDecisionTrees.start_without_world])
 
 
 
@@ -164,7 +164,7 @@ tree_str_multi = """
   ✘ NO_CLEAN_HISTORY_AND_LOW_PROBABILITY : 1/1 (conf = 1.0000)
 """
 
-tree_multi = parse_tree(tree_str_multi; worldtypes = [SoleModels.Interval, SoleModels.Interval, SoleModels.Interval], initconditions = [ModalDecisionTrees.start_without_world, ModalDecisionTrees.start_without_world, ModalDecisionTrees.start_without_world])
+tree_multi = parse_tree(tree_str_multi; worldtypes = [SoleData.Interval, SoleData.Interval, SoleData.Interval], initconditions = [ModalDecisionTrees.start_without_world, ModalDecisionTrees.start_without_world, ModalDecisionTrees.start_without_world])
 
 
 pure_tree_multi = translate(tree_multi)

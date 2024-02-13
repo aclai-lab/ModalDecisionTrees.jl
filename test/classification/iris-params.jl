@@ -6,12 +6,12 @@ using Random
 X, y = @load_iris
 
 model = ModalDecisionTree(; max_depth = 0)
-mach = machine(model, X, y) |> fit!
+mach = @time machine(model, X, y) |> fit!
 @test height(fitted_params(mach).rawmodel) == 0
 @test depth(fitted_params(mach).rawmodel) == 0
 
 model = ModalDecisionTree(; max_depth = 2, )
-mach = machine(model, X, y) |> fit!
+mach = @time machine(model, X, y) |> fit!
 @test depth(fitted_params(mach).rawmodel) == 2
 
 model = ModalDecisionTree(;
@@ -22,7 +22,7 @@ model = ModalDecisionTree(;
 	print_progress = true,
 	rng = 2
 )
-mach = machine(model, X, y) |> fit!
+mach = @time machine(model, X, y) |> fit!
 @test depth(fitted_params(mach).tree) == 4
 
 ################################################################################
@@ -39,7 +39,7 @@ model = ModalDecisionTree(;
 	display_depth = 1,
 	rng = Random.MersenneTwister(2)
 )
-mach = machine(model, X, y) |> fit!
+mach = @time machine(model, X, y) |> fit!
 report(mach).printmodel()
 ################################################################################
 
@@ -58,7 +58,7 @@ model = ModalDecisionTree(;
 	display_depth = 2,
 	rng = Random.MersenneTwister(2)
 )
-mach = machine(model, X, y) |> fit!
+mach = @time machine(model, X, y) |> fit!
 @test depth(fitted_params(mach).tree) == 6
 @test_nowarn report(mach).printmodel()
 @test_nowarn report(mach).printmodel(false, 0)
@@ -102,7 +102,7 @@ printmodel.(listrules(report(mach).model; use_shortforms=true, use_leftmostlinea
 
 model = ModalRandomForest()
 
-mach = machine(model, X, y, w) |> fit!
+mach = @time machine(model, X, y, w) |> fit!
 
 Xnew = (sepal_length = [6.4, 7.2, 7.4],
 		sepal_width = [2.8, 3.0, 2.8],

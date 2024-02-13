@@ -9,38 +9,38 @@ using ModalDecisionTrees:
        is_propositional_decision,
        is_global_decision
 
-using SoleModels
-using SoleModels.DimensionalDatasets
+using SoleData
+using SoleData.DimensionalDatasets
 using SoleLogics
 
 
-using SoleModels: nfeatures, nrelations,
-                            nmodalities, eachmodality, modality,
-                            displaystructure,
-                            #
-                            relations,
-                            #
-                            MultiLogiset,
-                            SupportedLogiset
+using SoleData: nfeatures, nrelations,
+                nmodalities, eachmodality, modality,
+                displaystructure,
+                #
+                relations,
+                #
+                MultiLogiset,
+                SupportedLogiset
 
-using SoleModels: scalarlogiset
+using SoleData: scalarlogiset
 
-using SoleModels: AbstractWorld, AbstractRelation
-using SoleModels: AbstractWorlds, Worlds
+using SoleData: AbstractWorld, AbstractRelation
+using SoleData: AbstractWorlds, Worlds
 
 using SoleLogics: FullDimensionalFrame
-using SoleModels.DimensionalDatasets
-using SoleModels: MultiLogiset
-using SoleModels: Worlds
+using SoleData.DimensionalDatasets
+using SoleData: MultiLogiset
+using SoleData: Worlds
 
 
-using SoleModels: worldtype
+using SoleData: worldtype
 
-using SoleModels: OneWorld
+using SoleData: OneWorld
 
-using SoleModels: Interval, Interval2D
+using SoleData: Interval, Interval2D
 
-using SoleModels: IARelations
+using SoleData: IARelations
 
 MDT = ModalDecisionTrees
 SL  = SoleLogics

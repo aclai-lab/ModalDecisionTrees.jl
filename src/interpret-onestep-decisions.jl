@@ -1,24 +1,26 @@
 
 using ResumableFunctions
 using SoleLogics: AbstractFrame
-using SoleModels: AbstractWorld, AbstractWorlds, AbstractFeature
+using SoleData: AbstractWorld, AbstractWorlds, AbstractFeature
 using Logging: @logmsg
-using SoleModels: AbstractLogiset, SupportedLogiset
+using SoleData: AbstractModalLogiset, SupportedLogiset
 
-using SoleModels: base, globmemoset
-using SoleModels: featchannel,
+using SoleData: base, globmemoset
+using SoleData: featchannel,
                     featchannel_onestep_aggregation,
                     onestep_aggregation
 
-using SoleModels: SupportedLogiset, ScalarOneStepMemoset, AbstractFullMemoset
-using SoleModels.DimensionalDatasets: UniformFullDimensionalLogiset
+using SoleData: SupportedLogiset, ScalarOneStepMemoset, AbstractFullMemoset
+using SoleData.DimensionalDatasets: UniformFullDimensionalLogiset
 
-import SoleModels: relations, nrelations, metaconditions, nmetaconditions
-import SoleModels: supports
-import SoleModels.DimensionalDatasets: nfeatures, features
+import SoleData: relations, nrelations, metaconditions, nmetaconditions
+import SoleData: supports
+import SoleData.DimensionalDatasets: nfeatures, features
 
-using SoleModels: Aggregator, TestOperator, ScalarMetaCondition
-using SoleModels: ScalarExistentialFormula
+using SoleData: Aggregator, TestOperator, ScalarMetaCondition
+using SoleData: ScalarExistentialFormula
+
+using DataStructures
 
 """
 Logical datasets with scalar features.
@@ -28,7 +30,7 @@ const AbstractScalarLogiset{
     U<:Number,
     FT<:AbstractFeature,
     FR<:AbstractFrame{W}
-} = AbstractLogiset{W,U,FT,FR}
+} = AbstractModalLogiset{W,U,FT,FR}
 
 nrelations(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset}}) where {W,U,FT,FR,L,N} = nrelations(supports(X)[1])
 nrelations(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}}) where {W,U,FT,FR,L,N} = nrelations(supports(X)[1])
@@ -116,7 +118,7 @@ end
 ############################################################################################
 
 
-Base.@propagate_inbounds @resumable function generate_feasible_decisions(
+Base.@propagate_inbounds @resumable function generate_decisions(
     X::AbstractScalarLogiset{W,U},
     i_instances::AbstractVector{<:Integer},
     Sf::AbstractVector{<:AbstractWorlds{W}},
@@ -130,49 +132,184 @@ Base.@propagate_inbounds @resumable function generate_feasible_decisions(
 ) where {W<:AbstractWorld,U}
     # Propositional splits
     if allow_propositional_decisions
-        for decision in generate_propositional_feasible_decisions(X, i_instances, Sf, features_inds, grouped_featsaggrsnops, grouped_featsnaggrs)
+        for decision in generate_propositional_decisions(X, i_instances, Sf, features_inds, grouped_featsaggrsnops, grouped_featsnaggrs)
             # @logmsg LogDebug " Testing decision: $(displaydecision(decision))"
             @yield decision
         end
     end
     # Global splits
     if allow_global_decisions
-        for decision in generate_global_feasible_decisions(X, i_instances, Sf, features_inds, grouped_featsaggrsnops, grouped_featsnaggrs)
+        for decision in generate_global_decisions(X, i_instances, Sf, features_inds, grouped_featsaggrsnops, grouped_featsnaggrs)
             # @logmsg LogDebug " Testing decision: $(displaydecision(decision))"
             @yield decision
         end
     end
     # Modal splits
     if allow_modal_decisions
-        for decision in generate_modal_feasible_decisions(X, i_instances, Sf, modal_relations_inds, features_inds, grouped_featsaggrsnops, grouped_featsnaggrs)
+        for decision in generate_modal_decisions(X, i_instances, Sf, modal_relations_inds, features_inds, grouped_featsaggrsnops, grouped_featsnaggrs)
             # @logmsg LogDebug " Testing decision: $(displaydecision(decision))"
             @yield decision
         end
     end
 end
 
-function compute_thresh_domain(testop, aggr_thresholds::AbstractVector{U}) where {U}
-    # @show testop
-    # @show aggr_thresholds
-    thresh_domain = begin
-        thresh_domain = unique(aggr_thresholds)
-        if length(thresh_domain) == 1 # Always zero entropy
-            U[]
-        elseif testop in [≥, <] # Remove edge-case with zero entropy
-            _m = minimum(thresh_domain)
-            filter(x->x != _m, thresh_domain)
-        elseif testop in [≤, >] # Remove edge-case with zero entropy
-            _m = maximum(thresh_domain)
-            filter(x->x != _m, thresh_domain)
-        else
-            thresh_domain
+using StatsBase
+
+function countmap_with_domain(v::AbstractVector, keyset::AbstractVector = unique(v), eltype = Float64)
+    res = StatsBase.countmap(v)
+    for el in keyset
+        if !haskey(res, el)
+            res[el] = zero(eltype)
         end
     end
-    return thresh_domain
-    # @show thresh_domain
+    res = Dict(collect(zip(keys(res), eltype.(values(res)))))
+    return res
 end
 
-# function compute_thresh_domain(aggr_thresholds::AbstractVector{U}) where {U}
+
+"""
+References:
+- "Generalizing Boundary Points"
+- "Multi-Interval Discretization of Continuous-Valued Attributes for Classification Learning"
+"""
+function limit_threshold_domain(
+    aggr_thresholds::AbstractVector{T},
+    Y::AbstractVector{L},
+    W::AbstractVector{U},
+    loss_function::Loss,
+    test_op::TestOperator,
+    min_samples_leaf::Integer,
+    perform_domain_optimization::Bool;
+    n_classes::Union{Nothing,Integer} = nothing,
+    nc::Union{Nothing,AbstractVector{U}} = nothing,
+    nt::Union{Nothing,U} = nothing,
+) where {T,L<:_Label,U}
+    if allequal(aggr_thresholds) # Always zero entropy
+        return T[], Nothing[]
+    end
+    if loss_function isa ShannonEntropy && test_op in [≥, <, ≤, >] && (W isa Ones) # TODO extendo to allequal(W) # TODO extend to Gini Index, Normalized Distance Measure, Info Gain, Gain Ratio (Ref. [Linear-Time Preprocessing in Optimal Numerical Range Partitioning])
+        if perform_domain_optimization
+            thresh_domain = unique(aggr_thresholds)
+            thresh_domain = begin
+                if test_op in [≥, <] # Remove edge-case with zero entropy
+                    _m = minimum(thresh_domain)
+                    filter(x->x != _m, thresh_domain)
+                elseif test_op in [≤, >] # Remove edge-case with zero entropy
+                    _m = maximum(thresh_domain)
+                    filter(x->x != _m, thresh_domain)
+                else
+                    thresh_domain
+                end
+            end
+            return thresh_domain, fill(nothing, length(thresh_domain))
+        else
+            p = sortperm(aggr_thresholds)
+            _ninstances = length(Y)
+            _aggr_thresholds = aggr_thresholds[p]
+            _Y = Y[p]
+
+            # thresh_domain = unique(_aggr_thresholds)
+            # sort!(thresh_domain)
+
+            ps = pairs(SoleBase._groupby(first, zip(_aggr_thresholds, _Y) |> collect))
+            groupedY = map(((k,v),)->begin
+                Ys = map(last, v)
+                # footprint = sort((Ys)) # associated with ==, it works
+                # footprint = sort(unique(Ys)) # couldn't get it to work.
+                # footprint = countmap(Ys; alg = :dict)
+                footprint = countmap(Ys);
+                footprint = collect(footprint); # footprint = map(((k,c),)->k=>c/sum(values(footprint)), collect(footprint)); # normalized
+                sort!(footprint; by = first)
+                k => (Ys, footprint)
+                end, collect(ps))
+            # groupedY = map(((k,v),)->(k=>sort(map(last, v))), collect(ps))
+            # groupedY = map(((k,v),)->(k=>sort(unique(map(last, v)))), collect(ps))
+
+            function is_same_footprint(f1, f2)
+                if f1 == f2
+                    return true
+                end
+                norm_f1 = map(((k,c),)->k=>c/sum(last.(f1)), f1)
+                norm_f2 = map(((k,c),)->k=>c/sum(last.(f2)), f2)
+                return norm_f1 == norm_f2
+            end
+            if test_op in [≥, <]
+                sort!(groupedY; by=first, rev = true)
+            elseif test_op in [≤, >]
+                sort!(groupedY; by=first)
+            else
+                error("Unexpected test_op: $(test_op)")
+            end
+
+            thresh_domain, _thresh_Ys, _thresh_footprint = first.(groupedY), first.(last.(groupedY)), last.(last.(groupedY))
+
+            # Filter out those that do not comply with min_samples_leaf
+            n_left = 0
+            is_boundary_point = map(__thresh_Ys->begin
+                n_left = n_left + length(__thresh_Ys)
+                ((n_left >= min_samples_leaf && _ninstances-n_left >= min_samples_leaf))
+                end, _thresh_Ys)
+
+            # Reference: ≤
+            is_boundary_point = map(((i, honors_min_samples_leaf),)->begin
+                # last = (i == length(is_boundary_point))
+                (
+                    (honors_min_samples_leaf &&
+                    # (!last &&
+                        !(is_boundary_point[i+1] && is_same_footprint(_thresh_footprint[i], _thresh_footprint[i+1])))
+                        # !(is_boundary_point[i+1] && isapprox(_thresh_footprint[i], _thresh_footprint[i+1]))) # TODO better..?
+                        # !(is_boundary_point[i+1] && issubset(_thresh_footprint[i+1], _thresh_footprint[i]))) # Probably doesn't work
+                        # !(is_boundary_point[i+1] && issubset(_thresh_footprint[i], _thresh_footprint[i+1]))) # Probably doesn't work
+                        # true)
+                )
+                end, enumerate(is_boundary_point))
+
+            thresh_domain = thresh_domain[is_boundary_point]
+
+            # NOTE: pretending that these are the right counts, when they are actually the left counts!!! It doesn't matter, it's symmetric.
+            # cur_left_counts = countmap_with_domain(L[], UnitRange{L}(1:n_classes), U)
+            cur_left_counts = fill(zero(U), n_classes)
+            additional_info = map(Ys->begin
+                # addcounts!(cur_left_counts, Ys)
+                # f = collect(values(cur_left_counts))
+                # weight = first(W) # when allequal(W)
+                weight = one(U)
+                [cur_left_counts[y] += weight for y in Ys]
+                f = cur_left_counts
+                if test_op in [≥, ≤]
+                    # These are left counts
+                    ncl, nl = copy(f), sum(f)
+                    # ncr = Vector{U}(undef, n_classes)
+                    # ncr .= nc .- ncl
+                    ncr = nc .- ncl
+                    nr = nt - nl
+                else
+                    # These are right counts
+                    ncr, nr = copy(f), sum(f)
+                    # ncl = Vector{U}(undef, n_classes)
+                    # ncl .= nc .- ncr
+                    ncl = nc .- ncr
+                    nl = nt - nr
+                end
+                threshold_info = (ncr, nr, ncl, nl)
+                threshold_info
+            end, _thresh_Ys)[is_boundary_point]
+
+            # @show typeof(additional_info)
+            # @show typeof(additional_info[1])
+
+            # @show test_op, min_samples_leaf
+            # @show groupedY
+            # @show sum(is_boundary_point), length(thresh_domain), sum(is_boundary_point)/length(thresh_domain)
+            return thresh_domain, additional_info
+        end
+    else
+        thresh_domain = unique(aggr_thresholds)
+        return thresh_domain, fill(nothing, length(thresh_domain))
+    end
+end
+
+# function limit_threshold_domain(loss_function::Loss, aggr_thresholds::AbstractVector{U}) where {U}
 #     # @show aggr_thresholds
 #     thresh_domain = begin
 #         if U <: Bool
@@ -187,7 +324,7 @@ end
 
 ############################################################################################
 
-Base.@propagate_inbounds @resumable function generate_propositional_feasible_decisions(
+Base.@propagate_inbounds @resumable function generate_propositional_decisions(
     X::AbstractScalarLogiset{W,U,FT,FR},
     i_instances::AbstractVector{<:Integer},
     Sf::AbstractVector{<:AbstractWorlds{W}},
@@ -232,7 +369,7 @@ Base.@propagate_inbounds @resumable function generate_propositional_feasible_dec
                 # gamma = featvalue(X[i_instance, w, feature) # TODO in general!
                 gamma = featvalue(X, i_instance, w, feature, i_feature)
                 for (i_aggregator,aggregator) in enumerate(aggregators)
-                    thresholds[i_aggregator,instance_idx] = SoleModels.aggregator_to_binary(aggregator)(gamma, thresholds[i_aggregator,instance_idx])
+                    thresholds[i_aggregator,instance_idx] = SoleData.aggregator_to_binary(aggregator)(gamma, thresholds[i_aggregator,instance_idx])
                 end
             end
         end
@@ -243,26 +380,10 @@ Base.@propagate_inbounds @resumable function generate_propositional_feasible_dec
         # For each aggregator
         for (i_aggregator,aggregator) in enumerate(aggregators)
             aggr_thresholds = thresholds[i_aggregator,:]
-            # thresh_domain = compute_thresh_domain(aggr_thresholds)
 
             for metacondition in aggrsnops[aggregator]
-                testop = SoleModels.test_operator(metacondition)
-                thresh_domain = compute_thresh_domain(testop, aggr_thresholds)
-
-                # TODO figure out a solution to this issue: ≥ and ≤ in a propositional condition can find more or less the same optimum, so no need to check both; but which one of them should be the one on the left child, the one that makes the modal step?
-                # if dual_metacondition(metacondition) in tested_metacondition
-                #   error("Double-check this part of the code: there's a foundational issue here to settle!")
-                #   println("Found $(metacondition)'s dual $(dual_metacondition(metacondition)) in tested_metacondition = $(tested_metacondition)")
-                #   continue
-                # end
-                # @logmsg LogDetail " Test operator $(metacondition)"
-                # Look for the best threshold 'a', as in atoms like "feature >= a"
-                for threshold in thresh_domain
-                    decision = SimpleDecision(ScalarExistentialFormula(relation, ScalarCondition(metacondition, threshold)))
-                    # @logmsg LogDebug " Testing decision: $(displaydecision(decision))"
-                    @yield decision, aggr_thresholds
-                end # for threshold
-                # push!(tested_metacondition, metacondition)
+                test_op = SoleData.test_operator(metacondition)
+                @yield relation, metacondition, test_op, aggr_thresholds
             end # for metacondition
         end # for aggregator
     end # for feature
@@ -270,7 +391,7 @@ end
 
 ############################################################################################
 
-Base.@propagate_inbounds @resumable function generate_modal_feasible_decisions(
+Base.@propagate_inbounds @resumable function generate_modal_decisions(
     X::AbstractScalarLogiset{W,U,FT,FR},
     i_instances::AbstractVector{<:Integer},
     Sf::AbstractVector{<:AbstractWorlds{W}},
@@ -325,10 +446,10 @@ Base.@propagate_inbounds @resumable function generate_modal_feasible_decisions(
                             # elseif X isa UniformFullDimensionalLogiset
                             #      onestep_aggregation(X, i_instance, w, relation, feature, aggregator, i_metacond, i_relation)
                             else
-                                error("generate_global_feasible_decisions is broken.")
+                                error("generate_global_decisions is broken.")
                             end
                         end
-                        thresholds[i_aggregator,instance_id] = SoleModels.aggregator_to_binary(aggregator)(gamma, thresholds[i_aggregator,instance_id])
+                        thresholds[i_aggregator,instance_id] = SoleData.aggregator_to_binary(aggregator)(gamma, thresholds[i_aggregator,instance_id])
                     end
                 end
                 
@@ -344,19 +465,11 @@ Base.@propagate_inbounds @resumable function generate_modal_feasible_decisions(
             for (i_aggregator,(_,aggregator)) in enumerate(aggregators_with_ids)
 
                 aggr_thresholds = thresholds[i_aggregator,:]
-                # thresh_domain = compute_thresh_domain(aggr_thresholds)
 
                 for metacondition in aggrsnops[aggregator]
                     # @logmsg LogDetail " Test operator $(metacondition)"
-                    testop = SoleModels.test_operator(metacondition)
-                    thresh_domain = compute_thresh_domain(testop, aggr_thresholds)
-
-                    # Look for the best threshold 'a', as in atoms like "feature >= a"
-                    for threshold in thresh_domain
-                        decision = SimpleDecision(ScalarExistentialFormula(relation, ScalarCondition(metacondition, threshold)))
-                        # @logmsg LogDebug " Testing decision: $(displaydecision(decision))"
-                        @yield decision, aggr_thresholds
-                    end # for threshold
+                    test_op = SoleData.test_operator(metacondition)
+                    @yield relation, metacondition, test_op, aggr_thresholds
                 end # for metacondition
             end # for aggregator
         end # for feature
@@ -365,7 +478,7 @@ end
 
 ############################################################################################
 
-Base.@propagate_inbounds @resumable function generate_global_feasible_decisions(
+Base.@propagate_inbounds @resumable function generate_global_decisions(
     X::AbstractScalarLogiset{W,U,FT,FR},
     i_instances::AbstractVector{<:Integer},
     Sf::AbstractVector{<:AbstractWorlds{W}},
@@ -423,13 +536,13 @@ Base.@propagate_inbounds @resumable function generate_global_feasible_decisions(
                     # elseif X isa UniformFullDimensionalLogiset
                     #     onestep_aggregation(X, i_instance, dummyworldTODO, relation, feature, aggregator, i_metacond)
                     else
-                        error("generate_global_feasible_decisions is broken.")
+                        error("generate_global_decisions is broken.")
                     end
                 end
                 # @show gamma
 
                 thresholds[i_aggregator,instance_id] = gamma
-                # thresholds[i_aggregator,instance_id] = SoleModels.aggregator_to_binary(aggregator)(gamma, thresholds[i_aggregator,instance_id])
+                # thresholds[i_aggregator,instance_id] = SoleData.aggregator_to_binary(aggregator)(gamma, thresholds[i_aggregator,instance_id])
                 # println(gamma)
                 # println(thresholds[i_aggregator,instance_id])
             end
@@ -445,20 +558,10 @@ Base.@propagate_inbounds @resumable function generate_global_feasible_decisions(
             # @show aggregator
 
             aggr_thresholds = thresholds[i_aggregator,:]
-            # thresh_domain = compute_thresh_domain(aggr_thresholds)
 
             for metacondition in aggrsnops[aggregator]
-                testop = SoleModels.test_operator(metacondition)
-                thresh_domain = compute_thresh_domain(testop, aggr_thresholds)
-
-                # @logmsg LogDetail " Test operator $(metacondition)"
-
-                # Look for the best threshold 'a', as in atoms like "feature >= a"
-                for threshold in thresh_domain
-                    decision = SimpleDecision(ScalarExistentialFormula(relation, ScalarCondition(metacondition, threshold)))
-                    # @logmsg LogDebug " Testing decision: $(displaydecision(decision))"
-                    @yield decision, aggr_thresholds
-                end # for threshold
+                test_op = SoleData.test_operator(metacondition)
+                @yield relation, metacondition, test_op, aggr_thresholds
             end # for metacondition
         end # for aggregator
     end # for feature

@@ -113,7 +113,7 @@ function apply(tree::DTree{L}, Xs; print_progress = !(Xs isa MultiLogiset), kwar
     predictions = Vector{L}(undef, _ninstances)
 
     if print_progress
-        p = Progress(_ninstances, 1, "Applying tree...")
+        p = Progress(_ninstances; dt = 1, desc = "Applying tree...")
     end
     Threads.@threads for i_instance in 1:_ninstances
         @logmsg LogDetail " instance $i_instance/$_ninstances"
@@ -156,7 +156,7 @@ function apply(
     # apply each tree to the whole dataset
     _predictions = Matrix{L}(undef, ntrees, _ninstances)
     if print_progress
-        p = Progress(ntrees, 1, "Applying trees...")
+        p = Progress(ntrees; dt = 1, desc = "Applying trees...")
     end
     Threads.@threads for i_tree in 1:ntrees
         _predictions[i_tree,:] = apply(trees[i_tree], Xs; print_progress = false, suppress_parity_warning = suppress_parity_warning)
@@ -336,7 +336,7 @@ function sprinkle(
 
     # Propagate instances down the tree
     if print_progress
-        p = Progress(ninstances(Xs), 1, "Applying tree...")
+        p = Progress(ninstances(Xs); dt = 1, desc = "Applying tree...")
     end
     # Note: no multi-threading
     for i_instance in 1:ninstances(Xs)
@@ -379,7 +379,7 @@ function sprinkle(
     # apply each tree to the whole dataset
     _predictions = Matrix{L}(undef, ntrees, _ninstances)
     if print_progress
-        p = Progress(ntrees, 1, "Applying trees...")
+        p = Progress(ntrees; dt = 1, desc = "Applying trees...")
     end
     Threads.@threads for i_tree in 1:ntrees
         _predictions[i_tree,:], trees[i_tree] = sprinkle(trees[i_tree], Xs, Y; print_progress = false)

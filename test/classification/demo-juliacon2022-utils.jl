@@ -106,7 +106,7 @@ end
 
 using LinearAlgebra
 using StatsBase
-using SoleModels: Label, RLabel, CLabel
+using SoleData: Label, RLabel, CLabel
 
 struct ConfusionMatrix{T<:Number}
     ########################################################################################

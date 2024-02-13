@@ -1,5 +1,12 @@
+abstract type Loss end
+
+abstract type ClassificationLoss <: Loss end;
+abstract type RegressionLoss <: Loss end;
+
 default_loss_function(::Type{<:CLabel}) = entropy
 default_loss_function(::Type{<:RLabel}) = variance
+
+istoploss(::Loss, purity) = isinf(purity)
 
 ############################################################################################
 # Loss functions for regression and classification
@@ -22,8 +29,12 @@ default_loss_function(::Type{<:RLabel}) = variance
 # (ps = normalize(ws, 1); return -sum(ps.*log.(ps)))
 # Source: _shannon_entropy from https://github.com/bensadeghi/DecisionTree.jl/blob/master/src/util.jl, with inverted sign
 
+struct ShannonEntropy <: ClassificationLoss end
+
+istoploss(::ShannonEntropy, purity) = iszero(purity)
+
 # Single
-Base.@propagate_inbounds @inline function _shannon_entropy_mod(ws :: AbstractVector{U}, t :: U) where {U<:Real}
+Base.@propagate_inbounds @inline function (::ShannonEntropy)(ws :: AbstractVector{U}, t :: U) where {U<:Real}
     s = 0.0
     @simd for k in ws
         if k > 0
@@ -33,22 +44,15 @@ Base.@propagate_inbounds @inline function _shannon_entropy_mod(ws :: AbstractVec
     return -(log(t) - s / t)
 end
 
-# Double
-Base.@propagate_inbounds @inline function _shannon_entropy_mod(
-    ws_l :: AbstractVector{U}, tl :: U,
-    ws_r :: AbstractVector{U}, tr :: U,
-) where {U<:Real}
-    (tl * _shannon_entropy_mod(ws_l, tl) +
-     tr * _shannon_entropy_mod(ws_r, tr))
+# Multiple
+Base.@propagate_inbounds @inline function (ent::ShannonEntropy)(wss_n_ts::Tuple{AbstractVector{U},U}...) where {U<:Real}
+    sum(((ws, t),)->t * ShannonEntropy()(ws, t), wss_n_ts)
 end
 
 # Correction
-Base.@propagate_inbounds @inline function _shannon_entropy_mod(e :: AbstractFloat)
+Base.@propagate_inbounds @inline function (::ShannonEntropy)(e :: AbstractFloat)
     e
 end
-
-# ShannonEntropy() = _shannon_entropy
-ShannonEntropy() = _shannon_entropy_mod
 
 ############################################################################################
 # Classification: Shannon (second untested version)
@@ -135,18 +139,20 @@ RenyiEntropy(alpha::AbstractFloat) = (args...)->_renyi_entropy(alpha, args...)
 ############################################################################################
 # Regression: Variance (weighted & unweigthed, see https://en.wikipedia.org/wiki/Weighted_arithmetic_mean)
 
+struct Variance <: RegressionLoss end
+
 # Single
 # sum(ws .* ((ns .- (sum(ws .* ns)/t)).^2)) / (t)
-Base.@propagate_inbounds @inline function _variance(ns :: AbstractVector{L}, s :: L, t :: Integer) where {L}
+Base.@propagate_inbounds @inline function (::Variance)(ns :: AbstractVector{L}, s :: L, t :: Integer) where {L}
     # @btime sum((ns .- mean(ns)).^2) / (1 - t)
     # @btime (sum(ns.^2)-s^2/t) / (1 - t)
     (sum(ns.^2)-s^2/t) / (1 - t)
-    # TODO remove / (1 - t) from here, and move it to the correction-version of _variance, but it must be for single-version only!
+    # TODO remove / (1 - t) from here, and move it to the correction-version of (::Variance), but it must be for single-version only!
 end
 
 # Single weighted (non-frequency weigths interpretation)
 # sum(ws .* ((ns .- (sum(ws .* ns)/t)).^2)) / (t)
-Base.@propagate_inbounds @inline function _variance(ns :: AbstractVector{L}, ws :: AbstractVector{U}, wt :: U) where {L,U<:Real}
+Base.@propagate_inbounds @inline function (::Variance)(ns :: AbstractVector{L}, ws :: AbstractVector{U}, wt :: U) where {L,U<:Real}
     # @btime (sum(ws .* ns)/wt)^2 - sum(ws .* (ns.^2))/wt
     # @btime (wns = ws .* ns; (sum(wns)/wt)^2 - sum(wns .* ns)/wt)
     # @btime (wns = ws .* ns; sum(wns)^2/wt^2 - sum(wns .* ns)/wt)
@@ -155,7 +161,7 @@ Base.@propagate_inbounds @inline function _variance(ns :: AbstractVector{L}, ws 
 end
 
 # Double
-Base.@propagate_inbounds @inline function _variance(
+Base.@propagate_inbounds @inline function (::Variance)(
     ns_l :: AbstractVector{LU}, sl :: L, tl :: U,
     ns_r :: AbstractVector{LU}, sr :: L, tr :: U,
 ) where {L,LU<:Real,U<:Real}
@@ -164,7 +170,7 @@ Base.@propagate_inbounds @inline function _variance(
 end
 
 # Correction
-Base.@propagate_inbounds @inline function _variance(e :: AbstractFloat)
+Base.@propagate_inbounds @inline function (::Variance)(e :: AbstractFloat)
     e
 end
 
@@ -175,4 +181,4 @@ end
 # The default classification loss is Shannon's entropy
 entropy = ShannonEntropy()
 # The default regression loss is variance
-variance = _variance
+variance = Variance()

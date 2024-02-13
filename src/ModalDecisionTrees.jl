@@ -17,6 +17,8 @@ using StatsBase
 using SoleBase
 using SoleBase: LogOverview, LogDebug, LogDetail
 using SoleBase: spawn, nat_sort
+using SoleBase: CLabel, RLabel, Label, _CLabel, _Label, get_categorical_form
+using SoleBase: bestguess, default_weights, slice_weights
 
 using SoleData
 using SoleData: nvariables,
@@ -25,22 +27,19 @@ using SoleData: nvariables,
 
 using FillArrays
 
-using SoleModels
-using SoleModels: AbstractLogiset
-using SoleModels: CLabel, RLabel, Label, _CLabel, _Label, get_categorical_form
+using SoleData: AbstractModalLogiset
+import SoleData: feature, test_operator, threshold
 
-using SoleModels: bestguess, default_weights, slice_weights
 
-import SoleModels: feature, test_operator, threshold
 
 import AbstractTrees: print_tree
 
 # Data structures
-@reexport using SoleModels.DimensionalDatasets
-using SoleModels: MultiLogiset
-using SoleModels: Worlds
+@reexport using SoleData.DimensionalDatasets
+using SoleData: MultiLogiset
+using SoleData: Worlds
 
-using SoleModels: nfeatures, nrelations,
+using SoleData: nfeatures, nrelations,
                             nmodalities, eachmodality, modality,
                             displaystructure,
                             #
@@ -49,21 +48,22 @@ using SoleModels: nfeatures, nrelations,
                             MultiLogiset,
                             SupportedLogiset
 
-using SoleModels: AbstractWorld, AbstractRelation
-using SoleModels: AbstractWorlds, Worlds
+using SoleData: AbstractWorld, AbstractRelation
+using SoleData: AbstractWorlds, Worlds
 
-using SoleModels: worldtype
+using SoleData: worldtype
 
-using SoleModels: OneWorld
+using SoleData: OneWorld
 
-using SoleModels: Interval, Interval2D
+using SoleData: Interval, Interval2D
 
-using SoleModels: IARelations, IA2DRelations
+using SoleData: IARelations, IA2DRelations
 
 using SoleLogics: FullDimensionalFrame
 
-using SoleModels: existential_aggregator, universal_aggregator, aggregator_bottom
+using SoleData: existential_aggregator, universal_aggregator, aggregator_bottom
 
+using SoleModels
 import SoleModels: nnodes
 import SoleModels: nleaves
 import SoleModels: height
@@ -87,7 +87,7 @@ ModalityId = Int
 include("utils.jl")
 
 # Loss functions
-include("entropy-measures.jl")
+include("loss-functions.jl")
 
 # Purity helpers
 include("purity.jl")

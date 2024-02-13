@@ -17,7 +17,7 @@ Cool ideas:
 ☐	MLJ: Create non-deterministic DecisionTree model
 ☐	INTERFACE: build_forest Add (Val{Bool}?) oob_error parameter (note that oob computation is expensive)
 ☐	MODEL: Bagging and boosting. ADABoost code n_iterations        = defaulted to 10; model, coeffs = build_adaboost_stumps(train_labels, train_features, n_iterations); predictions = apply_adaboost_stumps(model, coeffs, test_features [XGBoost](https://towardsdatascience.com/ensemble-learning-bagging-and-boosting-explained-in-3-minutes-2e6d2240ae21)
-☐	add conversion rules or promotion rules ModalDataset to MultiModalDataset: https://docs.julialang.org/en/v1/manual/conversion-and-promotion/#Constructors-that-don't-return-instances-of-their-own-type
+☐	add conversion rules or promotion rules ModalDataset to MultiDataset: https://docs.julialang.org/en/v1/manual/conversion-and-promotion/#Constructors-that-don't-return-instances-of-their-own-type
 
 ☐ minified fwd structures: once computed the fwd, map each unique value to a UInt8/UInt16 value, while mantaining the relative order. Once a tree is learnt, remap the values to the old ones. tables contain a lot of redundance: perhaps use PooledArrays.jl, IndirectArrays.jl, CategoricalArrays.jl for saving space, both for saving to file AND for learing (might be beneficial for caching)?
 
@@ -44,9 +44,6 @@ Possible performance improvements:
 Half-ideas:
 ☐ pruning: what about instance weights?
 ☐ Label: a label could also be Nothing?
-
-☐ Better define the relationship between loss_function and purity
-☐ Is it possible to compile split_node! this once loss_function is known? (maybe as a generated function) @code_typed split_node!() https://stackoverflow.com/questions/46842510/how-to-pass-a-function-as-an-argument-for-another-function-in-julia ; maybe wrap function arguments: using FunctionWrappers: FunctionWrapper; loss FunctionWrapper{Float64,Tuple{Integer}}
 
 ☐ expand code so that the FWD parameter in the construction of ExplicitModalDataset is used
 ☐ Perhaps, min_samples_leaf, min_purity_increase & max_purity_at_leaf should be used to select the best_optimal decision that satisfies them, not for rejecting the best_optimal decision. This, however, breaks the pruning-based code optimizations.

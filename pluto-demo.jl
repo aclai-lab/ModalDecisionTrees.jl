@@ -14,7 +14,7 @@ begin
 	using SoleModels
 
 	# Load an example time-series classification dataset as a tuple (DataFrame, Vector{String})
-	X, y = SoleModels.load_arff_dataset("NATOPS")
+	X, y = SoleData.load_arff_dataset("NATOPS")
 end
 
 # ╔═╡ 65141ec2-4da9-11ee-2a0a-8974a3ec37da

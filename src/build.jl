@@ -5,15 +5,15 @@ include("fit_tree.jl")
 ############################# Unimodal datasets ################################
 ################################################################################
 
-function build_stump(X::AbstractLogiset, args...; kwargs...)
+function build_stump(X::AbstractModalLogiset, args...; kwargs...)
     build_stump(MultiLogiset(X), args...; kwargs...)
 end
 
-function build_tree(X::AbstractLogiset, args...; kwargs...)
+function build_tree(X::AbstractModalLogiset, args...; kwargs...)
     build_tree(MultiLogiset(X), args...; kwargs...)
 end
 
-function build_forest(X::AbstractLogiset, args...; kwargs...)
+function build_forest(X::AbstractModalLogiset, args...; kwargs...)
     build_forest(MultiLogiset(X), args...; kwargs...)
 end
 
@@ -50,7 +50,8 @@ function build_tree(
     Y                   :: AbstractVector{L},
     W                   :: Union{Nothing,AbstractVector{U},Symbol}   = default_weights(ninstances(X));
     ##############################################################################
-    loss_function       :: Union{Nothing,Function}            = nothing,
+    loss_function       :: Union{Nothing,Loss}                = nothing,
+    lookahead           :: Union{Nothing,Integer}             = nothing,
     max_depth           :: Union{Nothing,Int64}               = nothing,
     min_samples_leaf    :: Int64                              = BOTTOM_MIN_SAMPLES_LEAF,
     min_purity_increase :: AbstractFloat                      = BOTTOM_MIN_PURITY_INCREASE,
@@ -86,6 +87,10 @@ function build_tree(
     if isnothing(loss_function)
         loss_function = default_loss_function(L)
     end
+
+    if isnothing(lookahead)
+        lookahead = 0
+    end
     
     if allow_global_splits isa Bool
         allow_global_splits = fill(allow_global_splits, nmodalities(X))
@@ -106,6 +111,7 @@ function build_tree(
     fit_tree(X, Y, initconditions, W
         ;###########################################################################
         loss_function               = loss_function,
+        lookahead                   = lookahead,
         max_depth                   = max_depth,
         min_samples_leaf            = min_samples_leaf,
         min_purity_increase         = min_purity_increase,
@@ -136,7 +142,8 @@ function build_forest(
     partial_sampling    = 0.7,      # portion of sub-sampled samples (without replacement) by each tree
     ##############################################################################
     # Tree logic-agnostic parameters
-    loss_function       :: Union{Nothing,Function}          = nothing,
+    loss_function       :: Union{Nothing,Loss}              = nothing,
+    lookahead           :: Union{Nothing,Integer}           = nothing,
     max_depth           :: Union{Nothing,Int64}             = nothing,
     min_samples_leaf    :: Int64                            = BOTTOM_MIN_SAMPLES_LEAF,
     min_purity_increase :: AbstractFloat                    = BOTTOM_MIN_PURITY_INCREASE,
@@ -207,14 +214,14 @@ function build_forest(
     rngs = [spawn(rng) for i_tree in 1:ntrees]
 
     if print_progress
-        p = Progress(ntrees, 1, "Computing Forest...")
+        p = Progress(ntrees; dt = 1, desc = "Computing Forest...")
     end
     Threads.@threads for i_tree in 1:ntrees
         train_idxs = rand(rngs[i_tree], 1:tot_samples, num_samples)
 
         X_slice = SoleData.instances(X, train_idxs, Val(true))
         Y_slice = @view Y[train_idxs]
-        W_slice = SoleModels.slice_weights(W, train_idxs)
+        W_slice = SoleBase.slice_weights(W, train_idxs)
 
         trees[i_tree] = build_tree(
             X_slice
@@ -223,6 +230,7 @@ function build_forest(
             ;
             ################################################################################
             loss_function        = loss_function,
+            lookahead            = lookahead,
             max_depth            = max_depth,
             min_samples_leaf     = min_samples_leaf,
             min_purity_increase  = min_purity_increase,
@@ -249,7 +257,7 @@ function build_forest(
         oob_metrics[i_tree] = (;
             actual = Y[oob_instances[i_tree]],
             predicted = tree_preds,
-            weights = collect(SoleModels.slice_weights(W, oob_instances[i_tree]))
+            weights = collect(SoleBase.slice_weights(W, oob_instances[i_tree]))
         )
 
         !print_progress || next!(p)

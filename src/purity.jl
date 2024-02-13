@@ -12,7 +12,7 @@ end
 #     labels           ::AbstractVector{L},
 #     n_classes        ::Integer,
 #     weights          ::AbstractVector{U} = default_weights(labels);
-#     loss_function    ::Union{Nothing,Function} = default_loss_function(L),
+#     loss_function    ::Union{Nothing,Loss} = default_loss_function(L),
 # ) where {L<:CLabel,L<:Integer,U}
 #     nc = fill(zero(U), n_classes)
 #     @simd for i in 1:max(length(labels),length(weights))
@@ -24,7 +24,7 @@ end
 function compute_purity(
     labels           ::AbstractVector{L},
     weights          ::AbstractVector{U} = default_weights(labels);
-    loss_function    ::Union{Nothing,Function} = default_loss_function(L),
+    loss_function    ::Union{Nothing,Loss} = default_loss_function(L),
 ) where {L<:CLabel,U}
     nc = Dict{L,U}()
     @simd for i in 1:max(length(labels),length(weights))
@@ -37,7 +37,7 @@ end
 function _compute_purity(
     labels           ::AbstractVector{L},
     weights          ::AbstractVector{U} = default_weights(labels);
-    loss_function    ::Union{Nothing,Function} = default_loss_function(L),
+    loss_function    ::Union{Nothing,Loss} = default_loss_function(L),
 ) where {L<:RLabel,U}
     # sums = labels .* weights
     nt = sum(weights)
@@ -46,7 +46,7 @@ end
 function compute_purity(
     labels           ::AbstractVector{L},
     weights          ::AbstractVector{U} = default_weights(labels);
-    loss_function    ::Union{Nothing,Function} = default_loss_function(L),
+    loss_function    ::Union{Nothing,Loss} = default_loss_function(L),
 ) where {L<:RLabel,U}
     _compute_purity(labels, weights; loss_function = loss_function)
 end

@@ -1,7 +1,7 @@
-using SoleModels.DimensionalDatasets
-using SoleModels.DimensionalDatasets: UniformFullDimensionalLogiset
-using SoleModels: ScalarOneStepMemoset, AbstractFullMemoset
-using SoleModels: naturalconditions
+using SoleData.DimensionalDatasets
+using SoleData.DimensionalDatasets: UniformFullDimensionalLogiset
+using SoleData: ScalarOneStepMemoset, AbstractFullMemoset
+using SoleData: naturalconditions
 
 const ALLOW_GLOBAL_SPLITS = true
 
@@ -58,6 +58,7 @@ function defaultrelations(dataset, relations)
                 :IA7
             elseif dimensionality(dataset) == 2
                 :IA7
+                # :RCC8
             else
                 error("Cannot infer relation set for dimensionality $(repr(dimensionality(dataset))). " *
                     "Dimensionality should be 0, 1 or 2.")
@@ -84,8 +85,8 @@ function readrelations(model, dataset)
         }
             rels = model.relations(dataset)
             @assert issubset(rels, MDT.relations(dataset)) "Could not find " *
-                "specified relations $(displaysyntaxvector(rels)) in " *
-                "logiset relations $(displaysyntaxvector(MDT.relations(dataset)))."
+                "specified relations $(SoleLogics.displaysyntaxvector(rels)) in " *
+                "logiset relations $(SoleLogics.displaysyntaxvector(MDT.relations(dataset)))."
             rels
         else
             model.relations(dataset)
@@ -110,14 +111,14 @@ function defaultconditions(dataset)
         vcat([
             [
                 ScalarMetaCondition(feature, ≥),
-                (all(i_instance->SoleModels.nworlds(frame(dataset, i_instance)) == 1, 1:ninstances(dataset)) ?
+                (all(i_instance->SoleData.nworlds(frame(dataset, i_instance)) == 1, 1:ninstances(dataset)) ?
                     [] :
                     [ScalarMetaCondition(feature, <)]
                 )...
             ]
         for feature in features(dataset)]...)
     else
-        if all(i_instance->SoleModels.nworlds(frame(dataset, i_instance)) == 1, 1:ninstances(dataset))
+        if all(i_instance->SoleData.nworlds(frame(dataset, i_instance)) == 1, 1:ninstances(dataset))
             [identity]
         else
             [minimum, maximum]
@@ -139,8 +140,8 @@ function readconditions(model, dataset)
         SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}} where {W,U,FT,FR,L,N},
     }
         @assert issubset(conditions, MDT.metaconditions(dataset)) "Could not find " *
-            "specified conditions $(displaysyntaxvector(conditions)) in " *
-            "logiset metaconditions $(displaysyntaxvector(MDT.metaconditions(dataset)))."
+            "specified conditions $(SoleLogics.displaysyntaxvector(conditions)) in " *
+            "logiset metaconditions $(SoleLogics.displaysyntaxvector(MDT.metaconditions(dataset)))."
         conditions
     else
         # @show typeof(dataset)
@@ -161,11 +162,11 @@ AVAILABLE_INITCONDITIONS = OrderedDict{Symbol,InitialCondition}([
 
 
 function readinitconditions(model, dataset)
-    if SoleModels.ismultilogiseed(dataset)
+    if SoleData.ismultilogiseed(dataset)
         map(mod->readinitconditions(model, mod), eachmodality(dataset))
     else
         if model.initconditions == mlj_default_initconditions
-            # d = dimensionality(SoleModels.base(dataset)) # ? TODO maybe remove base for AbstractLogiset's?
+            # d = dimensionality(SoleData.base(dataset)) # ? TODO maybe remove base for AbstractModalLogiset's?
             d = dimensionality(frame(dataset, 1))
             if d == 0
                 AVAILABLE_INITCONDITIONS[:start_with_global]

@@ -7,7 +7,7 @@
 export prune
 
 using DataStructures
-using SoleModels.DimensionalDatasets: AbstractUnivariateFeature
+using SoleData.DimensionalDatasets: AbstractUnivariateFeature
 
 function prune(tree::DTree; kwargs...)
     DTree(prune(root(tree); depth = 0, kwargs...), worldtypes(tree), initconditions(tree))
@@ -29,14 +29,14 @@ function prune(node::DTInternal{L}; depth = nothing, kwargs...) where {L}
     end
 
     pruning_params = merge((
-        loss_function              = default_loss_function(L)            :: Union{Nothing,Function},
+        loss_function              = default_loss_function(L)           :: Union{Nothing,Loss},
         max_depth                  = BOTTOM_MAX_DEPTH                   :: Int                    ,
         min_samples_leaf           = BOTTOM_MIN_SAMPLES_LEAF            :: Int                    ,
         min_purity_increase        = BOTTOM_MIN_PURITY_INCREASE         :: AbstractFloat          ,
         max_purity_at_leaf         = BOTTOM_MAX_PURITY_AT_LEAF          :: AbstractFloat          ,
         max_performance_at_split   = BOTTOM_MAX_PERFORMANCE_AT_SPLIT    :: AbstractFloat          ,
         min_performance_at_split   = BOTTOM_MIN_PERFORMANCE_AT_SPLIT    :: AbstractFloat          ,
-        simplify                   = false                               :: Bool                   ,
+        simplify                   = false                              :: Bool                   ,
     ), NamedTuple(kwargs))
 
     @assert all(map((x)->(isa(x, DTInternal) || isa(x, DTLeaf)), [this(node), left(node), right(node)]))
@@ -367,7 +367,7 @@ end
 ############################################################################################
 
 function _variable_countmap(leaf::AbstractDecisionLeaf{L}; weighted = false) where {L<:Label}
-    return []
+    return Tuple{ModalityId,Int}[]
 end
 
 function _variable_countmap(node::DTInternal{L}; weighted = false) where {L<:Label}

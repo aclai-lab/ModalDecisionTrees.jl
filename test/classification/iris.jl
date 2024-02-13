@@ -10,7 +10,7 @@ w = abs.(randn(length(y)))
 # w = rand([1,2], length(y))
 model = ModalDecisionTree()
 
-mach = machine(model, X, y, w) |> fit!
+mach = @time machine(model, X, y, w) |> fit!
 
 Xnew = (sepal_length = [6.4, 7.2, 7.4],
         sepal_width = [2.8, 3.0, 2.8],

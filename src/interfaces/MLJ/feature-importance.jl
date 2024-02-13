@@ -9,7 +9,7 @@ function compute_featureimportance(model, var_grouping = nothing; normalize = tr
     end
 
     if normalize
-        sumcount = sum(values(feature_importance_by_count))
+        sumcount = sum(Vector{Float64}(collect(values(feature_importance_by_count))))
         feature_importance_by_count = Dict([
             feature => (count/sumcount)
             for (feature, count) in feature_importance_by_count])
