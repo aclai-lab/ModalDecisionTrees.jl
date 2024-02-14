@@ -1,5 +1,6 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+ModalDecisionTrees = "e54bda2e-c571-11ec-9d64-0242ac120002"
 SoleBase = "4475fa32-7023-44a0-aa70-4813b230e492"
 
 [compat]
