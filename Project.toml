@@ -71,6 +71,7 @@ SoleModels = "0.6"
 StatsBase = "0.30 - 0.34"
 Suppressor = "0.2"
 Tables = "1"
+MultiData = "0 - 0.1"
 ThreadsX = "0.1"
 julia = "1"
 
