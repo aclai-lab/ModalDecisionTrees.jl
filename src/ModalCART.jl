@@ -977,7 +977,7 @@ end
     W                         :: AbstractVector{U}                     # weight vector
     ;
     ##########################################################################
-    profile                   :: Symbol = :restricted,
+    profile                   :: Symbol,
     ##########################################################################
     _is_classification        :: Union{Val{true},Val{false}},
     _using_lookahead          :: Union{Val{true},Val{false}},
@@ -1172,7 +1172,7 @@ end
             * " max_modal_depth >= 0, or max_modal_depth = nothing for unbounded depth)")
     end
 
-    if profile in [:restricted, :full]
+    if !(profile in [:restricted, :full])
         error("Unexpected ModalCART profile: $(profile).")
     end
 
@@ -1214,6 +1214,8 @@ function fit_tree(
     W                         :: AbstractVector{U} = default_weights(Y)
     # W                       :: AbstractVector{U} = Ones{Int}(ninstances(Xs)), # TODO check whether this is faster
     ;
+    # Learning profile (e.g., restricted, full...)
+    profile                   :: Symbol = :restricted,
     # Lookahead parameter (i.e., depth of the trees to locally optimize for)
     lookahead                 :: Integer = 0,
     # Perform minification: transform dataset so that learning happens faster
@@ -1223,7 +1225,7 @@ function fit_tree(
     kwargs...,
 ) where {L<:Union{CLabel,RLabel}, U}
     # Check validity of the input
-    check_input(Xs, Y, initconditions, W; lookahead = lookahead, kwargs...)
+    check_input(Xs, Y, initconditions, W; profile = profile, lookahead = lookahead, kwargs...)
 
     # Classification-only: transform labels to categorical form (indexed by integers)
     n_classes = begin
@@ -1250,6 +1252,7 @@ function fit_tree(
         _is_classification = Val(L<:CLabel),
         _using_lookahead = Val((lookahead > 0)),
         _perform_consistency_check = Val(perform_consistency_check),
+        profile = profile,
         lookahead = lookahead,
         n_classes = n_classes,
         kwargs...
