@@ -4,6 +4,8 @@
 
 # Also thanks to Poom Chiarawongse <eight1911@gmail.com>
 
+include("ModalCART-states.jl")
+
 ##############################################################################
 ##############################################################################
 ##############################################################################
@@ -311,13 +313,13 @@ end
 Base.@propagate_inbounds @inline function optimize_node!(
     node                      :: NodeMeta{L,P},                                                                               # node to split
     Xs                        :: MultiLogiset,                                                                                # modal dataset
-    Ss                        :: AbstractVector{<:AbstractVector{WST} where {WorldType,WST<:Vector{WorldType}}},              # vector of current worlds for each instance and modality
     Y                         :: AbstractVector{L},                                                                           # label vector
-    initconditions            :: AbstractVector{<:InitialCondition},                                                          # world starting conditions
     W                         :: AbstractVector{U},                                                                           # weight vector
     grouped_featsaggrsnopss   :: AbstractVector{<:AbstractVector{<:AbstractDict{<:Aggregator,<:AbstractVector{<:ScalarMetaCondition}}}},
     grouped_featsnaggrss      :: AbstractVector{<:AbstractVector{<:AbstractVector{<:Tuple{<:Integer,<:Aggregator}}}},
     lookahead_depth           :: Integer,
+    ##########################################################################
+    Ss                        :: AbstractVector{S},
     ##########################################################################
     _is_classification        :: Union{Val{true},Val{false}},
     _using_lookahead          :: Union{Val{true},Val{false}},
@@ -342,7 +344,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
     idxs                      :: AbstractVector{Int},
     n_classes                 :: Int,
     rng                       :: Random.AbstractRNG,
-) where{P,L<:_Label,U,NSubRelationsFunction<:Function}
+) where{P,L<:_Label,U,NSubRelationsFunction<:Function,S<:ModalCARTState}
 
     # Region of idxs to use to perform the split
     region = node.region
@@ -481,11 +483,14 @@ Base.@propagate_inbounds @inline function optimize_node!(
     #   lsums[i] = zero(U)
     # end
 
-    Sfs = Vector{Vector{WST} where {WorldType,WST<:Vector{WorldType}}}(undef, nmodalities(Xs))
-    for (i_modality,WT) in enumerate(worldtype.(eachmodality(Xs)))
-        Sfs[i_modality] = Vector{Vector{WT}}(undef, _ninstances)
-        @simd for i in 1:_ninstances
-            Sfs[i_modality][i] = Ss[i_modality][idxs[i + r_start]]
+    if eltype(Ss) <: RestrictedMCARTState
+        # TODO @view
+        Sfs = Vector{Vector{WST} where {WorldType,WST<:Vector{WorldType}}}(undef, nmodalities(Xs))
+        for (i_modality,WT) in enumerate(worldtype.(eachmodality(Xs)))
+            Sfs[i_modality] = Vector{Vector{WT}}(undef, _ninstances)
+            @simd for i in 1:_ninstances
+                Sfs[i_modality][i] = Ss[i_modality][idxs[i + r_start]]
+            end
         end
     end
 
@@ -549,6 +554,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
             # println(instance)
             # println(Sfs[node.i_modality][i_instance])
             _sat, _ss = modalstep(X, idxs[i_instance + r_start], Sfs[node.i_modality][i_instance], node.decision)
+            # _sat, _ss = modalstep(X, idxs[i_instance + r_start], Ss[node.i_modality][idxs[i_instance + r_start]], node.decision)
             (issat,Ss[node.i_modality][idxs[i_instance + r_start]]) = _sat, _ss
             # @logmsg LogDetail " [$issat] Instance $(i_instance)/$(_ninstances)" Sfs[node.i_modality][i_instance] (if issat Ss[node.i_modality][idxs[i_instance + r_start]] end)
             # println(issat)
@@ -909,17 +915,17 @@ Base.@propagate_inbounds @inline function optimize_node!(
                     # node.purity_times_nt
                     # purity_times_nt = loss_function((ncl, nl), (ncr, nr)) ...
                     for childnode in [node.l, node.r]
-                        rng_copy =
+                        # rng_copy =
                         optimize_node!(
                             childnode,
                             Xs,
-                            Ss_copy,
                             Y,
-                            initconditions,
                             W,
                             grouped_featsaggrsnopss,
                             grouped_featsnaggrss,
                             lookahead_depth+1,
+                            ##########################################################################
+                            Ss_copy,
                             ##########################################################################
                             _is_classification,
                             _using_lookahead,
@@ -983,7 +989,7 @@ end
     _ninstances = ninstances(Xs)
 
     # Initialize world sets for each instance
-    Ss = ModalDecisionTrees.initialworldsets(Xs, initconditions)
+    Ss = RestrictedMCARTState.(ModalDecisionTrees.initialworldsets(Xs, initconditions))
 
     # Distribution of the instances indices throughout the tree.
     #  It will be recursively permuted, and regions of it assigned to the tree nodes (idxs[node.region])
@@ -1044,13 +1050,13 @@ end
         @inbounds optimize_node!(
             node,
             Xs,
-            Ss,
             Y,
-            initconditions,
             W,
             grouped_featsaggrsnopss,
             grouped_featsnaggrss,
             0,
+            ################################################################################
+            Ss,
             ################################################################################
             _is_classification,
             _using_lookahead,
