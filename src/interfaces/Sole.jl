@@ -265,7 +265,7 @@ end
 # # Compute path formula using semantics from TODO cite
 # # @memoize function pathformula(
 # function pathformula(
-#     nodes::Vector{<:DTNode{L,<:SimpleDecision{<:ScalarExistentialFormula}}},
+#     nodes::Vector{<:DTNode{L,<:RestrictedDecision{<:ScalarExistentialFormula}}},
 #     multi::Bool,
 #     dontincrease::Bool = true,
 # ) where {L}
@@ -273,7 +273,7 @@ end
 # end
 
 function pathformula(
-    pos_ancestors::Vector{<:DTInternal{L,<:SimpleDecision{<:ScalarExistentialFormula}}},
+    pos_ancestors::Vector{<:DTInternal{L,<:RestrictedDecision{<:ScalarExistentialFormula}}},
     node::DTNode{LL},
     multimodal::Bool,
     dontincrease::Bool = true,
@@ -309,7 +309,7 @@ function pathformula(
             isprop = (relation(f) == identityrel)
 
             _dontincrease = isprop
-            φ = pathformula(Vector{DTInternal{Union{L,LL},<:SimpleDecision{<:ScalarExistentialFormula}}}(nodes[2:(end-1)]), nodes[end], multimodal, _dontincrease, addlast)
+            φ = pathformula(Vector{DTInternal{Union{L,LL},<:RestrictedDecision{<:ScalarExistentialFormula}}}(nodes[2:(end-1)]), nodes[end], multimodal, _dontincrease, addlast)
 
             # @assert length(unique(anc_mods)) == 1 "At the moment, translate does not work " *
             #     "for MultiFormula formulas $(unique(anc_mods))."

@@ -53,7 +53,7 @@ using ModalDecisionTrees: DTInternal, decision
 
 formula = SoleData.ScalarExistentialFormula(SoleData.globalrel, UnivariateMin(1), >=, 10)
 
-_decision = SimpleDecision(formula)
+_decision = RestrictedDecision(formula)
 
 reg_leaf, cls_leaf = DTLeaf([1.0,2.0]), DTLeaf([1,2])
 

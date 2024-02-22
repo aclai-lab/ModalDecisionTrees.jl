@@ -93,7 +93,7 @@ include("loss-functions.jl")
 include("purity.jl")
 
 
-export SimpleDecision,
+export RestrictedDecision,
        ScalarExistentialFormula,
        displaydecision
 
