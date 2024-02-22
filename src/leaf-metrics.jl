@@ -1,11 +1,11 @@
-
+# TODO remove and use SoleModels.accuracy, SoleModels.mae, SoleModels.mse
 function _acc(y_pred, y_true)
     @assert length(y_pred) == length(y_true)
     return (sum(y_pred .== y_true)/length(y_pred))
 end
 function _mae(y_pred, y_true)
     @assert length(y_pred) == length(y_true)
-    return (sum((y_true .- y_pred)) / length(y_true))
+    return (sum(abs.(y_true .- y_pred)) / length(y_true))
 end
 function _mse(y_pred, y_true)
     @assert length(y_pred) == length(y_true)
