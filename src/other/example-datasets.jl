@@ -1,9 +1,9 @@
-using MLJ
+using OpenML
 using SoleData
 using DataFrames
 
 function load_japanesevowels()
-    X = DataFrame(MLJ.OpenML.load(375)) # Load JapaneseVowels https://www.openml.org/search?type=data&status=active&id=375
+    X = DataFrame(OpenML.load(375)) # Load JapaneseVowels https://www.openml.org/search?type=data&status=active&id=375
     names(X)
 
     take_col = []

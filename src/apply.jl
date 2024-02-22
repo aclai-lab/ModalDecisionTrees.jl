@@ -1,3 +1,4 @@
+using MLJModelInterface
 using StatsBase
 
 export apply_tree, apply_forest, apply_model, printapply, tree_walk_metrics
@@ -487,8 +488,8 @@ function apply_proba(tree::DTree{L}, Xs, _classes; return_scores = false, suppre
         d = begin
             c = categorical(collect(this_prediction_scores); levels = _classes)
             cc = countmap(c)
-            s = [get(cc, cl, 0) for cl in classes(c)]
-            UnivariateFinite(classes(c), s ./ sum(s))
+            s = [get(cc, cl, 0) for cl in MLJModelInterface.classes(c)]
+            UnivariateFinite(MLJModelInterface.classes(c), s ./ sum(s))
         end
         prediction_scores[i_instance, :] .= [pdf(d, c) for c in _classes]
     end
@@ -561,8 +562,8 @@ function apply_proba(
         ret = map(this_prediction_scores->begin
             c = categorical(this_prediction_scores; levels = _classes)
             cc = countmap(c)
-            s = [get(cc, cl, 0) for cl in classes(c)]
-            UnivariateFinite(classes(c), s ./ sum(s))
+            s = [get(cc, cl, 0) for cl in MLJModelInterface.classes(c)]
+            UnivariateFinite(MLJModelInterface.classes(c), s ./ sum(s))
         end, eachslice(bestguesses; dims=1))
         # ret = map(s->bestguess(s; suppress_parity_warning = suppress_parity_warning), eachslice(bestguesses; dims=1))
         # @show ret

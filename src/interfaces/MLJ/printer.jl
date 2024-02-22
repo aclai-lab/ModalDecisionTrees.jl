@@ -1,10 +1,10 @@
 
-using MLJBase
+using MLJModelInterface
 
 import Base: show
 
 struct ModelPrinter{M<:MDT.SymbolicModel,SM<:SoleModels.AbstractModel}
-    m::MLJBase.Model
+    m::MLJModelInterface.Model
     rawmodel::M
     solemodel::SM
     var_grouping::Union{Nothing,AbstractVector{<:AbstractVector},AbstractVector{<:AbstractDict}}
