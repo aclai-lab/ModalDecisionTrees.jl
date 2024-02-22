@@ -150,6 +150,7 @@ function get_metrics(
     n_inst = length(supporting_labels)
     
     mae = _mae(supporting_labels, supporting_predictions)
+    mse = _mse(supporting_labels, supporting_predictions)
     # sum(abs.(supporting_labels .- supporting_predictions)) / n_inst
     rmse = StatsBase.rmsd(supporting_labels, supporting_predictions)
     var = StatsBase.var(supporting_labels)
@@ -157,6 +158,7 @@ function get_metrics(
     metrics = merge(metrics, (
         n_inst = n_inst,
         mae = mae,
+        mse = mse,
         rmse = rmse,
         var = var,
     ))
