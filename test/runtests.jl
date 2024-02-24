@@ -15,7 +15,7 @@ using StatsBase: mean
 
 using ModalDecisionTrees: build_stump, build_tree, build_forest
 
-Pkg.update() # For MLDatasets
+# Pkg.update() # For MLDatasets
 
 println("Julia version: ", VERSION)
 
