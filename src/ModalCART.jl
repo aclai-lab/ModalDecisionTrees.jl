@@ -296,8 +296,12 @@ function generate_relevant_decisions(
             grouped_featsaggrsnopss[i_modality],
             grouped_featsnaggrss[i_modality],
         )
-            push!(out, (i_modality, relation, metacondition, test_op, aggr_thresholds))
-            # @yield i_modality, relation, metacondition, test_op, aggr_thresholds
+            decision_instantiator = _threshold->begin
+                cond = ScalarCondition(metacondition, _threshold)
+                RestrictedDecision(ScalarExistentialFormula(relation, cond))
+            end
+            push!(out, (i_modality, decision_instantiator, test_op, aggr_thresholds))
+            # @yield i_modality, decision_instantiator, test_op, aggr_thresholds
         end # END decisions
     end # END modality
     return out
@@ -708,7 +712,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
     perform_domain_optimization = is_lookahead_basecase && !performing_consistency_check
 
     ## Test all decisions or each modality
-    for (i_modality, relation, metacondition, test_op, aggr_thresholds) in generate_relevant_decisions(
+    for (i_modality, decision_instantiator, test_op, aggr_thresholds) in generate_relevant_decisions(
         Xs,
         Sfs,
         n_subrelations,
@@ -729,7 +733,8 @@ Base.@propagate_inbounds @inline function optimize_node!(
         end
         # Look for the best threshold 'a', as in atoms like "feature >= a"
         for (_threshold, threshold_info) in zip(thresh_domain, additional_info)
-            decision = RestrictedDecision(ScalarExistentialFormula(relation, ScalarCondition(metacondition, _threshold)))
+            decision = decision_instantiator(_threshold)
+
 
             # @show decision
             # @show aggr_thresholds
@@ -979,6 +984,8 @@ end
     ##########################################################################
     profile                   :: Symbol,
     ##########################################################################
+    lookahead                 :: Union{Nothing,Integer},
+    ##########################################################################
     _is_classification        :: Union{Val{true},Val{false}},
     _using_lookahead          :: Union{Val{true},Val{false}},
     _perform_consistency_check:: Union{Val{true},Val{false}},
@@ -994,8 +1001,10 @@ end
         # Initialize world sets for each instance
         Ss = RestrictedMCARTState.(ModalDecisionTrees.initialworldsets(Xs, initconditions))
         D = RestrictedDecision
+        lookahead = 0
     elseif profile == :full
         error("TODO implement.")
+        lookahead = 1
     else
         error("Unexpected ModalCART profile: $(profile).")
     end
@@ -1074,6 +1083,7 @@ end
             ;
             idxs                       = idxs,
             rng                        = rng,
+            lookahead                  = lookahead,
             kwargs...,
         )
         # !print_progress || ProgressMeter.update!(p, node.purity)
@@ -1104,8 +1114,9 @@ end
     ;
     ##########################################################################
     profile                 :: Symbol,
+    ##########################################################################
     loss_function           :: Loss,
-    lookahead               :: Integer,
+    lookahead               :: Union{Nothing,Integer},
     max_depth               :: Union{Nothing,Int},
     min_samples_leaf        :: Int,
     min_purity_increase     :: AbstractFloat,
@@ -1176,7 +1187,7 @@ end
         error("Unexpected ModalCART profile: $(profile).")
     end
 
-    if !(lookahead >= 0)
+    if !isnothing(lookahead) && !(lookahead >= 0)
         error("Unexpected value for lookahead: $(lookahead) (expected:"
             * " lookahead >= 0)")
     end
@@ -1217,7 +1228,7 @@ function fit_tree(
     # Learning profile (e.g., restricted, full...)
     profile                   :: Symbol = :restricted,
     # Lookahead parameter (i.e., depth of the trees to locally optimize for)
-    lookahead                 :: Integer = 0,
+    lookahead                 :: Union{Nothing,Integer} = nothing,
     # Perform minification: transform dataset so that learning happens faster
     use_minification          :: Bool,
     # Debug-only: checks the consistency of the dataset during training

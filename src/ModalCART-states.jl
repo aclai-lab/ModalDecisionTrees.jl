@@ -17,5 +17,3 @@ end
 struct FullMCARTState{ANC<:Vector} <: MCARTState
     ancestors::ANC
 end
-
-@forward RestrictedMCARTState.witnesses (Base.getindex, Base.setindex!)

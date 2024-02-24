@@ -1,7 +1,6 @@
 using MLJ
 using ModalDecisionTrees
 using MLDatasets
-using Pkg; Pkg.update() # For MLDatasets
 
 
 trainset = MNIST(:train)
