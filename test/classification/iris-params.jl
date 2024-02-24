@@ -112,5 +112,5 @@ yhat = MLJ.predict(mach, Xnew)
 
 yhat = MLJ.predict_mode(mach, X)
 
-@test MLJBase.accuracy(y, yhat) > 0.8
+@test MLJ.accuracy(y, yhat) > 0.8
 

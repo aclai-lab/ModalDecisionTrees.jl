@@ -19,7 +19,7 @@ print_tree(model, 3)
 
 model = build_tree(labels, features)
 preds = apply_tree(model, features)
-@test MLJBase.accuracy(labels, preds) > 0.9
+@test MLJ.accuracy(labels, preds) > 0.9
 @test preds isa Vector{Int}
 
 # test RNG param of trees
@@ -38,7 +38,7 @@ t3 = build_tree(labels, features, n_subfeatures; rng=mt)
 
 model = build_forest(labels, features)
 preds = apply_forest(model, features)
-@test MLJBase.accuracy(labels, preds) > 0.9
+@test MLJ.accuracy(labels, preds) > 0.9
 @test preds isa Vector{Int}
 
 n_subfeatures       = 3
@@ -58,7 +58,7 @@ model = build_forest(
         min_samples_split,
         min_purity_increase)
 preds = apply_forest(model, features)
-@test MLJBase.accuracy(labels, preds) > 0.9
+@test MLJ.accuracy(labels, preds) > 0.9
 @test length(model) == ntrees
 
 # test n_subfeatures
@@ -109,7 +109,7 @@ m3 = build_forest(labels, features,
 n_iterations = 25
 model, coeffs = build_adaboost_stumps(labels, features, n_iterations);
 preds = apply_adaboost_stumps(model, coeffs, features);
-@test MLJBase.accuracy(labels, preds) > 0.6
+@test MLJ.accuracy(labels, preds) > 0.6
 @test preds isa Vector{Int}
 @test length(model) == n_iterations
 

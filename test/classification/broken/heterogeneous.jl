@@ -16,17 +16,17 @@ features[:,4] = tf[inds]
 
 model = build_tree(labels, features)
 preds = apply_tree(model, features)
-@test MLJBase.accuracy(labels, preds) > 0.9
+@test MLJ.accuracy(labels, preds) > 0.9
 
 n_subfeatures = 2
 ntrees = 3
 model = build_forest(labels, features, n_subfeatures, ntrees)
 preds = apply_forest(model, features)
-@test MLJBase.accuracy(labels, preds) > 0.9
+@test MLJ.accuracy(labels, preds) > 0.9
 
 n_subfeatures = 7
 model, coeffs = build_adaboost_stumps(labels, features, n_subfeatures)
 preds = apply_adaboost_stumps(model, coeffs, features)
-@test MLJBase.accuracy(labels, preds) > 0.9
+@test MLJ.accuracy(labels, preds) > 0.9
 
 end # @testset
