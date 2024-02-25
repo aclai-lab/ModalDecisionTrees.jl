@@ -26,6 +26,10 @@ function build_antecedent(a::MultiFormula{F}, initconditions) where {F<:Abstract
     MultiFormula(Dict([i_mod => anchor(f, initconditions[i_mod]) for (i_mod, f) in modforms(a)]))
 end
 
+function translate(model::SoleModels.AbstractModel)
+    return model
+end
+
 function translate(
     forest::DForest,
     info = (;),
