@@ -184,9 +184,9 @@ begin
 
 
     SoleModels.info.(listrules(soletree2), :supporting_labels);
-    leaves = consequent.(listrules(soletree2))
-    SoleModels.readmetrics.(leaves)
-    zip(SoleModels.readmetrics.(leaves),leaves) |> collect |> sort
+    _leaves = consequent.(listrules(soletree2))
+    SoleModels.readmetrics.(_leaves)
+    zip(SoleModels.readmetrics.(_leaves),_leaves) |> collect |> sort
 
 
     @test MLJ.accuracy(y_test, yhat_test) > 0.4
