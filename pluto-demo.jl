@@ -94,12 +94,14 @@ end
 
 # ╔═╡ 3cdf0a35-edd0-4a02-9410-94e828d0f519
 # This model has a decent accuracy by the way. TODO
-evaluate!(mach,
-        resampling=StratifiedCV(shuffle=true),
-        measures=[accuracy],
-        verbosity=0,
-        check_measure=false
-)
+begin
+    # evaluate!(mach,
+    #         resampling=StratifiedCV(; nfolds = 3, shuffle=true),
+    #         measures=[accuracy],
+    #         verbosity=0,
+    #         check_measure=false
+    # )
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """

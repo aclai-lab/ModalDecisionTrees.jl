@@ -53,7 +53,7 @@ test_suites = [
         "other/parse-and-translate.jl"
     ]),
 
-    # ("Pluto Demo", ["$(dirname(dirname(pathof(ModalDecisionTrees))))/pluto-demo.jl", ]),
+    ("Pluto Demo", ["$(dirname(dirname(pathof(ModalDecisionTrees))))/pluto-demo.jl", ]),
 ]
 
 @testset "ModalDecisionTrees.jl" begin
