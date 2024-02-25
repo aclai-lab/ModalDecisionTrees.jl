@@ -95,7 +95,7 @@ begin
 
     report(mach1).printmodel(1000; threshold_digits = 2);
     report(mach2).printmodel(1000; threshold_digits = 2);
-    @test fitted_params(mach1).solemodel == fitted_params(mach2).solemodel
+    @test displaymodel(fitted_params(mach1).solemodel) == displaymodel(fitted_params(mach2).solemodel)
 
 
     yhat_test = MLJ.predict_mode(mach, X_test)
@@ -173,9 +173,9 @@ begin
 
     MLJ.accuracy(y_test, yhat_test)
 
-    @test yhat_test2 == yhat_test
-
     yhat_test2, tree2 = report(mach).sprinkle(X_test, y_test);
+
+    @test yhat_test2 == yhat_test
 
     soletree2 = ModalDecisionTrees.translate(tree2)
     printmodel(soletree2; show_metrics = true);
