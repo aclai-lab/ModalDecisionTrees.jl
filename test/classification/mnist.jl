@@ -95,7 +95,7 @@ begin
 
     report(mach1).printmodel(1000; threshold_digits = 2);
     report(mach2).printmodel(1000; threshold_digits = 2);
-    @test fitted_params(mach1).soletree == fitted_params(mach2).soletree
+    @test fitted_params(mach1).solemodel == fitted_params(mach2).solemodel
 
 
     yhat_test = MLJ.predict_mode(mach, X_test)
