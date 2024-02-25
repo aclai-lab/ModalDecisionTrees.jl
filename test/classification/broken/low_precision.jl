@@ -28,7 +28,7 @@ model = build_tree(
         min_purity_increase)
 preds = apply_tree(model, features)
 @test preds isa Vector{Int32}
-@test MLJBase.accuracy(labels, preds) > 0.9
+@test MLJ.accuracy(labels, preds) > 0.9
 
 n_subfeatures       = Int32(0)
 ntrees             = Int32(10)
@@ -42,13 +42,13 @@ model = build_forest(
         max_depth)
 preds = apply_forest(model, features)
 @test preds isa Vector{Int32}
-@test MLJBase.accuracy(labels, preds) > 0.9
+@test MLJ.accuracy(labels, preds) > 0.9
 
 n_iterations        = Int32(25)
 model, coeffs = build_adaboost_stumps(labels, features, n_iterations);
 preds = apply_adaboost_stumps(model, coeffs, features);
 @test preds isa Vector{Int32}
-@test MLJBase.accuracy(labels, preds) > 0.6
+@test MLJ.accuracy(labels, preds) > 0.6
 
 println("\n##### nfoldCV Classification Tree #####")
 n_folds             = Int32(3)

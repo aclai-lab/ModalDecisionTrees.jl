@@ -49,7 +49,7 @@ function modalstep(
     X, # ::AbstractScalarLogiset{W},
     i_instance::Integer,
     worlds::AbstractWorlds{W},
-    decision::SimpleDecision{<:ScalarExistentialFormula},
+    decision::RestrictedDecision{<:ScalarExistentialFormula},
     return_worldmap::Union{Val{true},Val{false}} = Val(false)
 ) where {W<:AbstractWorld}
     @logmsg LogDetail "modalstep" worlds displaydecision(decision)

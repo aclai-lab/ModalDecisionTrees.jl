@@ -9,7 +9,7 @@
 ##############################################################################
 ##############################################################################
 
-mutable struct NodeMeta{L<:Label,P} <: AbstractNode{L}
+mutable struct NodeMeta{L<:Label,P,D<:AbstractDecision} <: AbstractNode{L}
     region             :: UnitRange{Int}                   # a slice of the instances used to decide the split of the node
     depth              :: Int
     modaldepth         :: Int
@@ -22,25 +22,25 @@ mutable struct NodeMeta{L<:Label,P} <: AbstractNode{L}
     # split node-only properties
     split_at           :: Int                              # index of instances
 
-    parent             :: Union{Nothing,NodeMeta{L,P}}     # parent node
-    l                  :: NodeMeta{L,P}                    # left child node
-    r                  :: NodeMeta{L,P}                    # right child node
+    parent             :: Union{Nothing,NodeMeta{L,P,D}}     # parent node
+    l                  :: NodeMeta{L,P,D}                    # left child node
+    r                  :: NodeMeta{L,P,D}                    # right child node
     
     purity_times_nt    :: P                                # purity grade attained at training time
     consistency        :: Any
 
     i_modality         :: ModalityId                       # modality id
-    decision           :: AbstractDecision
+    decision           :: D
 
     onlyallowglobal:: Vector{Bool}
 
-    function NodeMeta{L,P}(
+    function NodeMeta{L,P,D}(
         region      :: UnitRange{Int},
         depth       :: Int,
         modaldepth  :: Int,
         oura        :: Vector{Bool},
-    ) where {L,P}
-        node = new{L,P}()
+    ) where {L<:Label,P,D<:AbstractDecision}
+        node = new{L,P,D}()
         node.region = region
         node.depth = depth
         node.modaldepth = modaldepth
@@ -51,6 +51,8 @@ mutable struct NodeMeta{L<:Label,P} <: AbstractNode{L}
         node
     end
 end
+
+include("ModalCART-states.jl")
 
 isleftchild(node::NodeMeta, parent::NodeMeta) = (parent.l == node)
 isrightchild(node::NodeMeta, parent::NodeMeta) = (parent.r == node)
@@ -83,7 +85,7 @@ function _convert(
     else
         left  = _convert(node.l, labels, class_names, threshold_backmap)
         right = _convert(node.r, labels, class_names, threshold_backmap)
-        DTInternal(node.i_modality, SimpleDecision(node.decision, threshold_backmap[node.i_modality]), this_leaf, left, right)
+        DTInternal(node.i_modality, RestrictedDecision(node.decision, threshold_backmap[node.i_modality]), this_leaf, left, right)
     end
 end
 
@@ -99,7 +101,7 @@ function _convert(
     else
         left  = _convert(node.l, labels, threshold_backmap)
         right = _convert(node.r, labels, threshold_backmap)
-        DTInternal(node.i_modality, SimpleDecision(node.decision, threshold_backmap[node.i_modality]), this_leaf, left, right)
+        DTInternal(node.i_modality, RestrictedDecision(node.decision, threshold_backmap[node.i_modality]), this_leaf, left, right)
     end
 end
 
@@ -294,8 +296,12 @@ function generate_relevant_decisions(
             grouped_featsaggrsnopss[i_modality],
             grouped_featsnaggrss[i_modality],
         )
-            push!(out, (i_modality, relation, metacondition, test_op, aggr_thresholds))
-            # @yield i_modality, relation, metacondition, test_op, aggr_thresholds
+            decision_instantiator = _threshold->begin
+                cond = ScalarCondition(metacondition, _threshold)
+                RestrictedDecision(ScalarExistentialFormula(relation, cond))
+            end
+            push!(out, (i_modality, decision_instantiator, test_op, aggr_thresholds))
+            # @yield i_modality, decision_instantiator, test_op, aggr_thresholds
         end # END decisions
     end # END modality
     return out
@@ -309,15 +315,15 @@ end
 # Find an optimal local split satisfying the given constraints
 #  (e.g. max_depth, min_samples_leaf, etc.)
 Base.@propagate_inbounds @inline function optimize_node!(
-    node                      :: NodeMeta{L,P},                                                                               # node to split
+    node                      :: NodeMeta{L,P,D},                                                                               # node to split
     Xs                        :: MultiLogiset,                                                                                # modal dataset
-    Ss                        :: AbstractVector{<:AbstractVector{WST} where {WorldType,WST<:Vector{WorldType}}},              # vector of current worlds for each instance and modality
     Y                         :: AbstractVector{L},                                                                           # label vector
-    initconditions            :: AbstractVector{<:InitialCondition},                                                          # world starting conditions
     W                         :: AbstractVector{U},                                                                           # weight vector
     grouped_featsaggrsnopss   :: AbstractVector{<:AbstractVector{<:AbstractDict{<:Aggregator,<:AbstractVector{<:ScalarMetaCondition}}}},
     grouped_featsnaggrss      :: AbstractVector{<:AbstractVector{<:AbstractVector{<:Tuple{<:Integer,<:Aggregator}}}},
     lookahead_depth           :: Integer,
+    ##########################################################################
+    Ss                        :: AbstractVector{S},
     ##########################################################################
     _is_classification        :: Union{Val{true},Val{false}},
     _using_lookahead          :: Union{Val{true},Val{false}},
@@ -342,7 +348,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
     idxs                      :: AbstractVector{Int},
     n_classes                 :: Int,
     rng                       :: Random.AbstractRNG,
-) where{P,L<:_Label,U,NSubRelationsFunction<:Function}
+) where{P,L<:_Label,D<:AbstractDecision,U,NSubRelationsFunction<:Function,S<:MCARTState}
 
     # Region of idxs to use to perform the split
     region = node.region
@@ -481,11 +487,14 @@ Base.@propagate_inbounds @inline function optimize_node!(
     #   lsums[i] = zero(U)
     # end
 
-    Sfs = Vector{Vector{WST} where {WorldType,WST<:Vector{WorldType}}}(undef, nmodalities(Xs))
-    for (i_modality,WT) in enumerate(worldtype.(eachmodality(Xs)))
-        Sfs[i_modality] = Vector{Vector{WT}}(undef, _ninstances)
-        @simd for i in 1:_ninstances
-            Sfs[i_modality][i] = Ss[i_modality][idxs[i + r_start]]
+    if eltype(Ss) <: RestrictedMCARTState
+        # TODO @view
+        Sfs = Vector{Vector{WST} where {WorldType,WST<:Vector{WorldType}}}(undef, nmodalities(Xs))
+        for (i_modality,WT) in enumerate(worldtype.(eachmodality(Xs)))
+            Sfs[i_modality] = Vector{Vector{WT}}(undef, _ninstances)
+            @simd for i in 1:_ninstances
+                Sfs[i_modality][i] = Ss[i_modality].witnesses[idxs[i + r_start]]
+            end
         end
     end
 
@@ -549,7 +558,8 @@ Base.@propagate_inbounds @inline function optimize_node!(
             # println(instance)
             # println(Sfs[node.i_modality][i_instance])
             _sat, _ss = modalstep(X, idxs[i_instance + r_start], Sfs[node.i_modality][i_instance], node.decision)
-            (issat,Ss[node.i_modality][idxs[i_instance + r_start]]) = _sat, _ss
+            # _sat, _ss = modalstep(X, idxs[i_instance + r_start], Ss[node.i_modality][idxs[i_instance + r_start]], node.decision)
+            (issat,Ss[node.i_modality].witnesses[idxs[i_instance + r_start]]) = _sat, _ss
             # @logmsg LogDetail " [$issat] Instance $(i_instance)/$(_ninstances)" Sfs[node.i_modality][i_instance] (if issat Ss[node.i_modality][idxs[i_instance + r_start]] end)
             # println(issat)
             # println(Ss[node.i_modality][idxs[i_instance + r_start]])
@@ -696,13 +706,13 @@ Base.@propagate_inbounds @inline function optimize_node!(
     # Optimization-tracking variables
     node.purity_times_nt = typemin(P)
     # node.i_modality = -1
-    # node.decision = SimpleDecision(ScalarExistentialFormula{Float64}())
+    # node.decision = RestrictedDecision(ScalarExistentialFormula{Float64}())
     # node.consistency = nothing
 
     perform_domain_optimization = is_lookahead_basecase && !performing_consistency_check
 
     ## Test all decisions or each modality
-    for (i_modality, relation, metacondition, test_op, aggr_thresholds) in generate_relevant_decisions(
+    for (i_modality, decision_instantiator, test_op, aggr_thresholds) in generate_relevant_decisions(
         Xs,
         Sfs,
         n_subrelations,
@@ -723,7 +733,8 @@ Base.@propagate_inbounds @inline function optimize_node!(
         end
         # Look for the best threshold 'a', as in atoms like "feature >= a"
         for (_threshold, threshold_info) in zip(thresh_domain, additional_info)
-            decision = SimpleDecision(ScalarExistentialFormula(relation, ScalarCondition(metacondition, _threshold)))
+            decision = decision_instantiator(_threshold)
+
 
             # @show decision
             # @show aggr_thresholds
@@ -909,17 +920,17 @@ Base.@propagate_inbounds @inline function optimize_node!(
                     # node.purity_times_nt
                     # purity_times_nt = loss_function((ncl, nl), (ncr, nr)) ...
                     for childnode in [node.l, node.r]
-                        rng_copy =
+                        # rng_copy =
                         optimize_node!(
                             childnode,
                             Xs,
-                            Ss_copy,
                             Y,
-                            initconditions,
                             W,
                             grouped_featsaggrsnopss,
                             grouped_featsnaggrss,
                             lookahead_depth+1,
+                            ##########################################################################
+                            Ss_copy,
                             ##########################################################################
                             _is_classification,
                             _using_lookahead,
@@ -971,6 +982,10 @@ end
     W                         :: AbstractVector{U}                     # weight vector
     ;
     ##########################################################################
+    profile                   :: Symbol,
+    ##########################################################################
+    lookahead                 :: Union{Nothing,Integer},
+    ##########################################################################
     _is_classification        :: Union{Val{true},Val{false}},
     _using_lookahead          :: Union{Val{true},Val{false}},
     _perform_consistency_check:: Union{Val{true},Val{false}},
@@ -982,15 +997,24 @@ end
 
     _ninstances = ninstances(Xs)
 
-    # Initialize world sets for each instance
-    Ss = ModalDecisionTrees.initialworldsets(Xs, initconditions)
+    if profile == :restricted
+        # Initialize world sets for each instance
+        Ss = RestrictedMCARTState.(ModalDecisionTrees.initialworldsets(Xs, initconditions))
+        D = RestrictedDecision
+        lookahead = 0
+    elseif profile == :full
+        error("TODO implement.")
+        lookahead = 1
+    else
+        error("Unexpected ModalCART profile: $(profile).")
+    end
 
     # Distribution of the instances indices throughout the tree.
     #  It will be recursively permuted, and regions of it assigned to the tree nodes (idxs[node.region])
     idxs = collect(1:_ninstances)
 
     # Create root node
-    NodeMetaT = NodeMeta{(isa(_is_classification, Val{true}) ? Int64 : Float64),Float64}
+    NodeMetaT = NodeMeta{(isa(_is_classification, Val{true}) ? Int64 : Float64),Float64,D}
     onlyallowglobal = [(initcond == ModalDecisionTrees.start_without_world) for initcond in initconditions]
     root = NodeMetaT(1:_ninstances, 0, 0, onlyallowglobal)
     
@@ -1044,13 +1068,13 @@ end
         @inbounds optimize_node!(
             node,
             Xs,
-            Ss,
             Y,
-            initconditions,
             W,
             grouped_featsaggrsnopss,
             grouped_featsnaggrss,
             0,
+            ################################################################################
+            Ss,
             ################################################################################
             _is_classification,
             _using_lookahead,
@@ -1059,6 +1083,7 @@ end
             ;
             idxs                       = idxs,
             rng                        = rng,
+            lookahead                  = lookahead,
             kwargs...,
         )
         # !print_progress || ProgressMeter.update!(p, node.purity)
@@ -1088,8 +1113,10 @@ end
     W                       :: AbstractVector{U}
     ;
     ##########################################################################
+    profile                 :: Symbol,
+    ##########################################################################
     loss_function           :: Loss,
-    lookahead               :: Integer,
+    lookahead               :: Union{Nothing,Integer},
     max_depth               :: Union{Nothing,Int},
     min_samples_leaf        :: Int,
     min_purity_increase     :: AbstractFloat,
@@ -1156,7 +1183,11 @@ end
             * " max_modal_depth >= 0, or max_modal_depth = nothing for unbounded depth)")
     end
 
-    if !(lookahead >= 0)
+    if !(profile in [:restricted, :full])
+        error("Unexpected ModalCART profile: $(profile).")
+    end
+
+    if !isnothing(lookahead) && !(lookahead >= 0)
         error("Unexpected value for lookahead: $(lookahead) (expected:"
             * " lookahead >= 0)")
     end
@@ -1194,8 +1225,10 @@ function fit_tree(
     W                         :: AbstractVector{U} = default_weights(Y)
     # W                       :: AbstractVector{U} = Ones{Int}(ninstances(Xs)), # TODO check whether this is faster
     ;
+    # Learning profile (e.g., restricted, full...)
+    profile                   :: Symbol = :restricted,
     # Lookahead parameter (i.e., depth of the trees to locally optimize for)
-    lookahead                 :: Integer = 0,
+    lookahead                 :: Union{Nothing,Integer} = nothing,
     # Perform minification: transform dataset so that learning happens faster
     use_minification          :: Bool,
     # Debug-only: checks the consistency of the dataset during training
@@ -1203,7 +1236,7 @@ function fit_tree(
     kwargs...,
 ) where {L<:Union{CLabel,RLabel}, U}
     # Check validity of the input
-    check_input(Xs, Y, initconditions, W; lookahead = lookahead, kwargs...)
+    check_input(Xs, Y, initconditions, W; profile = profile, lookahead = lookahead, kwargs...)
 
     # Classification-only: transform labels to categorical form (indexed by integers)
     n_classes = begin
@@ -1230,6 +1263,7 @@ function fit_tree(
         _is_classification = Val(L<:CLabel),
         _using_lookahead = Val((lookahead > 0)),
         _perform_consistency_check = Val(perform_consistency_check),
+        profile = profile,
         lookahead = lookahead,
         n_classes = n_classes,
         kwargs...

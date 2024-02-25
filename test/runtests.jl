@@ -11,8 +11,13 @@ using DataFrames
 using Random
 using CategoricalArrays
 using StatsBase
+using StatsBase: mean
 
 using ModalDecisionTrees: build_stump, build_tree, build_forest
+
+# For MLDatasets
+ENV["DATADEPS_ALWAYS_ACCEPT"] = true
+# Pkg.update()
 
 println("Julia version: ", VERSION)
 

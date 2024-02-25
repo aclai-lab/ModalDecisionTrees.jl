@@ -2,9 +2,16 @@ using MLJ
 using ModalDecisionTrees
 using MLDatasets
 
-trainset = MNIST(:train)
 
-Xcube, y = trainset[:]
+Xcube, y = begin
+    if MNIST isa Base.Callable # v0.7
+        trainset = MNIST(:train)
+        trainset[:]
+    else # v0.5
+        MNIST.traindata()
+    end
+end
+
 y = string.(y)
 
 N = length(y)

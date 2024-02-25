@@ -131,38 +131,38 @@ is_global_decision(d::ScalarOneStepFormula) = (SoleData.relation(d) == globalrel
 
 import SoleData: relation, atom, metacond, feature, test_operator, threshold
 
-struct SimpleDecision{F<:ScalarExistentialFormula} <: AbstractDecision
+struct RestrictedDecision{F<:ScalarExistentialFormula} <: AbstractDecision
     formula  :: F
 end
 
-formula(d::SimpleDecision) = d.formula
+formula(d::RestrictedDecision) = d.formula
 
-relation(d::SimpleDecision) = relation(formula(d))
-atom(d::SimpleDecision) = atom(formula(d))
-metacond(d::SimpleDecision) = metacond(formula(d))
-feature(d::SimpleDecision) = feature(formula(d))
-test_operator(d::SimpleDecision) = test_operator(formula(d))
-threshold(d::SimpleDecision) = threshold(formula(d))
+relation(d::RestrictedDecision) = relation(formula(d))
+atom(d::RestrictedDecision) = atom(formula(d))
+metacond(d::RestrictedDecision) = metacond(formula(d))
+feature(d::RestrictedDecision) = feature(formula(d))
+test_operator(d::RestrictedDecision) = test_operator(formula(d))
+threshold(d::RestrictedDecision) = threshold(formula(d))
 
-is_propositional_decision(d::SimpleDecision) = is_propositional_decision(formula(d))
-is_global_decision(d::SimpleDecision) = is_global_decision(formula(d))
+is_propositional_decision(d::RestrictedDecision) = is_propositional_decision(formula(d))
+is_global_decision(d::RestrictedDecision) = is_global_decision(formula(d))
 
-function displaydecision(d::SimpleDecision; kwargs...)
+function displaydecision(d::RestrictedDecision; kwargs...)
     outstr = ""
-    outstr *= "SimpleDecision("
+    outstr *= "RestrictedDecision("
     outstr *= syntaxstring(formula(d); kwargs...)
     outstr *= ")"
     outstr
 end
 
-function SimpleDecision(
-    d::SimpleDecision{<:ScalarExistentialFormula},
+function RestrictedDecision(
+    d::RestrictedDecision{<:ScalarExistentialFormula},
     threshold_backmap::Function
 )
     f = formula(d)
     cond = value(atom(f))
     newcond = ScalarCondition(metacond(cond), threshold_backmap(threshold(cond)))
-    SimpleDecision(ScalarExistentialFormula(relation(f), newcond))
+    RestrictedDecision(ScalarExistentialFormula(relation(f), newcond))
 end
 
 mutable struct DoubleEdgedDecision{F<:Formula} <: AbstractDecision
@@ -398,7 +398,7 @@ struct DTInternal{L<:Label,D<:AbstractDecision} <: AbstractDecisionInternal{L,D}
         miscellaneous    :: NamedTuple = (;),
     ) where {D<:Union{AbstractDecision,ScalarExistentialFormula},L<:Label}
         if decision isa ScalarExistentialFormula
-            decision = SimpleDecision(decision)
+            decision = RestrictedDecision(decision)
         end
         this = squashtoleaf(Union{<:AbstractDecisionLeaf,<:DTInternal}[left, right])
         DTInternal{L,D}(i_modality, decision, this, left, right, miscellaneous)
@@ -420,7 +420,7 @@ struct DTInternal{L<:Label,D<:AbstractDecision} <: AbstractDecisionInternal{L,D}
         miscellaneous    :: NamedTuple = (;),
     ) where {D<:Union{AbstractDecision,ScalarExistentialFormula},L1<:Label,L2<:Label}
         if decision isa ScalarExistentialFormula
-            decision = SimpleDecision(decision)
+            decision = RestrictedDecision(decision)
         end
         L = Union{L1,L2}
         DTInternal{L,D}(i_modality, decision, left, right, miscellaneous)

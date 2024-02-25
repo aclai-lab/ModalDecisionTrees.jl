@@ -1,4 +1,5 @@
 using StatsBase
+using StatsBase: mean
 using SoleBase: movingwindow
 using SoleData: AbstractDimensionalDataset
 

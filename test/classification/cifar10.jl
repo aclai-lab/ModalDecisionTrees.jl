@@ -5,7 +5,14 @@ using SoleData
 using SoleModels
 using Test
 
-Xcube, y = CIFAR10(:test)[:]
+Xcube, y = begin
+    if MNIST isa Base.Callable # v0.7
+        CIFAR10(:test)[:]
+    else # v0.5
+        CIFAR10.testdata()
+    end
+end
+
 class_names = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
 y = map(_y-> class_names[_y+1], y)
 
