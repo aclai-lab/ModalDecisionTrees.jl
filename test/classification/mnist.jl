@@ -151,7 +151,7 @@ begin
         relations = :IA7,
         features = [minimum],
         initconditions = :start_at_center,
-        downsize = (x)->ModalDecisionTrees.moving_average(x, (10,10)),
+        downsize = (x)->ModalDecisionTrees.MLJInterface.moving_average(x, (10,10)),
     )
 
     mach = @time machine(model, X_train, y_train) |> fit!

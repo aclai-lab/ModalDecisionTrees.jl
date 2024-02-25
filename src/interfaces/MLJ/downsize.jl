@@ -69,6 +69,8 @@ function make_downsizing_function(::ForestModel)
     end
 end
 
+# TODO move to MultiData/SoleData
+
 _mean(::Type{T}, vals::AbstractArray{T}) where {T<:Number} = StatsBase.mean(vals)
 _mean(::Type{T1}, vals::AbstractArray{T2}) where {T1<:AbstractFloat,T2<:Integer} = T1(StatsBase.mean(vals))
 _mean(::Type{T1}, vals::AbstractArray{T2}) where {T1<:Integer,T2<:AbstractFloat} = round(T1, StatsBase.mean(vals))
