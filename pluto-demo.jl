@@ -29,7 +29,7 @@ md"""
 
 # ╔═╡ 99b1da9b-517a-4a84-8d0c-26e9f9ff6e15
 # Instantiate the modal extension of CART, that uses relations from the coarser Interval Algebra "IA7"
-model = ModalDecisionTree(; relations = :IA7)
+model = ModalDecisionTree(; relations = :IA7, downsize = (15,))
 
 # ╔═╡ a00c4abe-5534-4c42-9464-d5a6867b9802
 begin
@@ -93,14 +93,14 @@ begin
 end
 
 # ╔═╡ 3cdf0a35-edd0-4a02-9410-94e828d0f519
-# This model has a decent accuracy by the way. TODO
 begin
-    # evaluate!(mach,
-    #         resampling=StratifiedCV(; nfolds = 3, shuffle=true),
-    #         measures=[accuracy],
-    #         verbosity=0,
-    #         check_measure=false
-    # )
+    # This model has a decent accuracy by the way. TODO
+    evaluate!(mach,
+            resampling=StratifiedCV(; nfolds = 3, shuffle=true),
+            measures=[accuracy],
+            verbosity=0,
+            check_measure=false
+    )
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
