@@ -16,7 +16,8 @@ function MDT(prediction)
     return DTLeaf(prediction)
 end
 function MDT(p::Atom, left::AbstractNode, right::AbstractNode)
-    decision = DoubleEdgedDecision(ScalarExistentialFormula(identityrel, value(p)))
+    # decision = DoubleEdgedDecision(ScalarExistentialFormula(identityrel, value(p)))
+    decision = DoubleEdgedDecision(p)
     return DTInternal(1, decision, left, right)
 end
 

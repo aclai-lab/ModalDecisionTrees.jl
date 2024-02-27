@@ -128,6 +128,9 @@ function _atom_inv(p::String)
     return ¬(Atom(p))
 end
 
+get_atom(φ::Atom) = φ
+get_atom_inv(φ::Atom) = ¬(φ)
+
 get_atom(φ::ExistentialTopFormula) = ⊤
 get_atom_inv(φ::ExistentialTopFormula) = ⊥
 get_diamond_op(φ::ExistentialTopFormula) = DiamondRelationalConnective(relation(φ))

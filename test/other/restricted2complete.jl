@@ -18,6 +18,7 @@ branch = DTInternal(2, decision2, cls_leaf, branch)
 branch = DTInternal(2, decision3, branch, cls_leaf)
 
 @test_nowarn AbstractTrees.print_tree(branch)
+@test_nowarn AbstractTrees.print_tree(ModalDecisionTrees.translate(branch, [ModalDecisionTrees.StartWithoutWorld(), ModalDecisionTrees.StartWithoutWorld()]))
 
 using D3Trees
 

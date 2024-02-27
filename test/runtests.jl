@@ -51,7 +51,7 @@ test_suites = [
     ]),
     ("Other", [
         "other/parse-and-translate-restricted.jl",
-        "other/abstract-trees-interface.jl",
+        "other/restricted2complete.jl",
         "other/translate-complete.jl",
     ]),
 

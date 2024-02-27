@@ -129,6 +129,8 @@ end
 # end
 
 
+is_propositional_decision(d::Atom) = false
+is_global_decision(d::Atom) = false
 is_propositional_decision(d::ScalarOneStepFormula) = (SoleData.relation(d) == identityrel)
 is_global_decision(d::ScalarOneStepFormula) = (SoleData.relation(d) == globalrel)
 is_propositional_decision(d::ExistentialTopFormula) = (SoleData.relation(d) == identityrel)
@@ -176,6 +178,8 @@ mutable struct DoubleEdgedDecision{F<:Formula} <: AbstractDecision
     _forth    :: Base.RefValue{N} where N<:AbstractNode # {L,DoubleEdgedDecision}
 
     function DoubleEdgedDecision{F}(formula::F) where {F<:Formula}
+        @assert F <: Union{Atom,ExistentialTopFormula} "Cannot instantiate " *
+            "DoubleEdgedDecision with formula of type $(F)."
         ded = new{F}()
         ded.formula = formula
         ded
