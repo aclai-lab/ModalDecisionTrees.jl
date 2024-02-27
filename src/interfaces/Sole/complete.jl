@@ -150,7 +150,7 @@ function _pathformula_complete(
 
         # f2_isimpl = isimplicative(f2)
         ded = decision(ν0)
-        isprop = is_propositional(ν0)
+        isprop = is_propositional_decision(ded)
 
         if isprop
             λ = MultiFormula(i_modality(ν0), _lambda)

@@ -154,7 +154,7 @@ end
             end
             f = formula(ModalDecisionTrees.decision(nodes[1]))
             p = MultiFormula(i_modality(nodes[1]), SyntaxTree(get_atom(f)))
-            isprop = (relation(f) == identityrel)
+            isprop = is_propositional_decision(decision(nodes[1]))
 
             _dontincrease = isprop
             φ = pathformula(Vector{DTInternal{Union{L,LL},<:RestrictedDecision{<:ScalarExistentialFormula}}}(nodes[2:(end-1)]), nodes[end], multimodal, _dontincrease, addlast)

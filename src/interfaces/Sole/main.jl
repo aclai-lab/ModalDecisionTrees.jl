@@ -141,15 +141,17 @@ get_atom_inv(φ::ScalarExistentialFormula) = _atom_inv(φ.p)
 get_diamond_op(φ::ScalarExistentialFormula) = DiamondRelationalConnective(relation(φ))
 get_box_op(φ::ScalarExistentialFormula) = BoxRelationalConnective(relation(φ))
 
-function is_propositional(node::DTNode)
-    f = formula(ModalDecisionTrees.decision(node))
-    isprop = (relation(f) == identityrel)
-    return isprop
-end
+# function is_propositional(node::DTNode)
+#     f = formula(ModalDecisionTrees.decision(node))
+#     isprop = (relation(f) == identityrel)
+#     return isprop
+# end
 
 function get_lambda(parent::DTNode, child::DTNode)
-    f = formula(ModalDecisionTrees.decision(parent))
-    isprop = (relation(f) == identityrel)
+    d = ModalDecisionTrees.decision(parent)
+    f = formula(d)
+    # isprop = (relation(f) == identityrel)
+    isprop = is_propositional_decision(d)
     if isinleftsubtree(child, parent)
         p = get_atom(f)
         diamond_op = get_diamond_op(f)
