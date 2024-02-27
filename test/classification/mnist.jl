@@ -51,18 +51,18 @@ X = SoleData.cube2dataframe(Xcube, ["black"])
 X_train, y_train = X[p,:], y[p]
 X_test, y_test = X[p_test,:], y[p_test]
 
-begin
-    model = ModalDecisionTree()
+# begin
+#     model = ModalDecisionTree()
 
-    mach = @time machine(model, X_train, y_train) |> fit!
+#     mach = @time machine(model, X_train, y_train) |> fit!
 
-    report(mach).printmodel(1000; threshold_digits = 2);
+#     report(mach).printmodel(1000; threshold_digits = 2);
 
 
-    yhat_test = MLJ.predict_mode(mach, X_test)
-    MLJ.accuracy(y_test, yhat_test)
-    @test MLJ.accuracy(y_test, yhat_test) > 0.2
-end
+#     yhat_test = MLJ.predict_mode(mach, X_test)
+#     MLJ.accuracy(y_test, yhat_test)
+#     @test MLJ.accuracy(y_test, yhat_test) > 0.2
+# end
 
 
 # begin
@@ -77,6 +77,18 @@ end
 #     MLJ.accuracy(y_test, yhat_test)
 #     @test MLJ.accuracy(y_test, yhat_test) > 0.2
 # end
+
+begin
+    model = ModalDecisionTree(; downsize = DOWNSIZE_WINDOW)
+
+    mach = @time machine(model, X_train, y_train) |> fit!
+
+    report(mach).printmodel(1000; threshold_digits = 2);
+
+    yhat_test = MLJ.predict_mode(mach, X_test)
+    MLJ.accuracy(y_test, yhat_test)
+    @test MLJ.accuracy(y_test, yhat_test) > 0.12
+end
 
 begin
     model = ModalDecisionTree(; relations = :IA7, downsize = DOWNSIZE_WINDOW)
