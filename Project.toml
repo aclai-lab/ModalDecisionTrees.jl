@@ -3,7 +3,7 @@ uuid = "e54bda2e-c571-11ec-9d64-0242ac120002"
 license = "MIT"
 desc = "Julia implementation of Modal Decision Trees and Random Forest algorithms"
 authors = ["Giovanni PAGLIARINI"]
-version = "0.4.0"
+version = "0.4.1"
 
 [deps]
 AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
@@ -19,7 +19,6 @@ FunctionWrappers = "069b7b12-0de2-55c6-9aab-29f3d0a68a2e"
 Lazy = "50d2b5c4-7a5e-59d5-8109-a42b560f39c0"
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 LoggingExtras = "e6f89c97-d47a-5376-807f-9c37f3926c36"
-MLDatasets = "eb30cadb-4394-5ae3-aed4-317e484a6458"
 MLJModelInterface = "e80e1ace-859a-464e-9ed9-23947d8ae3ea"
 Memoization = "6fafb56a-5788-4b4e-91ca-c0cea6611c73"
 MultiData = "8cc5100c-b3d1-4f82-90cb-0ea93d317aba"
@@ -92,6 +91,7 @@ PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 RDatasets = "ce6b1742-4840-55fa-b093-852dadbb1d8b"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 ZipFile = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
+D3Trees = "e3df1716-f71e-5df9-9e2d-98e193103c45"
 
 [targets]
-test = ["ARFFFiles", "HTTP", "ImageFiltering", "Images", "InteractiveUtils", "LinearAlgebra", "MLDatasets", "Markdown", "PlutoUI", "RDatasets", "Test", "ZipFile", "MLJ", "MLJBase"]
+test = ["ARFFFiles", "HTTP", "ImageFiltering", "Images", "InteractiveUtils", "LinearAlgebra", "MLDatasets", "Markdown", "PlutoUI", "RDatasets", "Test", "ZipFile", "MLJ", "MLJBase", "D3Trees"]

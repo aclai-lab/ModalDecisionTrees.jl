@@ -23,7 +23,7 @@ preds = apply_tree(model, features)
 @test length(model) == 9
 @test depth(model) == 5
 @test preds isa Vector{String}
-print_tree(model)
+print_model(model)
 probs = apply_tree_proba(model, features, classes)
 @test reshape(sum(probs, dims=2), n) ≈ ones(n)
 

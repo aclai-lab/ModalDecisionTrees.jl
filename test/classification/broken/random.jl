@@ -15,7 +15,7 @@ preds = apply_tree(model, round.(Int, features))
 max_depth = 3
 model = build_tree(labels, features, 0, max_depth)
 @test depth(model) == max_depth
-print_tree(model, 3)
+print_model(model, 3)
 
 model = build_tree(labels, features)
 preds = apply_tree(model, features)

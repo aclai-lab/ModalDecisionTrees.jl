@@ -47,10 +47,12 @@ test_suites = [
         # "regression/random.jl",
     ]),
     ("Miscellaneous", [
-        "multimodal-datasets-multiformulas-construction.jl"
+        "multimodal-datasets-multiformulas-construction.jl",
     ]),
     ("Other", [
-        "other/parse-and-translate.jl"
+        "other/parse-and-translate-restricted.jl",
+        "other/abstract-trees-interface.jl",
+        "other/translate-complete.jl",
     ]),
 
     ("Pluto Demo", ["$(dirname(dirname(pathof(ModalDecisionTrees))))/pluto-demo.jl", ]),

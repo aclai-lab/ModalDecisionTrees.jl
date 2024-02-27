@@ -104,8 +104,11 @@ using SoleLogics: identityrel, globalrel
 using SoleData.DimensionalDatasets: alpha
 using SoleData: ScalarOneStepFormula,
                 ScalarExistentialFormula,
+                ExistentialTopFormula,
                 ScalarUniversalFormula
 
+
+struct NoNode end
 
 function displaydecision(
     i_modality::ModalityId,
@@ -117,17 +120,19 @@ function displaydecision(
     "{$i_modality} $(displaydecision(decision; variable_names_map = _variable_names_map, kwargs...))"
 end
 
-function displaydecision_inverse(decision::AbstractDecision, kwargs...; args...)
-    syntaxstring(dual(decision), kwargs...; args...)
-end
+# function displaydecision_inverse(decision::AbstractDecision, args...; node = nothing, kwargs...)
+#     syntaxstring(dual(decision), args...; node = node, kwargs...)
+# end
 
-function displaydecision_inverse(i_modality::ModalityId, decision::AbstractDecision, kwargs...; args...)
-    displaydecision(i_modality, dual(decision), kwargs...; args...)
-end
+# function displaydecision_inverse(i_modality::ModalityId, decision::AbstractDecision, args...; node = nothing, kwargs...)
+#     displaydecision(i_modality, dual(decision), args...; node = node, kwargs...)
+# end
 
 
 is_propositional_decision(d::ScalarOneStepFormula) = (SoleData.relation(d) == identityrel)
 is_global_decision(d::ScalarOneStepFormula) = (SoleData.relation(d) == globalrel)
+is_propositional_decision(d::ExistentialTopFormula) = (SoleData.relation(d) == identityrel)
+is_global_decision(d::ExistentialTopFormula) = (SoleData.relation(d) == globalrel)
 
 import SoleData: relation, atom, metacond, feature, test_operator, threshold
 
@@ -147,7 +152,7 @@ threshold(d::RestrictedDecision) = threshold(formula(d))
 is_propositional_decision(d::RestrictedDecision) = is_propositional_decision(formula(d))
 is_global_decision(d::RestrictedDecision) = is_global_decision(formula(d))
 
-function displaydecision(d::RestrictedDecision; kwargs...)
+function displaydecision(d::RestrictedDecision; node = NoNode(), kwargs...)
     outstr = ""
     outstr *= "RestrictedDecision("
     outstr *= syntaxstring(formula(d); kwargs...)
@@ -191,17 +196,36 @@ formula!(ded::DoubleEdgedDecision, formula) = (ded.formula = formula)
 _back!(ded::DoubleEdgedDecision, _back) = (ded._back = _back)
 _forth!(ded::DoubleEdgedDecision, _forth) = (ded._forth = _forth)
 
-
 # TODO remove?
 is_propositional_decision(ded::DoubleEdgedDecision) = is_propositional_decision(formula(ded))
 is_global_decision(ded::DoubleEdgedDecision) = is_global_decision(formula(ded))
 
-function displaydecision(ded::DoubleEdgedDecision; kwargs...)
+function displaydecision(ded::DoubleEdgedDecision; node = NoNode(), kwargs...)
     outstr = ""
     outstr *= "DoubleEdgedDecision("
     outstr *= syntaxstring(formula(ded); kwargs...)
-    outstr *= ", " * (isnothing(_back(ded)) ? "-" : "$(typeof(_back(ded)))")
-    outstr *= ", " * (isnothing(_forth(ded)) ? "-" : "$(typeof(_forth(ded)))")
+    # outstr *= ", " * (isnothing(_back(ded)) ? "-" : "$(typeof(_back(ded))){decision = $(displaydecision(_back(ded)[])), height = $(height(_back(ded)[]))}")
+    outstr *= ", " * (isnothing(_back(ded)) ? "-" : begin
+        νb = _back(ded)[]
+        # @show νb
+        # @show node
+        if νb == node
+            "{backloop}"
+        else
+            if node isa NoNode "?" else "" end *
+                "{decision = $(displaydecision(decision(νb); node = νb)), height = $(height(νb))}"
+        end
+    end)
+    # outstr *= ", " * (isnothing(_forth(ded)) ? "-" : "$(typeof(_forth(ded))){decision = $(displaydecision(_forth(ded)[])), height = $(height(_forth(ded)[]))}")
+    outstr *= ", " * (isnothing(_forth(ded)) ? "-" : begin
+        νf = _forth(ded)[]
+        if νf == node
+            "{forthloop}"
+        else
+            if node isa NoNode "?" else "" end *
+                "{decision = $(displaydecision(decision(νf); node = νf)), height = $(height(νf))}"
+        end
+    end)
     outstr *= ")"
     # outstr *= "DoubleEdgedDecision(\n\t"
     # outstr *= syntaxstring(formula(ded))
@@ -219,6 +243,7 @@ function DoubleEdgedDecision(
 )
     return error("TODO implement")
 end
+
 ############################################################################################
 ############################################################################################
 ############################################################################################
@@ -235,8 +260,8 @@ struct DTLeaf{L<:Label} <: AbstractDecisionLeaf{L}
     DTLeaf(prediction::L, supp_labels::AbstractVector) where {L<:Label} = DTLeaf{L}(prediction, supp_labels)
 
     # create leaf without supporting labels
-    DTLeaf{L}(prediction) where {L<:Label} = DTLeaf{L}(prediction, L[])
-    DTLeaf(prediction::L) where {L<:Label} = DTLeaf{L}(prediction, L[])
+    DTLeaf{L}(prediction) where {L<:Label} = DTLeaf{L}(prediction, [prediction])
+    DTLeaf(prediction::L) where {L<:Label} = DTLeaf{L}(prediction, [prediction])
 
     # create leaf from supporting labels
     DTLeaf{L}(supp_labels::AbstractVector) where {L<:Label} = DTLeaf{L}(bestguess(L.(supp_labels)), supp_labels)
@@ -350,8 +375,8 @@ struct DTInternal{L<:Label,D<:AbstractDecision} <: AbstractDecisionInternal{L,D}
     # representative leaf for the current node
     this          :: AbstractDecisionLeaf{<:L}
     # child nodes
-    left          :: Union{AbstractDecisionLeaf{<:L}, DTInternal{<:L,D}}
-    right         :: Union{AbstractDecisionLeaf{<:L}, DTInternal{<:L,D}}
+    left          :: Union{AbstractDecisionLeaf{<:L}, DTInternal{<:L,<:AbstractDecision}}
+    right         :: Union{AbstractDecisionLeaf{<:L}, DTInternal{<:L,<:AbstractDecision}}
 
     # semantics-specific miscellanoeus info
     miscellaneous :: NamedTuple
@@ -381,8 +406,8 @@ struct DTInternal{L<:Label,D<:AbstractDecision} <: AbstractDecisionInternal{L,D}
         i_modality       :: ModalityId,
         decision         :: D,
         this             :: AbstractDecisionLeaf{L0},
-        left             :: Union{AbstractDecisionLeaf{L1}, DTInternal{L1,D}},
-        right            :: Union{AbstractDecisionLeaf{L2}, DTInternal{L2,D}},
+        left             :: Union{AbstractDecisionLeaf{L1}, DTInternal{L1}},
+        right            :: Union{AbstractDecisionLeaf{L2}, DTInternal{L2}},
         miscellaneous    :: NamedTuple = (;),
     ) where {D<:AbstractDecision,L0<:Label,L1<:Label,L2<:Label}
         L = Union{L0,L1,L2}
@@ -406,23 +431,24 @@ struct DTInternal{L<:Label,D<:AbstractDecision} <: AbstractDecisionInternal{L,D}
     function DTInternal{L}(
         i_modality       :: ModalityId,
         decision         :: D,
-        left             :: Union{AbstractDecisionLeaf{<:L}, DTInternal{<:L,D}},
-        right            :: Union{AbstractDecisionLeaf{<:L}, DTInternal{<:L,D}},
+        left             :: Union{AbstractDecisionLeaf{<:L}, DTInternal{<:L}},
+        right            :: Union{AbstractDecisionLeaf{<:L}, DTInternal{<:L}},
         miscellaneous    :: NamedTuple = (;),
     ) where {D<:AbstractDecision,L<:Label}
         DTInternal{L,D}(i_modality, decision, left, right, miscellaneous)
     end
     function DTInternal(
         i_modality       :: ModalityId,
-        decision         :: D,
-        left             :: Union{AbstractDecisionLeaf{L1}, DTInternal{L1,D}},
-        right            :: Union{AbstractDecisionLeaf{L2}, DTInternal{L2,D}},
+        decision         :: _D,
+        left             :: Union{AbstractDecisionLeaf{L1}, DTInternal{L1}},
+        right            :: Union{AbstractDecisionLeaf{L2}, DTInternal{L2}},
         miscellaneous    :: NamedTuple = (;),
-    ) where {D<:Union{AbstractDecision,ScalarExistentialFormula},L1<:Label,L2<:Label}
+    ) where {_D<:Union{AbstractDecision,ScalarExistentialFormula},L1<:Label,L2<:Label}
         if decision isa ScalarExistentialFormula
             decision = RestrictedDecision(decision)
         end
         L = Union{L1,L2}
+        D = typeof(decision)
         DTInternal{L,D}(i_modality, decision, left, right, miscellaneous)
     end
 end
@@ -433,6 +459,32 @@ this(node::DTInternal) = node.this
 left(node::DTInternal) = node.left
 right(node::DTInternal) = node.right
 miscellaneous(node::DTInternal) = node.miscellaneous
+
+function back!(ν1::DTInternal{<:Label,<:DoubleEdgedDecision}, ν2::DTNode)
+    _back!(decision(ν1), Ref(ν2))
+    return ν1
+end
+
+function forth!(ν1::DTInternal{<:Label,<:DoubleEdgedDecision}, ν2::DTNode)
+    _forth!(decision(ν1), Ref(ν2))
+    return ν1
+end
+
+function back(ν1::DTInternal{<:Label,<:DoubleEdgedDecision})
+    return back(decision(ν1))
+end
+
+function forth(ν1::DTInternal{<:Label,<:DoubleEdgedDecision})
+    return forth(decision(ν1))
+end
+
+function isbackloop(ν1::DTInternal{<:Label,<:DoubleEdgedDecision})
+    return ν1 == back(ModalDecisionTrees.decision(ν1))
+end
+
+function isforthloop(ν1::DTInternal{<:Label,<:DoubleEdgedDecision})
+    return ν1 == forth(ModalDecisionTrees.decision(ν1))
+end
 
 function supp_labels(node::DTInternal; train_or_valid = true)
     @assert train_or_valid == true
@@ -602,10 +654,10 @@ ismodalnode(tree::DTree)      = ismodalnode(root(tree))
 ############################################################################################
 
 displaydecision(node::DTInternal, args...; kwargs...) =
-    displaydecision(i_modality(node), decision(node), args...; kwargs...)
+    displaydecision(i_modality(node), decision(node), args...; node = node, kwargs...)
 
-displaydecision_inverse(node::DTInternal, args...; kwargs...) =
-    displaydecision_inverse(i_modality(node), decision(node), args...; kwargs...)
+# displaydecision_inverse(node::DTInternal, args...; kwargs...) =
+#     displaydecision_inverse(i_modality(node), decision(node), args...; kwargs...)
 
 ############################################################################################
 ############################################################################################
@@ -666,10 +718,10 @@ end
 function display(node::DTInternal{L,D}) where {L,D}
     return """
 Decision Node{$(L),$(D)}(
-$(display(this(node)))
+    $(display(this(node)))
     ###########################################################
     i_modality: $(i_modality(node))
-    decision: $(decision(node))
+    decision: $(displaydecision(node))
     miscellaneous: $(miscellaneous(node))
     ###########################################################
     sub-tree leaves: $(nleaves(node))
