@@ -20,7 +20,6 @@ branch = DTInternal(2, decision3, branch, cls_leaf)
 @test_nowarn AbstractTrees.print_tree(branch)
 
 using D3Trees
-pathformula
 
 text = ["one\n(second line)", "2", "III", "four"]
 style = ["", "fill:red", "r:14px", "opacity:0.7"]
@@ -34,8 +33,8 @@ tooltip = ["pops", "up", "on", "hover"]
    title="My Tree",
    init_expand=10,
 )
-inchrome(t)
-# inbrowser(t, "firefox")
 @test_nowarn t = D3Tree(tree)
+# inchrome(t)
+# inbrowser(t, "firefox")
 # inchrome(t)
 # inbrowser(t, "firefox")
