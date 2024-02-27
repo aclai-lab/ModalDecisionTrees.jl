@@ -154,12 +154,20 @@ function get_lambda(parent::DTNode, child::DTNode)
     isprop = is_propositional_decision(d)
     if isinleftsubtree(child, parent)
         p = get_atom(f)
-        diamond_op = get_diamond_op(f)
-        return isprop ? SyntaxTree(p) : diamond_op(p)
+        if isprop
+            return SyntaxTree(p)
+        else
+            diamond_op = get_diamond_op(f)
+            return diamond_op(p)
+        end
     elseif isinrightsubtree(child, parent)
         p_inv = get_atom_inv(f)
-        box_op = get_box_op(f)
-        return isprop ? SyntaxTree(p_inv) : box_op(p_inv)
+        if isprop
+            return SyntaxTree(p_inv)
+        else
+            box_op = get_box_op(f)
+            return box_op(p_inv)
+        end
     else
         error("Cannot compute pathformula on malformed path: $((child, parent)).")
     end

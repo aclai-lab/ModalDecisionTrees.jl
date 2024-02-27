@@ -129,7 +129,7 @@ end
 # end
 
 
-is_propositional_decision(d::Atom) = false
+is_propositional_decision(d::Atom) = true
 is_global_decision(d::Atom) = false
 is_propositional_decision(d::ScalarOneStepFormula) = (SoleData.relation(d) == identityrel)
 is_global_decision(d::ScalarOneStepFormula) = (SoleData.relation(d) == globalrel)
