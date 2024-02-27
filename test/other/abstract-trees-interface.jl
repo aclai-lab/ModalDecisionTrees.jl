@@ -1,6 +1,6 @@
 using Test
 
-using AbstracTrees
+using AbstractTrees
 using SoleLogics
 using SoleData
 using SoleModels
@@ -17,7 +17,7 @@ branch = DTInternal(2, decision1, cls_leaf, cls_leaf)
 branch = DTInternal(2, decision2, cls_leaf, branch)
 branch = DTInternal(2, decision3, branch, cls_leaf)
 
-@test_nowarn AbstracTrees.print_tree(branch)
+@test_nowarn AbstractTrees.print_tree(branch)
 
 using D3Trees
 pathformula
