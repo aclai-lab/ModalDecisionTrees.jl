@@ -27,6 +27,24 @@ completepure = ModalDecisionTrees.translate(complete, [ModalDecisionTrees.StartW
 branchpure |> printmodel
 completepure |> printmodel
 
+printmodel(branchpure; show_shortforms = true)
+printmodel(completepure; show_shortforms = true)
+
+branchpure    |> listrules
+completepure  |> listrules
+
+branchpure = ModalDecisionTrees.translate(branch, [ModalDecisionTrees.StartWithoutWorld(), ModalDecisionTrees.StartWithoutWorld()]; optimize_shortforms = true)
+completepure = ModalDecisionTrees.translate(complete, [ModalDecisionTrees.StartWithoutWorld(), ModalDecisionTrees.StartWithoutWorld()]; optimize_shortforms = true)
+
+printmodel(branchpure; show_shortforms = true)
+printmodel(completepure; show_shortforms = true)
+
+printmodel(branchpure)
+printmodel(completepure)
+
+branchpure    |> listrules
+completepure  |> listrules
+
 using D3Trees
 
 text = ["one\n(second line)", "2", "III", "four"]

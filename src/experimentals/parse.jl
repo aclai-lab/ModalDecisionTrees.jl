@@ -46,7 +46,8 @@ function _parse_tree(
     # _threshold_ex = "[^\\)\\s)]+" # TODO use smarter regex (e.g., https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch06s10.html )
     # Regex("[-+]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)") == r"[-+]?([0-9]+(\.[0-9]*)?|\.[0-9]+)"
     # _threshold_ex = "[-+]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)" # GOOD
-    _threshold_ex = "[-+]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)"
+    _threshold_ex = "[-+]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)" # https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch06s10.html
+
     _indentation_ex = "[ │]*[✔✘]"
     _metrics_ex = "\\(\\S*.*\\)"
     _feature_ex             = "(?:\\S+)\\s+(?:(?:⫹|⫺|⪳|⪴|⪵|⪶|↗|↘|>|<|=|≤|≥|<=|>=))"
