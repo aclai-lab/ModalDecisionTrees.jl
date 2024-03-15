@@ -1,62 +1,81 @@
 using SoleData: ExistentialTopFormula
 
-function translate(
-    node::DTInternal{L,D},
-    initconditions,
-    all_ancestors::Vector{<:DTInternal} = DTInternal[],
-    all_ancestor_formulas::Vector = [],
-    pos_ancestors::Vector{<:DTInternal} = DTInternal[],
-    info = (;),
-    shortform::Union{Nothing,MultiFormula} = nothing,
-) where {L,D<:DoubleEdgedDecision}
-    new_all_ancestors = DTInternal{L,<:DoubleEdgedDecision}[all_ancestors..., node]
-    new_pos_ancestors = DTInternal{L,<:DoubleEdgedDecision}[pos_ancestors..., node]
-    φl = pathformula(new_all_ancestors, left(node), false)
-    φr = SoleLogics.normalize(¬(φl); allow_atom_flipping=true, prefer_implications = true)
-    new_all_ancestor_formulas = [all_ancestor_formulas..., φl]
+# function translate(
+#     node::DTInternal{L,D},
+#     initconditions,
+#     all_ancestors::Vector{<:DTInternal} = DTInternal[],
+#     all_ancestor_formulas::Vector = [],
+#     pos_ancestors::Vector{<:DTInternal} = DTInternal[],
+#     info = (;),
+#     shortform::Union{Nothing,MultiFormula} = nothing,
+# ) where {L,D<:DoubleEdgedDecision}
+#     forthnode = forth(node)
+#     subtree_nodes = []
+#     cur_node = node
+#     while cur_node != forthnode
+#         push!(subtree_nodes, cur_node)
+#         @assert isinleftsubtree(forthnode, cur_node) || isinrightsubtree(forthnode, cur_node) "Translation error! Illegal case detected."
+#         cur_node = isinleftsubtree(forthnode, cur_node) ? left(cur_node) : right(cur_node)
+#     end
+#     @show length(subtree_nodes)
+#     @show displaydecision.(decision.(subtree_nodes))
+#     println(displaydecision.(decision.(subtree_nodes)))
+#     push!(subtree_nodes, forthnode)
+#     new_all_ancestors = DTInternal{L,<:DoubleEdgedDecision}[all_ancestors..., subtree_nodes...]
+#     new_pos_ancestors = DTInternal{L,<:DoubleEdgedDecision}[pos_ancestors..., subtree_nodes...]
+#     for (i, (νi, νj)) in enumerate(zip(new_all_ancestors[2:end], new_all_ancestors[1:end-1]))
+#         if !(isleftchild(νi, νj) || isrightchild(νi, νj))
+#             error("ERROR")
+#             @show νi
+#             @show νj
+#         end
+#     end
+#     φl = pathformula(new_all_ancestors, left(forthnode), false)
+#     φr = SoleLogics.normalize(¬(φl); allow_atom_flipping=true, prefer_implications = true)
+#     new_all_ancestor_formulas = [all_ancestor_formulas..., φl]
 
-    # @show φl, φr
+#     # @show φl, φr
 
-    # φr = pathformula(new_pos_ancestors, right(node), true)
+#     # φr = pathformula(new_pos_ancestors, right(node), true)
 
-    # @show syntaxstring(φl)
-    pos_shortform, neg_shortform = begin
-        if length(all_ancestors) == 0
-            (
-                φl,
-                φr,
-            )
-        else
+#     # @show syntaxstring(φl)
+#     pos_shortform, neg_shortform = begin
+#         if length(all_ancestors) == 0
+#             (
+#                 φl,
+#                 φr,
+#             )
+#         else
 
-            my_conjuncts = [begin
-                (isinleftsubtree(node, anc) ? φ : SoleLogics.normalize(¬(φ); allow_atom_flipping=true, prefer_implications = true))
-            end for (φ, anc) in zip(all_ancestor_formulas, all_ancestors)]
+#             my_conjuncts = [begin
+#                 (isinleftsubtree(node, anc) ? φ : SoleLogics.normalize(¬(φ); allow_atom_flipping=true, prefer_implications = true))
+#             end for (φ, anc) in zip(all_ancestor_formulas, all_ancestors)]
 
-            my_left_conjuncts = [my_conjuncts..., φl]
-            my_right_conjuncts = [my_conjuncts..., φr]
+#             my_left_conjuncts = [my_conjuncts..., φl]
+#             my_right_conjuncts = [my_conjuncts..., φr]
 
-            ∧(my_left_conjuncts...), ∧(my_right_conjuncts...)
-        end
-    end
+#             ∧(my_left_conjuncts...), ∧(my_right_conjuncts...)
+#         end
+#     end
 
-    info = merge(info, (;
-        this = translate(ModalDecisionTrees.this(node), initconditions, new_all_ancestors, all_ancestor_formulas, new_pos_ancestors, (;), shortform),
-        supporting_labels = ModalDecisionTrees.supp_labels(node),
-    ))
-    if !isnothing(shortform)
-        # @show syntaxstring(shortform)
-        info = merge(info, (;
-            shortform = build_antecedent(shortform, initconditions),
-        ))
-    end
+#     info = merge(info, (;
+#         this = translate(ModalDecisionTrees.this(node), initconditions, new_all_ancestors, all_ancestor_formulas, new_pos_ancestors, (;), shortform),
+#         supporting_labels = ModalDecisionTrees.supp_labels(node),
+#     ))
+#     if !isnothing(shortform)
+#         # @show syntaxstring(shortform)
+#         info = merge(info, (;
+#             shortform = build_antecedent(shortform, initconditions),
+#         ))
+#     end
 
-    SoleModels.Branch(
-        build_antecedent(φl, initconditions),
-        translate(left(node), initconditions, new_all_ancestors, new_all_ancestor_formulas, new_pos_ancestors, (;), pos_shortform),
-        translate(right(node), initconditions, new_all_ancestors, new_all_ancestor_formulas, pos_ancestors, (;), neg_shortform),
-        info
-    )
-end
+#     SoleModels.Branch(
+#         build_antecedent(φl, initconditions),
+#         translate(left(forthnode), initconditions, new_all_ancestors, new_all_ancestor_formulas, new_pos_ancestors, (;), pos_shortform),
+#         translate(right(forthnode), initconditions, new_all_ancestors, new_all_ancestor_formulas, pos_ancestors, (;), neg_shortform),
+#         info
+#     )
+# end
 
 # isback(backnode::DTInternal, back::DTInternal) = (backnode == back(node))
 
