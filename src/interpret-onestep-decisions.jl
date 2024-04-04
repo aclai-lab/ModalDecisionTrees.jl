@@ -188,7 +188,7 @@ function limit_threshold_domain(
         return T[], Nothing[]
     end
     if loss_function isa ShannonEntropy && test_op in [≥, <, ≤, >] && (W isa Ones) # TODO extendo to allequal(W) # TODO extend to Gini Index, Normalized Distance Measure, Info Gain, Gain Ratio (Ref. [Linear-Time Preprocessing in Optimal Numerical Range Partitioning])
-        if perform_domain_optimization
+        if !perform_domain_optimization
             thresh_domain = unique(aggr_thresholds)
             thresh_domain = begin
                 if test_op in [≥, <] # Remove edge-case with zero entropy
