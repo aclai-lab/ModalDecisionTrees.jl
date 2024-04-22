@@ -37,11 +37,32 @@ mach = @time machine(model, X, y, w) |> fit!
 mach.report[:fit].model
 
 ###
-model = ModalDecisionTree(; loss_function=ModalDecisionTrees.RandomLoss(), max_depth = 4, min_samples_leaf=1, rng=10)
-
+model = ModalDecisionTree(; loss_function=ModalDecisionTrees.RandomLoss(), max_depth = 6, min_samples_leaf=1, rng=1)
 mach = @time machine(model, X, y, w) |> fit!
-m = mach.report[:fit].model
-scores = ModalDecisionTrees.apply_proba([m], X, y; anomaly_detection=true, path_length_hlim = 5)
+m1 = mach.report[:fit].rawmodel
+
+# model = ModalDecisionTree(; loss_function=ModalDecisionTrees.RandomLoss(), max_depth = 4, min_samples_leaf=1, rng=9)
+# mach = @time machine(model, X, y, w) |> fit!
+# m2 = mach.report[:fit].rawmodel
+
+# model = ModalDecisionTree(; loss_function=ModalDecisionTrees.RandomLoss(), max_depth = 4, min_samples_leaf=1, rng=8)
+# mach = @time machine(model, X, y, w) |> fit!
+# m3 = mach.report[:fit].rawmodel
+
+models = [m1]
+for i in 2:50
+    model = model = ModalDecisionTree(; loss_function=ModalDecisionTrees.RandomLoss(), max_depth = 6, min_samples_leaf=1, rng=i)
+    mach = @time machine(model, X, y, w) |> fit!
+    m = mach.report[:fit].rawmodel
+    push!(models, m)
+end
+
+scores = ModalDecisionTrees.apply_proba(models, 
+                SoleData.MultiLogiset(SoleData.scalarlogiset(DataFrame(X))), 
+                y; 
+                anomaly_detection=true, 
+                path_length_hlim = 2)
+
 ###
 
 sampling_fraction = 0.7

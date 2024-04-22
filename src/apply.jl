@@ -451,7 +451,7 @@ using CategoricalDistributions: UnivariateFinite
 using CategoricalArrays
 
 ### Eduard
-function path_length(tree::DTree{L}, Xs, i_instance::Integer, hlim=Inf) where {L}
+function path_length(tree::DTree{L}, Xs, i_instance::Integer; hlim=5) where {L}
     # Specific logic for isolation trees to calculate path lengths
     path_length = 0
     current_node = tree.root
@@ -466,7 +466,7 @@ function path_length(tree::DTree{L}, Xs, i_instance::Integer, hlim=Inf) where {L
     # - If the current node, after the update, is a leaf or the path length is greater than
     # hlim, then return the current path length + the average path length of unsuccessful 
     # searches in BST with n=ninstances(Xs) instances
-    while !is_leaf(current_node)
+    while current_node isa DTInternal
         path_length += 1
         satisfied, new_worlds = modalstep(
             modality(Xs, i_modality(current_node)),
@@ -476,7 +476,7 @@ function path_length(tree::DTree{L}, Xs, i_instance::Integer, hlim=Inf) where {L
         )
         worlds[i_modality(current_node)] = new_worlds
         current_node = satisfied ? left(current_node) : right(current_node)
-        if is_leaf(current_node) || path_length >= hlim
+        if current_node isa DTLeaf || path_length >= hlim
             return path_length + c_n_approx(ninstances(Xs))
         end
     end
@@ -485,7 +485,6 @@ function path_length(tree::DTree{L}, Xs, i_instance::Integer, hlim=Inf) where {L
 end
 
 function c_n_approx(n)
-    n = ninstances(Xs)
     if n > 2
         c_n = 2 * log(n - 1) + Base.MathConstants.eulergamma - 2 * (n - 1) / n
     elseif n == 1
@@ -499,15 +498,22 @@ end
 
 function compute_anomaly_scores(path_lengths::Vector{Float64}, n::Integer)
     c_n = c_n_approx(n)
+    print(size(path_lengths))
+    print("\n")
     scores = 2 .^ (-path_lengths ./ c_n)
     return scores
 end
 
 # TODO: there is no need for y here
-function apply_proba(trees::Vector{DTree{L}}, Xs, y; anomaly_detection=true, path_length_hlim=Inf) where L
+function apply_proba(trees::Vector{DTree{L}}, Xs, y; anomaly_detection=true, path_length_hlim=5) where L
     # n time t matrix, n = ninstances(Xs) and t = trees
-    path_lengths = [path_length(tree, Xs, i; hlim=path_length_hlim) for i in 1:ninstances(Xs), tree in trees]
-    return compute_anomaly_scores(mean(path_lengths, dims=2), ninstances(Xs))
+    n = ninstances(Xs)
+    path_lengths = Array{Float64, 2}(undef, n, length(trees))
+    # print(size(path_lengths))
+    # print("\n")
+    path_lengths = [path_length(tree, Xs, i; hlim=path_length_hlim) for i in 1:n, tree in trees]
+    # print(path_lengths)
+    return compute_anomaly_scores(vec(mean(path_lengths, dims=2)), n)
 end
 ###
 
