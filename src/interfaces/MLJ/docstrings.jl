@@ -59,7 +59,7 @@ Defaulted to `ceil(Int, sqrt(x))`.
         error("Unexpected model type: $(typeof(m))")
     end
 """
-Modal C4.5. This classification and regression algorithm, originally presented in $MDT_ref,
+ModalCART. This classification and regression algorithm, originally presented in $MDT_ref,
 is an extension of the CART and C4.5
 [decision tree learning algorithms](https://en.wikipedia.org/wiki/Decision_tree_learning)
 that leverages the expressive power of modal logics of time and space
@@ -126,6 +126,7 @@ $(n_subfeatures_str)
 - `merge_purity_threshold=1.0`: (post-pruning) merge leaves having
                            combined purity `>= merge_purity_threshold`
 
+- `loss_function=nothing`:       Loss function to minimize (defaults to Shannon Entropy and Variance in the classification and regression cases, respectively)
 - `display_depth=5`:       max depth to show when displaying the tree(s)
 
 - `rng=Random.GLOBAL_RNG`: random number generator or seed

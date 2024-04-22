@@ -350,6 +350,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
     rng                       :: Random.AbstractRNG,
 ) where{P,L<:_Label,D<:AbstractDecision,U,NSubRelationsFunction<:Function,S<:MCARTState}
 
+    println(repeat(" ", node.depth) * "optimize_node!")
     # Region of idxs to use to perform the split
     region = node.region
     _ninstances = length(region)
@@ -526,7 +527,8 @@ Base.@propagate_inbounds @inline function optimize_node!(
 
         # @logmsg LogOverview "purity_times_nt increase" corrected_this_purity_times_nt/nt node.purity (corrected_this_purity_times_nt/nt + node.purity) (node.purity_times_nt/nt - node.purity)
         # If the best split is good, partition and split accordingly
-        @inbounds if ((
+        @inbounds if !(loss_function isa RandomLoss) && ((
+        # @inbounds if (( # !(loss_function isa RandomLoss) && ((
             corrected_this_purity_times_nt == typemin(P)) ||
             dishonor_min_purity_increase(L, min_purity_increase, node.purity, corrected_this_purity_times_nt, nt)
         )
@@ -705,14 +707,14 @@ Base.@propagate_inbounds @inline function optimize_node!(
 
     # Optimization-tracking variables
     node.purity_times_nt = typemin(P)
+    # @show node.purity_times_nt
     # node.i_modality = -1
     # node.decision = RestrictedDecision(ScalarExistentialFormula{Float64}())
     # node.consistency = nothing
 
     perform_domain_optimization = is_lookahead_basecase && !performing_consistency_check
 
-    ## Test all decisions or each modality
-    for (i_modality, decision_instantiator, test_op, aggr_thresholds) in generate_relevant_decisions(
+    relevant_decisions = generate_relevant_decisions(
         Xs,
         Sfs,
         n_subrelations,
@@ -726,15 +728,25 @@ Base.@propagate_inbounds @inline function optimize_node!(
         grouped_featsaggrsnopss,
         grouped_featsnaggrss,
     )
+
+    if loss_function isa RandomLoss
+        # relevant_decisions = [StatsBase.sample(rng, relevant_decisions)]
+        relevant_decisions = collect(relevant_decisions)
+        relevant_decisions = relevant_decisions[randperm(rng, length(relevant_decisions))]
+    end
+
+    ## Test all decisions or each modality
+    for (i_modality, decision_instantiator, test_op, aggr_thresholds) in relevant_decisions
+
         if isa(_is_classification, Val{true})
             thresh_domain, additional_info = limit_threshold_domain(aggr_thresholds, Yf, Wf, loss_function, test_op, min_samples_leaf, perform_domain_optimization; n_classes = n_classes, nc = nc, nt = nt)
         else
             thresh_domain, additional_info = limit_threshold_domain(aggr_thresholds, Yf, Wf, loss_function, test_op, min_samples_leaf, perform_domain_optimization)
         end
+
         # Look for the best threshold 'a', as in atoms like "feature >= a"
         for (_threshold, threshold_info) in zip(thresh_domain, additional_info)
             decision = decision_instantiator(_threshold)
-
 
             # @show decision
             # @show aggr_thresholds
@@ -851,30 +863,34 @@ Base.@propagate_inbounds @inline function optimize_node!(
             end
 
             purity_times_nt = begin
-                if isa(_is_classification, Val{true})
-                    loss_function((ncl, nl), (ncr, nr))
+                if loss_function isa RandomLoss
+                    RANDOM_LOSS_PURITY
                 else
-                    purity = begin
-                        if W isa Ones{Int}
-                            loss_function(lsums, lsum, nl, rsums, rsum, nr)
-                        else
-                            error("TODO expand regression code to weigthed version!")
-                            loss_function(lsums, ws_l, nl, rsums, ws_r, nr)
+                    if isa(_is_classification, Val{true})
+                        loss_function((ncl, nl), (ncr, nr))
+                    else
+                        purity = begin
+                            if W isa Ones{Int}
+                                loss_function(lsums, lsum, nl, rsums, rsum, nr)
+                            else
+                                error("TODO expand regression code to weigthed version!")
+                                loss_function(lsums, ws_l, nl, rsums, ws_r, nr)
+                            end
                         end
-                    end
 
-                    # TODO use loss_function instead
-                    # ORIGINAL: TODO understand how it works
-                    # purity_times_nt = (rsum * rsum / nr) + (lsum * lsum / nl)
-                    # Variance with ssqs
-                    # purity_times_nt = (rmean, lmean = rsum/nr, lsum/nl; - (nr * (rssq - 2*rmean*rsum + (rmean^2*nr)) / (nr-1) + (nl * (lssq - 2*lmean*lsum + (lmean^2*nl)) / (nl-1))))
-                    # Variance
-                    # var = (x)->sum((x.-StatsBase.mean(x)).^2) / (length(x)-1)
-                    # purity_times_nt = - (nr * var(rsums)) + nl * var(lsums))
-                    # Simil-variance that is easier to compute but it does not work with few samples on the leaves
-                    # var = (x)->sum((x.-StatsBase.mean(x)).^2)
-                    # purity_times_nt = - (var(rsums) + var(lsums))
-                    # println("purity_times_nt: $(purity_times_nt)")
+                        # TODO use loss_function instead
+                        # ORIGINAL: TODO understand how it works
+                        # purity_times_nt = (rsum * rsum / nr) + (lsum * lsum / nl)
+                        # Variance with ssqs
+                        # purity_times_nt = (rmean, lmean = rsum/nr, lsum/nl; - (nr * (rssq - 2*rmean*rsum + (rmean^2*nr)) / (nr-1) + (nl * (lssq - 2*lmean*lsum + (lmean^2*nl)) / (nl-1))))
+                        # Variance
+                        # var = (x)->sum((x.-StatsBase.mean(x)).^2) / (length(x)-1)
+                        # purity_times_nt = - (nr * var(rsums)) + nl * var(lsums))
+                        # Simil-variance that is easier to compute but it does not work with few samples on the leaves
+                        # var = (x)->sum((x.-StatsBase.mean(x)).^2)
+                        # purity_times_nt = - (var(rsums) + var(lsums))
+                        # println("purity_times_nt: $(purity_times_nt)")
+                    end
                 end
             end::P
 
@@ -899,6 +915,11 @@ Base.@propagate_inbounds @inline function optimize_node!(
                     else
                         nr
                     end
+                end
+
+                if loss_function isa RandomLoss
+                    # Accept the first decision
+                    break
                 end
 
                 # Short-circuit if you don't lookahead, and this is a perfect split

@@ -25,6 +25,32 @@ istoploss(::Loss, purity) = isinf(purity)
 # - Wang, Y., & Xia, S. T. (2017, March). Unifying variable splitting criteria of decision trees by Tsallis entropy. In 2017 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP) (pp. 2507-2511). IEEE.
 
 ############################################################################################
+
+struct RandomLoss <: Loss end
+
+RANDOM_LOSS_PURITY = 0.0
+
+Base.@propagate_inbounds @inline function (::RandomLoss)(ws :: AbstractVector{U}, t :: U) where {U<:Real}
+    # s = abs(reinterpret(Int64, (hash((ws,t)))))
+    # return rand(MersenneTwister(s))
+    return RANDOM_LOSS_PURITY
+end
+
+# Multiple
+Base.@propagate_inbounds @inline function (::RandomLoss)(wss_n_ts::Tuple{AbstractVector{U},U}...) where {U<:Real}
+    # s = abs(reinterpret(Int64, (hash(wss_n_ts))))
+    # return rand(MersenneTwister(s))
+    # sum(((ws, t),)->t * RandomLoss()(ws, t), wss_n_ts)
+    return RANDOM_LOSS_PURITY
+end
+
+# Correction
+Base.@propagate_inbounds @inline function (::RandomLoss)(e :: AbstractFloat)
+    # e
+    return RANDOM_LOSS_PURITY
+end
+
+############################################################################################
 # Classification: Shannon entropy
 # (ps = normalize(ws, 1); return -sum(ps.*log.(ps)))
 # Source: _shannon_entropy from https://github.com/bensadeghi/DecisionTree.jl/blob/master/src/util.jl, with inverted sign
@@ -45,7 +71,7 @@ Base.@propagate_inbounds @inline function (::ShannonEntropy)(ws :: AbstractVecto
 end
 
 # Multiple
-Base.@propagate_inbounds @inline function (ent::ShannonEntropy)(wss_n_ts::Tuple{AbstractVector{U},U}...) where {U<:Real}
+Base.@propagate_inbounds @inline function (::ShannonEntropy)(wss_n_ts::Tuple{AbstractVector{U},U}...) where {U<:Real}
     sum(((ws, t),)->t * ShannonEntropy()(ws, t), wss_n_ts)
 end
 

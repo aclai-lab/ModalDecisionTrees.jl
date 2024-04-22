@@ -1,7 +1,7 @@
 
 function get_kwargs(m::SymbolicModel, X)
     base_kwargs = (;
-        loss_function             = nothing,
+        loss_function             = m.loss_function,
         max_depth                 = m.max_depth,
         min_samples_leaf          = m.min_samples_leaf,
         min_purity_increase       = m.min_purity_increase,

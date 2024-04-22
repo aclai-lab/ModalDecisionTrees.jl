@@ -27,7 +27,7 @@ using ModalDecisionTrees: InitialCondition
 const MMI = MLJModelInterface
 const MDT = ModalDecisionTrees
 
-const _package_url = "https://github.com/giopaglia/$(MDT).jl"
+const _package_url = "https://github.com/aclai-lab/$(MDT).jl"
 
 include("MLJ/default-parameters.jl")
 include("MLJ/sanity-checks.jl")

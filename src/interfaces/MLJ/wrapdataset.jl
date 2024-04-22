@@ -37,6 +37,10 @@ function wrapdataset(
         X = collect(X')
     end
 
+    # if Tables.istable(X)
+    #     X = PropositionalLogiset(X)
+    # end
+
     if X isa AbstractArray # Cube
         if !(X isa Union{AbstractVector,AbstractMatrix})
             @warn "AbstractArray of $(ndims(X)) dimensions and size $(size(X)) encountered. " *

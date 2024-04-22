@@ -53,6 +53,7 @@ mutable struct ModalRandomForest <: MMI.Probabilistic
     rng                    :: Union{Random.AbstractRNG,Integer}
 
     ## DecisionTree.jl parameters
+    loss_function          :: Union{Nothing,ModalDecisionTrees.Loss}
     display_depth          :: Union{Nothing,Int}
     min_samples_split      :: Union{Nothing,Int}
     n_subfeatures          :: Union{Nothing,Int,Float64,Function}
@@ -81,6 +82,7 @@ function ModalRandomForest(;
     print_progress = (ntrees > 50),
     rng = Random.GLOBAL_RNG,
     #
+    loss_function = nothing,
     display_depth = nothing,
     min_samples_split = nothing,
     n_subfeatures = nothing,
@@ -108,6 +110,7 @@ function ModalRandomForest(;
         print_progress,
         rng,
         #
+        loss_function,
         display_depth,
         min_samples_split,
         n_subfeatures,
