@@ -36,6 +36,14 @@ model = ModalDecisionTree(; loss_function=ModalDecisionTrees.RandomLoss(), max_d
 mach = @time machine(model, X, y, w) |> fit!
 mach.report[:fit].model
 
+###
+model = ModalDecisionTree(; loss_function=ModalDecisionTrees.RandomLoss(), max_depth = 4, min_samples_leaf=1, rng=10)
+
+mach = @time machine(model, X, y, w) |> fit!
+m = mach.report[:fit].model
+scores = ModalDecisionTrees.apply_proba([m], X, y; anomaly_detection=true, path_length_hlim = 5)
+###
+
 sampling_fraction = 0.7
 
 ψ = ceil(sampling_fraction * ninstances(X))

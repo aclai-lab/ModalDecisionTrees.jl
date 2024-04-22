@@ -504,7 +504,7 @@ function compute_anomaly_scores(path_lengths::Vector{Float64}, n::Integer)
 end
 
 # TODO: there is no need for y here
-function apply_proba(trees::Vector{DTree{L}}, Xs, y; anomaly_detection=true, path_length_hlim=Inf) where {L}
+function apply_proba(trees::Vector{DTree{L}}, Xs, y; anomaly_detection=true, path_length_hlim=Inf) where L
     # n time t matrix, n = ninstances(Xs) and t = trees
     path_lengths = [path_length(tree, Xs, i; hlim=path_length_hlim) for i in 1:ninstances(Xs), tree in trees]
     return compute_anomaly_scores(mean(path_lengths, dims=2), ninstances(Xs))
