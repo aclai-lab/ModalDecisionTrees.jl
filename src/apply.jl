@@ -465,7 +465,7 @@ function path_length(tree::DTree{L}, Xs, i_instance::Integer, hlim=Inf) where {L
     # - Update the current node based on the decision's output
     # - If the current node, after the update, is a leaf or the path length is greater than
     # hlim, then return the current path length + the average path length of unsuccessful 
-    # searches in BST with n instances
+    # searches in BST with n=ninstances(Xs) instances
     while !is_leaf(current_node)
         path_length += 1
         satisfied, new_worlds = modalstep(
@@ -476,22 +476,26 @@ function path_length(tree::DTree{L}, Xs, i_instance::Integer, hlim=Inf) where {L
         )
         worlds[i_modality(current_node)] = new_worlds
         current_node = satisfied ? left(current_node) : right(current_node)
-        if is_leaf(current_node) or path_length >= hlim:
+        if is_leaf(current_node) || path_length >= hlim
             return path_length + c_n_approx(ninstances(Xs))
+        end
     end
 
     return path_length
 end
 
-function c_n_approx(n) where {L}
+function c_n_approx(n)
     n = ninstances(Xs)
-    if n > 2:
+    if n > 2
         c_n = 2 * log(n - 1) + Base.MathConstants.eulergamma - 2 * (n - 1) / n
-    elseif n = 1:
+    elseif n == 1
         c_n = 1
-    else: # TODO: is this really necessary?
+    else # TODO: is this really necessary?
         c_n = 0
+    end
+
     return c_n
+end
 
 function compute_anomaly_scores(path_lengths::Vector{Float64}, n::Integer)
     c_n = c_n_approx(n)
@@ -505,8 +509,8 @@ function apply_proba(trees::Vector{DTree{L}}, Xs, y; anomaly_detection=true, pat
     path_lengths = [path_length(tree, Xs, i; hlim=path_length_hlim) for i in 1:ninstances(Xs), tree in trees]
     return compute_anomaly_scores(mean(path_lengths, dims=2), ninstances(Xs))
 end
-
 ###
+
 function apply_proba(leaf::DTLeaf, Xs, i_instance::Integer, worlds::AbstractVector{<:AbstractWorlds})
     supp_labels(leaf)
 end

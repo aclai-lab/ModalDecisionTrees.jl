@@ -24,8 +24,7 @@ myforest = mach.report[:fit].model
 @test myforest isa DForest
 
 for t in myforest.trees
-    _, path_lengths = ModalDecisionTrees.apply_proba(t, X, y; return_path_lengths = true, path_length_hlim = 5)
-    scores = TODO(path_lengths)
+    scores = ModalDecisionTrees.apply_proba(t, X, y; anomaly_detection=true, path_length_hlim = 5)
 end
 
 model = ModalDecisionTree(; loss_function=ModalDecisionTrees.RandomLoss(), min_samples_leaf=1, min_purity_increase=ModalDecisionTrees.BOTTOM_MIN_PURITY_INCREASE, rng=1)
