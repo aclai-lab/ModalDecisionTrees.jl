@@ -70,7 +70,7 @@ function RestrictedDecision(
     threshold_backmap::Function
 )
     f = formula(d)
-    cond = value(atom(f))
+    cond = SoleLogics.value(atom(f))
     newcond = ScalarCondition(metacond(cond), threshold_backmap(threshold(cond)))
     RestrictedDecision(ScalarExistentialFormula(relation(f), newcond))
 end
