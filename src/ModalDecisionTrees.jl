@@ -60,6 +60,7 @@ using SoleData: Interval, Interval2D
 using SoleData: IARelations, IA2DRelations
 
 using SoleLogics: FullDimensionalFrame
+using SoleLogics: normalize
 
 using SoleData: existential_aggregator, universal_aggregator, aggregator_bottom
 

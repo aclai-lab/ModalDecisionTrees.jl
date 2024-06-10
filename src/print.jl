@@ -138,7 +138,7 @@ end
 function displaymodel(
     leaf::DTLeaf;
     indentation_str="",
-    depth=0,
+    depth = 0,
     variable_names_map = nothing,
     max_depth = nothing,
     hidemodality = false,
@@ -153,7 +153,7 @@ end
 function displaymodel(
     leaf::NSDTLeaf;
     indentation_str="",
-    depth=0,
+    depth = 0,
     variable_names_map = nothing,
     max_depth = nothing,
     hidemodality = false,
@@ -168,7 +168,7 @@ end
 function displaymodel(
     node::DTInternal;
     indentation_str="",
-    depth=0,
+    depth = 0,
     variable_names_map = nothing,
     max_depth = nothing,
     hidemodality = false,

@@ -115,8 +115,8 @@ function _parse_tree(
             if !isnothing(m_normal) && length(m_normal) == 3
                 feature_fun, i_variable, test_operator = m_normal
                 function eval_feature_fun_constructor(fun_str)
-                    if     fun_str == "min" MDT.UnivariateMin
-                    elseif fun_str == "max" MDT.UnivariateMax
+                    if     fun_str == "min" MDT.VariableMin
+                    elseif fun_str == "max" MDT.VariableMax
                     else
                         try
                             fun = eval(Symbol(fun_str))
@@ -133,12 +133,12 @@ function _parse_tree(
             elseif !isnothing(m_special) && length(m_special) == 2
                 i_variable, feature_fun_test_operator = m_special
                 feature_fun_test_operator_d = Dict([
-                    "⪴"   => (i_variable)->(SoleData.UnivariateMin(i_variable), ≥),
-                    "⪴₈₀" => (i_variable)->(SoleData.UnivariateSoftMin(i_variable, 80), ≥),
-                    "⪳₈₀" => (i_variable)->(SoleData.UnivariateSoftMax(i_variable, 80), ≤),
-                    "⪳"   => (i_variable)->(SoleData.UnivariateMax(i_variable), ≤),
-                    "↘"   => (i_variable)->(SoleData.UnivariateMin(i_variable), ≤),
-                    "↗"   => (i_variable)->(SoleData.UnivariateMax(i_variable), ≥),
+                    "⪴"   => (i_variable)->(SoleData.VariableMin(i_variable), ≥),
+                    "⪴₈₀" => (i_variable)->(SoleData.VariableSoftMin(i_variable, 80), ≥),
+                    "⪳₈₀" => (i_variable)->(SoleData.VariableSoftMax(i_variable, 80), ≤),
+                    "⪳"   => (i_variable)->(SoleData.VariableMax(i_variable), ≤),
+                    "↘"   => (i_variable)->(SoleData.VariableMin(i_variable), ≤),
+                    "↗"   => (i_variable)->(SoleData.VariableMax(i_variable), ≥),
                 ])
                 feature_fun_test_operator = feature_fun_test_operator_d[feature_fun_test_operator]
                 i_variable = parse(Int, i_variable)
