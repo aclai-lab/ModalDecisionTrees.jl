@@ -10,9 +10,9 @@ using ModalDecisionTrees: back, forth
 
 using AbstractTrees
 
-decision1 = ScalarExistentialFormula(globalrel, UnivariateMin(1), >=, 10)
-decision2 = ScalarExistentialFormula(IA_A, UnivariateMin(2), <, 0)
-decision3 = ScalarExistentialFormula(IA_L, UnivariateMin(3), <=, 0)
+decision1 = ScalarExistentialFormula(globalrel, VariableMin(1), >=, 10)
+decision2 = ScalarExistentialFormula(IA_A, VariableMin(2), <, 0)
+decision3 = ScalarExistentialFormula(IA_L, VariableMin(3), <=, 0)
 
 ded1 = DoubleEdgedDecision(decision1)
 ded2 = DoubleEdgedDecision(decision2)

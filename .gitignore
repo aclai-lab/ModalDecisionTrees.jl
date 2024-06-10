@@ -1,14 +1,15 @@
-#**/*.csv
-Manifest.toml
+*.jl.*.cov
+*.jl.cov
+*.jl.mem
+/Manifest.toml
+/docs/build/
+
 
 **/*.bkp
 !src/results-find-best-values/*.csv
 styleguide.txt
 makefile
 .DS_Store
-
-datasets/*
-!datasets/test-Eduard
 
 PythonCallMeta
 conda_env

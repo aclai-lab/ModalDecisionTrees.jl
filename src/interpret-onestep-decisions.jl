@@ -87,7 +87,7 @@ function modalstep(
         end
 
         for w in acc_worlds
-            if checkcondition(value(atom(φ)), X, i_instance, w)
+            if checkcondition(SoleLogics.value(atom(φ)), X, i_instance, w)
                 # @logmsg LogDetail " Found world " w ch_readWorld ... ch_readWorld(w, channel)
                 satisfied = true
                 push!(new_worlds, w)
@@ -366,8 +366,8 @@ Base.@propagate_inbounds @resumable function generate_propositional_decisions(
             # thresholds[:,instance_idx] = map(aggregator->aggregator(values), aggregators)
             
             for w in worlds
-                # gamma = featvalue(X[i_instance, w, feature) # TODO in general!
-                gamma = featvalue(X, i_instance, w, feature, i_feature)
+                # gamma = featvalue(feature, X[i_instance, w) # TODO in general!
+                gamma = featvalue(feature, X, i_instance, w, i_feature)
                 for (i_aggregator,aggregator) in enumerate(aggregators)
                     thresholds[i_aggregator,instance_idx] = SoleData.aggregator_to_binary(aggregator)(gamma, thresholds[i_aggregator,instance_idx])
                 end

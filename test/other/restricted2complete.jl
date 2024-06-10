@@ -9,9 +9,9 @@ using ModalDecisionTrees: DTLeaf, DTInternal
 
 reg_leaf, cls_leaf = DTLeaf([1.0,2.0]), DTLeaf([1,2])
 
-decision1 = ScalarExistentialFormula(globalrel, UnivariateMin(1), >=, 10)
-decision2 = ScalarExistentialFormula(IA_A, UnivariateMin(2), <, 0)
-decision3 = ScalarExistentialFormula(IA_L, UnivariateMin(3), <=, 0)
+decision1 = ScalarExistentialFormula(globalrel, VariableMin(1), >=, 10)
+decision2 = ScalarExistentialFormula(IA_A, VariableMin(2), <, 0)
+decision3 = ScalarExistentialFormula(IA_L, VariableMin(3), <=, 0)
 
 branch = DTInternal(2, decision1, cls_leaf, cls_leaf)
 branch = DTInternal(2, decision2, cls_leaf, branch)
