@@ -70,7 +70,7 @@ Sole = "0.5"
 SoleBase = "0.12"
 SoleData = "0.14"
 SoleLogics = "0.9"
-SoleModels = "0.7"
+SoleModels = "0.7, 0.8"
 StatsBase = "0.30 - 0.34"
 Suppressor = "0.2"
 Tables = "1"
@@ -79,6 +79,7 @@ julia = "1"
 
 [extras]
 ARFFFiles = "da404889-ca92-49ff-9e8b-0aa6b4d38dc8"
+D3Trees = "e3df1716-f71e-5df9-9e2d-98e193103c45"
 HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 ImageFiltering = "6a3955dd-da59-5b1f-98d4-e7296123deb5"
 Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
@@ -92,7 +93,6 @@ PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 RDatasets = "ce6b1742-4840-55fa-b093-852dadbb1d8b"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 ZipFile = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
-D3Trees = "e3df1716-f71e-5df9-9e2d-98e193103c45"
 
 [targets]
 test = ["ARFFFiles", "HTTP", "ImageFiltering", "Images", "InteractiveUtils", "LinearAlgebra", "MLDatasets", "Markdown", "PlutoUI", "RDatasets", "Test", "ZipFile", "MLJ", "MLJBase", "D3Trees"]
