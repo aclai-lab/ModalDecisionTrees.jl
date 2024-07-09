@@ -143,7 +143,9 @@ A DecisionTree model can be visualized using the print_tree-function of its nati
 - [ ]  Visualizations of modal rules/patterns
 <!-- - [x]  AbstractTrees interface -->
 
-## Theoretical foundations
+## Want to know more?
+
+[Della Monica, Dario, et al. "Decision trees with a modal flavor." International Conference of the Italian Association for Artificial Intelligence. Cham: Springer International Publishing, 2022.](https://link.springer.com/chapter/10.1007/978-3-031-27181-6_4)
 
 Most of the works in *symbolic learning* are based either on Propositional Logics (PLs) or First-order Logics (FOLs); PLs are the simplest kind of logic and can only handle *tabular data*, while FOLs can express complex entity-relation concepts. Machine Learning with FOLs enables handling data with complex topologies, such as time series, images, or videos; however, these logics are computationally challenging. Instead, Modal Logics (e.g. [Interval Logic](https://en.wikipedia.org/wiki/Interval_temporal_logic)) represent a perfect trade-off in terms of computational tractability and expressive power, and naturally lend themselves for expressing some forms of *temporal/spatial reasoning*.
 
