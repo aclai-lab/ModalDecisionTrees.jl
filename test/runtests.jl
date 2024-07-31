@@ -32,13 +32,15 @@ end
 
 test_suites = [
     ("Base", ["base.jl"]),
-    ("Classification", [
-        "classification/iris.jl",
-        "classification/iris-params.jl",
+    ("Classification, modal", [
         "classification/japanesevowels.jl",
         "classification/digits.jl",
         "classification/mnist.jl",
         # "classification/demo-juliacon2022.jl",
+    ]),
+    ("Classification", [
+        "classification/iris.jl",
+        "classification/iris-params.jl",
     ]),
     ("Regression", [
         "regression/simple.jl",

@@ -8,6 +8,7 @@
 	newpurity = -newent
 
 Fixes:
+☐	Be careful! parse_tree parses 1.65e-8 as 1.65.
 ☐ Add tests for AbstractTrees: `using GraphicRecipes; plot(TreePlot(dtree), method = :tree, nodeshape = :ellipse)`
 ☐ Entropy: regression, fix variance-based loss, and test it; Finally understand how entropy works, and fix it!!! (check test-entropy.txt)
 

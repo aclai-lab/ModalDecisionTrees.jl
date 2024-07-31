@@ -119,8 +119,8 @@ struct DTLeaf{L<:Label} <: AbstractDecisionLeaf{L}
     DTLeaf(prediction::L, supp_labels::AbstractVector) where {L<:Label} = DTLeaf{L}(prediction, supp_labels)
 
     # create leaf without supporting labels
-    DTLeaf{L}(prediction) where {L<:Label} = DTLeaf{L}(prediction, [prediction])
-    DTLeaf(prediction::L) where {L<:Label} = DTLeaf{L}(prediction, [prediction])
+    DTLeaf{L}(prediction) where {L<:Label} = DTLeaf{L}(prediction, L[])
+    DTLeaf(prediction::L) where {L<:Label} = DTLeaf{L}(prediction, L[])
 
     # create leaf from supporting labels
     DTLeaf{L}(supp_labels::AbstractVector) where {L<:Label} = DTLeaf{L}(bestguess(L.(supp_labels)), supp_labels)

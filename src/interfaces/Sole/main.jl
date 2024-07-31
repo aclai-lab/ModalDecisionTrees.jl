@@ -266,10 +266,17 @@ function translate(
     #     end
     # end
 
+    forthnode_as_a_leaf = ModalDecisionTrees.this(forthnode)
+    this_as_a_leaf = translate(forthnode_as_a_leaf, initconditions, new_path, new_pos_path, ancestors, ancestor_formulas; shortform = shortform, optimize_shortforms = optimize_shortforms)
+
     info = merge(info, (;
-        this = translate(ModalDecisionTrees.this(forthnode), initconditions, new_path, new_pos_path, ancestors, ancestor_formulas; shortform = shortform, optimize_shortforms = optimize_shortforms),
-        supporting_labels = ModalDecisionTrees.supp_labels(forthnode),
+        this = this_as_a_leaf,
+        # supporting_labels = SoleModels.info(this_as_a_leaf, :supporting_labels),
+        supporting_labels = ModalDecisionTrees.supp_labels(forthnode_as_a_leaf),
+        # supporting_predictions = SoleModels.info(this_as_a_leaf, :supporting_predictions),
+        supporting_predictions = ModalDecisionTrees.predictions(forthnode_as_a_leaf),
     ))
+
     if !isnothing(shortform)
         # @show syntaxstring(shortform)
         info = merge(info, (;
