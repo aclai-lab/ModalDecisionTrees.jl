@@ -46,7 +46,7 @@ function _parse_tree(
     # _threshold_ex = "[^\\)\\s)]+" # TODO use smarter regex (e.g., https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch06s10.html )
     # Regex("[-+]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)") == r"[-+]?([0-9]+(\.[0-9]*)?|\.[0-9]+)"
     # _threshold_ex = "[-+]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)" # GOOD
-    _threshold_ex = "[-+]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)" # https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch06s10.html
+    _threshold_ex = "[-+]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:e?[-+]?)(?:[0-9]+)?" # https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch06s10.html
 
     _indentation_ex = "[ │]*[✔✘]"
     _metrics_ex = "\\(\\S*.*\\)"
@@ -59,8 +59,8 @@ function _parse_tree(
     
     leaf_ex            = "(?:\\S+)\\s+:\\s+\\d+/\\d+(?:\\s+(?:$(_metrics_ex)))?"
     leaf_ex__capturing = "(\\S+)\\s+:\\s+(\\d+)/(\\d+)(?:\\s+($(_metrics_ex)))?"
-    decision_ex            = "(?:⟨(?:\\S+)⟩\\s*)?(?:$(_decision_ex)|\\(\\s*$(_decision_ex)\\s*\\))"
-    decision_ex__capturing =   "(?:⟨(\\S+)⟩\\s*)?\\(?\\s*$(_decision_ex__capturing)\\s*\\)?"
+    decision_ex            = "SimpleDecision\\((?:⟨(?:\\S+)⟩\\s*)?(?:$(_decision_ex)|\\(\\s*$(_decision_ex)\\s*\\))\\)"
+    decision_ex__capturing =   "SimpleDecision\\((?:⟨(\\S+)⟩\\s*)?\\(?\\s*$(_decision_ex__capturing)\\s*\\)?\\)"
     # decision_ex__capturing =   "(?:⟨(\\S+)⟩\\s*)?\\s*($(_decision_ex__capturing)|\\(\\s*$(_decision_ex__capturing)\\s*\\))"
     
     # TODO default frame to 1
@@ -162,7 +162,7 @@ function _parse_tree(
         @assert !isnothing(m) && length(m) == 3 "Unexpected format encountered on line $(i_this_line+offset) when parsing decision: \"$(decision_str)\". Matches: $(m) Expected matches = 3"
         # print(repeat(" ", _depth))
         # println(m) 
-
+        # @show m[3]
         relation, feature_test_operator, threshold = m
         relation = _parse_relation(relation)
         feature, test_operator = _parse_feature_test_operator(feature_test_operator)

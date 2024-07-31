@@ -125,8 +125,8 @@ Base.@propagate_inbounds @resumable function generate_decisions(
     allow_propositional_decisions::Bool,
     allow_modal_decisions::Bool,
     allow_global_decisions::Bool,
-    modal_relations_inds::AbstractVector{<:Integer},
-    features_inds::AbstractVector{<:Integer},
+    modal_relations_inds::AbstractVector,
+    features_inds::AbstractVector,
     grouped_featsaggrsnops::AbstractVector{<:AbstractDict{<:Aggregator,<:AbstractVector{<:ScalarMetaCondition}}},
     grouped_featsnaggrs::AbstractVector{<:AbstractVector{Tuple{<:Integer,<:Aggregator}}},
 ) where {W<:AbstractWorld,U}
@@ -328,7 +328,7 @@ Base.@propagate_inbounds @resumable function generate_propositional_decisions(
     X::AbstractScalarLogiset{W,U,FT,FR},
     i_instances::AbstractVector{<:Integer},
     Sf::AbstractVector{<:AbstractWorlds{W}},
-    features_inds::AbstractVector{<:Integer},
+    features_inds::AbstractVector,
     grouped_featsaggrsnops::AbstractVector{<:AbstractDict{<:Aggregator,<:AbstractVector{<:ScalarMetaCondition}}},
     grouped_featsnaggrs::AbstractVector{<:AbstractVector{Tuple{<:Integer,<:Aggregator}}},
 ) where {W<:AbstractWorld,U,FT<:AbstractFeature,N,FR<:FullDimensionalFrame{N,W}}
@@ -395,8 +395,8 @@ Base.@propagate_inbounds @resumable function generate_modal_decisions(
     X::AbstractScalarLogiset{W,U,FT,FR},
     i_instances::AbstractVector{<:Integer},
     Sf::AbstractVector{<:AbstractWorlds{W}},
-    modal_relations_inds::AbstractVector{<:Integer},
-    features_inds::AbstractVector{<:Integer},
+    modal_relations_inds::AbstractVector,
+    features_inds::AbstractVector,
     grouped_featsaggrsnops::AbstractVector{<:AbstractDict{<:Aggregator,<:AbstractVector{<:ScalarMetaCondition}}},
     grouped_featsnaggrs::AbstractVector{<:AbstractVector{Tuple{<:Integer,<:Aggregator}}},
 ) where {W<:AbstractWorld,U,FT<:AbstractFeature,N,FR<:FullDimensionalFrame{N,W}}
@@ -482,7 +482,7 @@ Base.@propagate_inbounds @resumable function generate_global_decisions(
     X::AbstractScalarLogiset{W,U,FT,FR},
     i_instances::AbstractVector{<:Integer},
     Sf::AbstractVector{<:AbstractWorlds{W}},
-    features_inds::AbstractVector{<:Integer},
+    features_inds::AbstractVector,
     grouped_featsaggrsnops::AbstractVector{<:AbstractDict{<:Aggregator,<:AbstractVector{<:ScalarMetaCondition}}},
     grouped_featsnaggrs::AbstractVector{<:AbstractVector{Tuple{<:Integer,<:Aggregator}}},
 ) where {W<:AbstractWorld,U,FT<:AbstractFeature,N,FR<:FullDimensionalFrame{N,W}}
