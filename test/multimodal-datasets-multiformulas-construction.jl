@@ -177,6 +177,8 @@ using MLJ
 using DataFrames
 using SoleModels
 using Random
+using Test
+using Logging
 
 N = 5
 
