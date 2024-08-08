@@ -22,8 +22,9 @@ using Memoization
 # MDTv1 translation
 ############################################################################################
 
-function build_antecedent(a::MultiFormula, initconditions)
-    MultiFormula(Dict([i_mod => anchor(f, initconditions[i_mod]) for (i_mod, f) in modforms(a)]))
+function build_antecedent(a::MultiFormula, initconditions; mono::Bool = false)
+    mono && return SyntaxTree(modforms(a)[1])
+    return MultiFormula(Dict([i_mod => anchor(f, initconditions[i_mod]) for (i_mod, f) in modforms(a)]))
 end
 
 function translate(model::SoleModels.AbstractModel; kwargs...)
@@ -74,6 +75,7 @@ function translate(
     info = (;),
     shortform = nothing,
     optimize_shortforms = nothing,
+    mono::Bool = false
 )
     info = merge(info, (;
         supporting_labels      = ModalDecisionTrees.supp_labels(tree),
@@ -81,7 +83,7 @@ function translate(
     ))
     if !isnothing(shortform)
         info = merge(info, (;
-            shortform = build_antecedent(shortform, initconditions),
+            shortform = build_antecedent(shortform, initconditions; mono=mono),
         ))
     end
     return SoleModels.ConstantModel(ModalDecisionTrees.prediction(tree), info)
@@ -94,6 +96,7 @@ function translate(
     info = (;),
     shortform = nothing,
     optimize_shortforms = nothing,
+    mono::Bool = false
 )
     info = merge(info, (;
         supporting_labels      = ModalDecisionTrees.supp_labels(tree),
@@ -101,7 +104,7 @@ function translate(
     ))
     if !isnothing(shortform)
         info = merge(info, (;
-            shortform = build_antecedent(shortform, initconditions),
+            shortform = build_antecedent(shortform, initconditions; mono=mono),
         ))
     end
     return SoleModels.FunctionModel(ModalDecisionTrees.predicting_function(tree), info)
@@ -120,7 +123,8 @@ function translate(
     ancestor_formulas::Vector = [];
     info = (;),
     shortform::Union{Nothing,MultiFormula} = nothing,
-    optimize_shortforms::Bool = true
+    optimize_shortforms::Bool = true,
+    mono::Bool = false
 ) where {L,D<:AbstractDecision}
     if D<:RestrictedDecision
         forthnode = node
@@ -267,7 +271,7 @@ function translate(
     # end
 
     forthnode_as_a_leaf = ModalDecisionTrees.this(forthnode)
-    this_as_a_leaf = translate(forthnode_as_a_leaf, initconditions, new_path, new_pos_path, ancestors, ancestor_formulas; shortform = shortform, optimize_shortforms = optimize_shortforms)
+    this_as_a_leaf = translate(forthnode_as_a_leaf, initconditions, new_path, new_pos_path, ancestors, ancestor_formulas; shortform = shortform, optimize_shortforms = optimize_shortforms, mono=mono)
 
     info = merge(info, (;
         this = this_as_a_leaf,
@@ -280,14 +284,14 @@ function translate(
     if !isnothing(shortform)
         # @show syntaxstring(shortform)
         info = merge(info, (;
-            shortform = build_antecedent(shortform, initconditions),
+            shortform = build_antecedent(shortform, initconditions; mono=mono),
         ))
     end
 
     SoleModels.Branch(
-        build_antecedent(φl, initconditions),
-        translate(left(forthnode), initconditions, new_path, new_pos_path, new_ancestors, new_ancestor_formulas; shortform = pos_shortform, optimize_shortforms = optimize_shortforms),
-        translate(right(forthnode), initconditions, new_path, pos_path, new_ancestors, new_ancestor_formulas; shortform = neg_shortform, optimize_shortforms = optimize_shortforms),
+        build_antecedent(φl, initconditions; mono=mono),
+        translate(left(forthnode), initconditions, new_path, new_pos_path, new_ancestors, new_ancestor_formulas; shortform = pos_shortform, optimize_shortforms = optimize_shortforms, mono=mono),
+        translate(right(forthnode), initconditions, new_path, pos_path, new_ancestors, new_ancestor_formulas; shortform = neg_shortform, optimize_shortforms = optimize_shortforms, mono=mono),
         info
     )
 end
@@ -401,12 +405,12 @@ end
 #     if !isnothing(shortform)
 #         # @show syntaxstring(shortform)
 #         info = merge(info, (;
-#             shortform = build_antecedent(shortform, initconditions),
+#             shortform = build_antecedent(shortform, initconditions; mono=mono),
 #         ))
 #     end
 
 #     SoleModels.Branch(
-#         build_antecedent(φl, initconditions),
+#         build_antecedent(φl, initconditions; mono=mono),
 #         translate(left(node), initconditions, new_all_ancestors, new_all_ancestor_formulas, new_pos_ancestors; shortform = pos_shortform, optimize_shortforms = optimize_shortforms),
 #         translate(right(node), initconditions, new_all_ancestors, new_all_ancestor_formulas, pos_ancestors; shortform = neg_shortform, optimize_shortforms = optimize_shortforms),
 #         info
