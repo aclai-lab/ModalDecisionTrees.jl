@@ -42,9 +42,8 @@ acc = sum(yhat .== y[test_idxs])/length(yhat)
 
 @test acc >= 0.8
 
-@test_nowarn report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = [('A':('A'+nvars))], threshold_digits = 2))
+@test_nowarn report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = ('A':('A'+nvars)), threshold_digits = 2))
 
-@test_throws BoundsError report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = [["a", "b"]]))
 @test_throws BoundsError report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = ["a", "b"]))
 @test_nowarn report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = 'A':('A'+nvars)))
 @test_nowarn report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = collect('A':('A'+nvars))))
@@ -55,7 +54,7 @@ acc = sum(yhat .== y[test_idxs])/length(yhat)
 @test_nowarn listrules(report(mach).model; use_shortforms=false)
 @test_nowarn listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true)
 @test_nowarn listrules(report(mach).model; use_shortforms=false, use_leftmostlinearform = true)
-@test_throws ErrorException listrules(report(mach).model; use_shortforms=false, use_leftmostlinearform = true, force_syntaxtree = true)
+@test_nowarn listrules(report(mach).model; use_shortforms=false, use_leftmostlinearform = true, force_syntaxtree = true)
 
 # Access raw model
 fitted_params(mach).rawmodel;

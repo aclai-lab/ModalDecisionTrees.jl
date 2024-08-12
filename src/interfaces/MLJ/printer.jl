@@ -41,11 +41,12 @@ function (c::ModelPrinter)(
     hidemodality = (isnothing(c.var_grouping) || length(c.var_grouping) == 1),
     kwargs...
 )
+    variable_names_map = (isnothing(c.var_grouping) || c.m.ensure_multimodal) ? c.var_grouping : first(values(c.var_grouping))
     more_kwargs = begin
         if model isa Union{MDT.DForest,MDT.DTree,MDT.DTNode}
-            (; variable_names_map = c.var_grouping, max_depth = max_depth)
+            (; variable_names_map = variable_names_map, max_depth = max_depth)
         elseif model isa SoleModels.AbstractModel
-            (; max_depth = max_depth, syntaxstring_kwargs = (variable_names_map = c.var_grouping, hidemodality = hidemodality))
+            (; max_depth = max_depth, syntaxstring_kwargs = (variable_names_map = variable_names_map, hidemodality = hidemodality))
         else
             error("Unexpected model type $(model)")
         end

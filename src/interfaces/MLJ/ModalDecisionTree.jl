@@ -51,6 +51,7 @@ mutable struct ModalDecisionTree <: MMI.Probabilistic
     downsize               :: Union{Bool,NTuple{N,Integer} where N,Function}
     print_progress         :: Bool
     rng                    :: Union{Random.AbstractRNG,Integer}
+    ensure_multimodal      :: Bool
 
     ## DecisionTree.jl parameters
     display_depth          :: Union{Nothing,Int}
@@ -78,6 +79,7 @@ function ModalDecisionTree(;
     downsize = true,
     print_progress = false,
     rng = Random.GLOBAL_RNG,
+    ensure_multimodal = false,
     #
     display_depth = nothing,
     min_samples_split = nothing,
@@ -102,6 +104,7 @@ function ModalDecisionTree(;
         downsize,
         print_progress,
         rng,
+        ensure_multimodal,
         #
         display_depth,
         min_samples_split,

@@ -96,9 +96,9 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
 
     verbosity < 2 || MDT.printmodel(model; max_depth = m.display_depth, variable_names_map = var_grouping)
 
-    translate_function = m->ModalDecisionTrees.translate(m, (;
+    translate_function = rawmodel->ModalDecisionTrees.translate(rawmodel, (;
         # syntaxstring_kwargs = (; hidemodality = (length(var_grouping) == 1), variable_names_map = var_grouping)
-    ), mono = nmodalities(X) == 1 ? true : false)
+    ), ensure_multimodal = (m.ensure_multimodal && nmodalities(X) > 1))
 
     rawmodel_full = model
     rawmodel = MDT.prune(model; simplify = true)

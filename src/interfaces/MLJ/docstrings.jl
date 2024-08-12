@@ -84,23 +84,14 @@ Train the machine with `fit!(mach)`.
 # Hyper-parameters
 
 $(forest_hyperparams_str)
-
 - `max_depth=-1`:          Maximum depth of the decision tree (-1=any)
-
 - `min_samples_leaf=$(default_min_samples_leaf)`:    Minimum number of samples required at each leaf
-
 - `min_purity_increase=$(default_min_purity_increase)`: Minimum value for the loss function needed for a split
-
 - `max_purity_at_leaf=$(default_max_purity_at_leaf)`: Minimum value for the loss function needed for a split
-
 - `max_modal_depth=-1`:          Maximum modal depth of the decision tree (-1=any). When this depth is reached, only propositional decisions are taken.
-
 $(n_subfeatures_str)
-
 - `feature=[minimum, maximum]`  Feature functions to be used by the tree to mine scalar conditions (e.g., `minimum[V2] ≥ 10`)
-
 - `featvaltype=Float64`     Output type for feature functions, when it cannot be inferred (e.g., with custom feature functions provided).
-
 - `relations=nothing`       Relations that the model uses to look for patterns; it can be a symbol in [:IA, :IA3, :IA7, :RCC5, :RCC8],
                             where :IA stands for [Allen's Interval Algebra](https://en.wikipedia.org/wiki/Allen%27s_interval_algebra) (13 relations in 1D, 169 relations in 2D),
                             :IA3 and :IA7 are [coarser fragments with 3 and 7 relations, respectively](https://www.sciencedirect.com/science/article/pii/S0004370218305964),
@@ -108,27 +99,21 @@ $(n_subfeatures_str)
                             Relations from :IA, :IA3, :IA7, capture directional aspects of the relative arrangement of two intervals in time (or rectangles in a 2D space),
                              while relations from :RCC5 and :RCC8 only capture topological aspects and are therefore rotation and flip-invariant.
                             This hyper-parameter defaults to $(mlj_default_relations_str).
-
 - `initconditions=nothing` initial conditions for evaluating modal decisions at the root; it can be a symbol in [:start_with_global, :start_at_center].
                             :start_with_global forces the first decision to be a *global* decision (e.g., `⟨G⟩ (minimum[V2] ≥ 10)`, which translates to "there exists a region where the minimum of variable 2 is higher than 10").
                             :start_at_center forces the first decision to be evaluated on the smallest central world, that is, the central value of a time-series, or the central pixel of an image.
                             This hyper-parameter defaults to $(mlj_default_initconditions_str).
-
 - `downsize=true` Whether to perform automatic downsizing, by means of moving average. In fact, this algorithm has high complexity
     (both time and space), and can only handle small time-series (< 100 points) & small images (< 10 x 10 pixels).
     When set to `true`, automatic downsizing is performed; when it is an `NTuple` of `Integer`s, a downsizing of dimensional data
     to match that size is performed.
-
 - `print_progress=false`:  set to `true` for a progress bar
-
 - `post_prune=false`:      set to `true` for post-fit pruning
-
 - `merge_purity_threshold=1.0`: (post-pruning) merge leaves having
                            combined purity `>= merge_purity_threshold`
-
 - `display_depth=5`:       max depth to show when displaying the tree(s)
-
 - `rng=Random.GLOBAL_RNG`: random number generator or seed
+- `ensure_multimodal=false`:       forces the resulting Sole tree's (e.g., the fitresult's `solemodel`) to be based on multiformulas
 
 """
 end
@@ -237,6 +222,7 @@ $(docstring_piece_1(ModalRandomForest))
 - `ntrees=$(mlj_mrf_default_ntrees)`                   Number of trees in the forest.
 - `sampling_fraction=0.7`          Fraction of samples to train each tree on.
 - `rng=Random.GLOBAL_RNG`          Random number generator or seed.
+- `ensure_multimodal=false`:       forces the resulting Sole tree's (e.g., the fitresult's `solemodel`) to be based on multiformulas
 
 # Operations
 - `predict(mach, Xnew)`: return predictions of the target given
