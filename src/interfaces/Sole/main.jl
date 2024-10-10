@@ -75,7 +75,7 @@ function translate(
     info = (;),
     shortform = nothing,
     optimize_shortforms = nothing,
-    ensure_multimodal::Bool = false
+    ensure_multimodal::Bool = false,
 )
     info = merge(info, (;
         supporting_labels      = ModalDecisionTrees.supp_labels(tree),
@@ -124,7 +124,7 @@ function translate(
     info = (;),
     shortform::Union{Nothing,MultiFormula} = nothing,
     optimize_shortforms::Bool = true,
-    ensure_multimodal::Bool = false
+    ensure_multimodal::Bool = false,
 ) where {L,D<:AbstractDecision}
     if D<:RestrictedDecision
         forthnode = node
