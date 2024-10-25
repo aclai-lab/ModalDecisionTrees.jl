@@ -22,6 +22,7 @@ makedocs(;
 
 deploydocs(;
     repo = "github.com/aclai-lab/ModalDecisionTrees.jl",
+    devbranch = "dev",
     target = "build",
     branch = "gh-pages",
     versions = ["main" => "main", "stable" => "v^", "v#.#", "dev" => "dev"],

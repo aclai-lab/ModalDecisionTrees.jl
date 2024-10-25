@@ -375,7 +375,7 @@ function _variable_countmap(node::DTInternal{L}; weighted = false) where {L<:Lab
         d = decision(node)
         f = feature(d)
         (f isa AbstractUnivariateFeature) ?
-            [((i_modality(node), f.i_variable), (weighted ? length(supp_labels) : 1)),] : []
+        [((i_modality(node), i_variable(f)), (weighted ? length(supp_labels) : 1))] : []
     end
     return [
         th...,

@@ -59,7 +59,7 @@ begin
 	report(mach).printmodel(false)
 
 	# Feature importances
-	feature_importances(mach)
+feature_importances(mach)
 end
 
 # ╔═╡ b6d6ed79-9abc-47a6-bbbc-1a1610ffb830
