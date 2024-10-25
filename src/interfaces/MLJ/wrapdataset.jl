@@ -142,7 +142,8 @@ function wrapdataset(
                             use_onestep_memoization = true,
                             conditions = _metaconditions,
                             relations = readrelations(model, mod),
-                            print_progress = (ninstances(X) > 500)
+                            print_progress = (ninstances(X) > 500),
+                            # force_i_variables=model.force_i_variables,
                         )
                     end for mod in eachmodality(X)
                 ])

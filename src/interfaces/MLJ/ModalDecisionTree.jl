@@ -60,6 +60,7 @@ mutable struct ModalDecisionTree <: MMI.Probabilistic
     post_prune             :: Bool
     merge_purity_threshold :: Union{Nothing,Float64}
     feature_importance     :: Symbol
+    # force_i_variables      :: Bool
 end
 
 # keyword constructor
@@ -87,6 +88,7 @@ function ModalDecisionTree(;
     post_prune = false,
     merge_purity_threshold = nothing,
     feature_importance = :split,
+    force_i_variables:: Bool = false,
 )
     model = ModalDecisionTree(
         max_depth,
@@ -112,6 +114,7 @@ function ModalDecisionTree(;
         post_prune,
         merge_purity_threshold,
         feature_importance,
+        # force_i_variables,
     )
     message = MMI.clean!(model)
     isempty(message) || @warn message

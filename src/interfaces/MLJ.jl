@@ -96,15 +96,21 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
 
     verbosity < 2 || MDT.printmodel(model; max_depth = m.display_depth, variable_names_map = var_grouping)
 
-    translate_function = rawmodel->ModalDecisionTrees.translate(rawmodel, (;
-        # syntaxstring_kwargs = (; hidemodality = (length(var_grouping) == 1), variable_names_map = var_grouping)
-    ), ensure_multimodal = (m.ensure_multimodal && nmodalities(X) > 1))
+    translate_function = (rawmodel)-> 
+        ModalDecisionTrees.translate(
+            rawmodel,
+            ensure_multimodal = (m.ensure_multimodal && nmodalities(X) > 1);
+            # variable_names_map = variable_names_map
+            # syntaxstring_kwargs = (; hidemodality = (length(var_grouping) == 1))
+        )
 
     rawmodel_full = model
     rawmodel = MDT.prune(model; simplify = true)
 
-    solemodel_full = translate_function(model)
-    solemodel = translate_function(rawmodel)
+    # solemodel_full = translate_function(model; variable_names_map=nothing)
+    # solemodel = translate_function(rawmodel; variable_names_map=nothing)
+    solemodel = DecisionTree{String}
+    solemodel_full = DecisionTree{String}
 
     fitresult = (
         model         = model,
@@ -113,11 +119,10 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
         var_grouping  = var_grouping,
     )
 
-    printer = ModelPrinter(m, model, solemodel, var_grouping)
+    # printer = ModelPrinter(m, model, solemodel, var_grouping)
 
     cache  = nothing
     report = (
-        printmodel                  = printer,
         sprinkle                    = (Xnew, ynew; simplify = false)->begin
             (Xnew, ynew, var_grouping, classes_seen, w) = MMI.reformat(m, Xnew, ynew; passive_mode = true)
             preds, sprinkledmodel = ModalDecisionTrees.sprinkle(model, Xnew, ynew)
@@ -131,11 +136,14 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
         model_full                  = solemodel_full,
         rawmodel                    = rawmodel,
         rawmodel_full               = rawmodel_full,
-        solemodel                   = solemodel,
-        solemodel_full              = solemodel_full,
+        # solemodel                   = solemodel,
+        # solemodel_full              = solemodel_full,
+        solemodel                   = hasfield(typeof(solemodel), :root) ? solemodel : translate_function(model),
+        solemodel_full              = hasfield(typeof(solemodel_full), :root) ? solemodel_full : translate_function(rawmodel),
         var_grouping                = var_grouping,
+        printmodel                  = (m, model, solemodel, var_grouping)->ModelPrinter(m, model, solemodel, var_grouping),
         # LEGACY with JuliaIA/DecisionTree.jl
-        print_tree                  = printer,
+        print_tree                  = (m, model, solemodel, var_grouping)->ModelPrinter(m, model, solemodel, var_grouping),
         # features                    = ?,
     )
 
