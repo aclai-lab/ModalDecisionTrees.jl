@@ -100,7 +100,7 @@ function MMI.clean!(m::SymbolicModel)
     
     m.relations, _w = SoleData.autorelations(m.relations); warning *= _w
     m.conditions, _w = SoleData.autoconditions(m.conditions); warning *= _w
-    m.downsize, _w = SoleData.autodownsize(m.downsize); warning *= _w
+    m.downsize, _w = SoleData.autodownsize(m); warning *= _w
 
     if !(isnothing(m.initconditions) ||
         m.initconditions isa Symbol && m.initconditions in keys(AVAILABLE_INITCONDITIONS) ||
