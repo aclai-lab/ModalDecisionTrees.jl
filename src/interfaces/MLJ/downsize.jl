@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 using StatsBase
 using StatsBase: mean
 using SoleBase: movingwindow
@@ -10,6 +11,11 @@ function make_downsizing_function(channelsize::NTuple)
         return moving_average(instance, channelsize)
     end
 end
+=======
+# using SoleData: make_downsizing_function
+import SoleData: make_downsizing_function
+
+>>>>>>> Stashed changes
 
 function make_downsizing_function(::TreeModel)
     function downsize(instance)
