@@ -113,7 +113,7 @@ $(n_subfeatures_str)
 - `initconditions=nothing` initial conditions for evaluating modal decisions at the root; it can be a symbol in [:start_with_global, :start_at_center].
                             :start_with_global forces the first decision to be a *global* decision (e.g., `⟨G⟩ (minimum[V2] ≥ 10)`, which translates to "there exists a region where the minimum of variable 2 is higher than 10").
                             :start_at_center forces the first decision to be evaluated on the smallest central world, that is, the central value of a time-series, or the central pixel of an image.
-                            This hyper-parameter defaults to $(SoleData.mlj_default_initconditions_str)
+                            This hyper-parameter defaults to ...UPDATE THIS!
 
 - `downsize=true` Whether to perform automatic downsizing, by means of moving average. In fact, this algorithm has high complexity
     (both time and space), and can only handle small time-series (< 100 points) & small images (< 10 x 10 pixels).

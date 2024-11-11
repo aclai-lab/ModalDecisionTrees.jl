@@ -1,4 +1,6 @@
-using SoleData: make_downsizing_function
+# using SoleData: make_downsizing_function
+import SoleData: make_downsizing_function
+
 
 function make_downsizing_function(::TreeModel)
     make_downsizing_function(Val(1))
