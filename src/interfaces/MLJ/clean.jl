@@ -88,22 +88,6 @@ function MMI.clean!(m::SymbolicModel)
     ########################################################################################
     ########################################################################################
     ########################################################################################
-
-    if !(isnothing(m.relations) ||
-        m.relations isa Symbol && m.relations in keys(AVAILABLE_RELATIONS) ||
-        m.relations isa Vector{<:AbstractRelation} ||
-        m.relations isa Function
-    )
-        warning *= "relations should be in $(collect(keys(AVAILABLE_RELATIONS))) " *
-            "or a vector of SoleLogics.AbstractRelation's, " *
-            "but $(m.relations) " *
-            "was provided. Defaulting to $(mlj_default_relations_str).\n"
-        m.relations = nothing
-    end
-
-    isnothing(m.relations)                      && (m.relations  = mlj_default_relations)
-    m.relations isa Vector{<:AbstractRelation}  && (m.relations  = m.relations)
-
     # Patch name: features -> conditions
     if !isnothing(m.features)
         if !isnothing(m.conditions)
@@ -113,24 +97,10 @@ function MMI.clean!(m::SymbolicModel)
         m.conditions = m.features
         m.features = nothing
     end
-
-    if !(isnothing(m.conditions) ||
-        m.conditions isa Vector{<:Union{SoleData.VarFeature,Base.Callable}} ||
-        m.conditions isa Vector{<:Tuple{Base.Callable,Integer}} ||
-        m.conditions isa Vector{<:Tuple{TestOperator,<:Union{SoleData.VarFeature,Base.Callable}}} ||
-        m.conditions isa Vector{<:SoleData.ScalarMetaCondition}
-    )
-        warning *= "conditions should be either:" *
-            "a) a vector of features (i.e., callables to be associated to all variables, or SoleData.VarFeature objects);\n" *
-            "b) a vector of tuples (callable,var_id);\n" *
-            "c) a vector of tuples (test_operator,features);\n" *
-            "d) a vector of SoleData.ScalarMetaCondition;\n" *
-            "but $(m.conditions) " *
-            "was provided. Defaulting to $(mlj_default_conditions_str).\n"
-        m.conditions = nothing
-    end
-
-    isnothing(m.conditions) && (m.conditions  = mlj_default_conditions)
+    
+    m.relations, _w = SoleData.autorelations(m.relations); warning *= _w
+    m.conditions, _w = SoleData.autoconditions(m.conditions); warning *= _w
+    m.downsize, _w = SoleData.autodownsize(m.downsize); warning *= _w
 
     if !(isnothing(m.initconditions) ||
         m.initconditions isa Symbol && m.initconditions in keys(AVAILABLE_INITCONDITIONS) ||
@@ -147,20 +117,6 @@ function MMI.clean!(m::SymbolicModel)
     ########################################################################################
     ########################################################################################
     ########################################################################################
-
-    m.downsize = begin
-        if m.downsize == true
-            make_downsizing_function(m)
-        elseif m.downsize == false
-            identity
-        elseif m.downsize isa NTuple{N,Integer} where N
-            make_downsizing_function(m.downsize)
-        elseif m.downsize isa Function
-            m.downsize
-        else
-            error("Unexpected value for `downsize` encountered: $(m.downsize)")
-        end
-    end
 
     if m.rng isa Integer
         m.rng = Random.MersenneTwister(m.rng)
