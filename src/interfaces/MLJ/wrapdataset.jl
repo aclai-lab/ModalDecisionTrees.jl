@@ -19,7 +19,8 @@ function wrapdataset(
     X,
     model,
     force_var_grouping::Union{Nothing,AbstractVector{<:AbstractVector}} = nothing;
-    passive_mode = false
+    passive_mode = false,
+    kwargs...
 )
     if X isa MultiLogiset
         if !isnothing(force_var_grouping)
@@ -142,7 +143,8 @@ function wrapdataset(
                             use_onestep_memoization = true,
                             conditions = _metaconditions,
                             relations = readrelations(model, mod),
-                            print_progress = (ninstances(X) > 500)
+                            print_progress = (ninstances(X) > 500),
+                            kwargs...
                         )
                     end for mod in eachmodality(X)
                 ])

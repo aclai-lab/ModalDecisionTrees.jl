@@ -70,13 +70,13 @@ depth(t::MDT.DTree) = height(t)
 ############################################################################################
 ############################################################################################
 
-function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, classes_seen=nothing, w=nothing)
+function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, classes_seen=nothing, w=nothing; kwargs...)
     # @show get_kwargs(m, X)
     model = begin
         if m isa ModalDecisionTree
-            MDT.build_tree(X, y, w; get_kwargs(m, X)...)
+            MDT.build_tree(X, y, w; get_kwargs(m, X)..., kwargs...)
         elseif m isa ModalRandomForest
-            MDT.build_forest(X, y, w; get_kwargs(m, X)...)
+            MDT.build_forest(X, y, w; get_kwargs(m, X)..., kwargs...)
         else
             error("Unexpected model type: $(typeof(m))")
         end
@@ -172,8 +172,8 @@ end
 # DATA FRONT END
 ############################################################################################
 
-function MMI.reformat(m::SymbolicModel, X, y, w = nothing; passive_mode = false)
-    X, var_grouping = wrapdataset(X, m; passive_mode = passive_mode)
+function MMI.reformat(m::SymbolicModel, X, y, w = nothing; passive_mode = false, kwargs...)
+    X, var_grouping = wrapdataset(X, m; passive_mode = passive_mode, kwargs...)
     y, classes_seen = fix_y(y)
     (X, y, var_grouping, classes_seen, w)
 end

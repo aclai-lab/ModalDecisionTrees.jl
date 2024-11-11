@@ -129,24 +129,25 @@ Base.@propagate_inbounds @resumable function generate_decisions(
     features_inds::AbstractVector,
     grouped_featsaggrsnops::AbstractVector{<:AbstractDict{<:Aggregator,<:AbstractVector{<:ScalarMetaCondition}}},
     grouped_featsnaggrs::AbstractVector{<:AbstractVector{Tuple{<:Integer,<:Aggregator}}},
+    fixnans::Bool,
 ) where {W<:AbstractWorld,U}
     # Propositional splits
     if allow_propositional_decisions
-        for decision in generate_propositional_decisions(X, i_instances, Sf, features_inds, grouped_featsaggrsnops, grouped_featsnaggrs)
+        for decision in generate_propositional_decisions(X, i_instances, Sf, features_inds, grouped_featsaggrsnops, grouped_featsnaggrs; fixnans=fixnans)
             # @logmsg LogDebug " Testing decision: $(displaydecision(decision))"
             @yield decision
         end
     end
     # Global splits
     if allow_global_decisions
-        for decision in generate_global_decisions(X, i_instances, Sf, features_inds, grouped_featsaggrsnops, grouped_featsnaggrs)
+        for decision in generate_global_decisions(X, i_instances, Sf, features_inds, grouped_featsaggrsnops, grouped_featsnaggrs; fixnans=fixnans)
             # @logmsg LogDebug " Testing decision: $(displaydecision(decision))"
             @yield decision
         end
     end
     # Modal splits
     if allow_modal_decisions
-        for decision in generate_modal_decisions(X, i_instances, Sf, modal_relations_inds, features_inds, grouped_featsaggrsnops, grouped_featsnaggrs)
+        for decision in generate_modal_decisions(X, i_instances, Sf, modal_relations_inds, features_inds, grouped_featsaggrsnops, grouped_featsnaggrs; fixnans=fixnans)
             # @logmsg LogDebug " Testing decision: $(displaydecision(decision))"
             @yield decision
         end
@@ -330,7 +331,8 @@ Base.@propagate_inbounds @resumable function generate_propositional_decisions(
     Sf::AbstractVector{<:AbstractWorlds{W}},
     features_inds::AbstractVector,
     grouped_featsaggrsnops::AbstractVector{<:AbstractDict{<:Aggregator,<:AbstractVector{<:ScalarMetaCondition}}},
-    grouped_featsnaggrs::AbstractVector{<:AbstractVector{Tuple{<:Integer,<:Aggregator}}},
+    grouped_featsnaggrs::AbstractVector{<:AbstractVector{Tuple{<:Integer,<:Aggregator}}};
+    fixnans::Bool=false,
 ) where {W<:AbstractWorld,U,FT<:AbstractFeature,N,FR<:FullDimensionalFrame{N,W}}
     relation = identityrel
     _ninstances = length(i_instances)
@@ -398,7 +400,8 @@ Base.@propagate_inbounds @resumable function generate_modal_decisions(
     modal_relations_inds::AbstractVector,
     features_inds::AbstractVector,
     grouped_featsaggrsnops::AbstractVector{<:AbstractDict{<:Aggregator,<:AbstractVector{<:ScalarMetaCondition}}},
-    grouped_featsnaggrs::AbstractVector{<:AbstractVector{Tuple{<:Integer,<:Aggregator}}},
+    grouped_featsnaggrs::AbstractVector{<:AbstractVector{Tuple{<:Integer,<:Aggregator}}};
+    fixnans::Bool=false,
 ) where {W<:AbstractWorld,U,FT<:AbstractFeature,N,FR<:FullDimensionalFrame{N,W}}
     _ninstances = length(i_instances)
 
@@ -441,7 +444,7 @@ Base.@propagate_inbounds @resumable function generate_modal_decisions(
                             if true
                                 # _featchannel = featchannel(base(X), i_instance, i_feature)
                                 # featchannel_onestep_aggregation(X, _featchannel, i_instance, w, relation, feature(metacondition), aggregator)
-                                featchannel_onestep_aggregation(X, _featchannel, i_instance, w, relation, metacondition, i_metacond, i_relation)
+                                featchannel_onestep_aggregation(X, _featchannel, i_instance, w, relation, metacondition, i_metacond, i_relation; fixnans=fixnans)
                                 # onestep_aggregation(X, i_instance, w, relation, feature, aggregator, i_metacond, i_relation)
                             # elseif X isa UniformFullDimensionalLogiset
                             #      onestep_aggregation(X, i_instance, w, relation, feature, aggregator, i_metacond, i_relation)
@@ -484,7 +487,8 @@ Base.@propagate_inbounds @resumable function generate_global_decisions(
     Sf::AbstractVector{<:AbstractWorlds{W}},
     features_inds::AbstractVector,
     grouped_featsaggrsnops::AbstractVector{<:AbstractDict{<:Aggregator,<:AbstractVector{<:ScalarMetaCondition}}},
-    grouped_featsnaggrs::AbstractVector{<:AbstractVector{Tuple{<:Integer,<:Aggregator}}},
+    grouped_featsnaggrs::AbstractVector{<:AbstractVector{Tuple{<:Integer,<:Aggregator}}};
+    fixnans::Bool=false,
 ) where {W<:AbstractWorld,U,FT<:AbstractFeature,N,FR<:FullDimensionalFrame{N,W}}
     relation = globalrel
     _ninstances = length(i_instances)
@@ -531,7 +535,7 @@ Base.@propagate_inbounds @resumable function generate_global_decisions(
                 gamma = begin
                     if true
                         # _featchannel = featchannel(base(X), i_instance, i_feature)
-                        featchannel_onestep_aggregation(X, _featchannel, i_instance, SoleLogics.emptyworld(frame(X, i_instance)), relation, metacondition, i_metacond)
+                        featchannel_onestep_aggregation(X, _featchannel, i_instance, SoleLogics.emptyworld(frame(X, i_instance)), relation, metacondition, i_metacond; fixnans=fixnans)   
                         # onestep_aggregation(X, i_instance, dummyworldTODO, relation, feature, aggregator, i_metacond)
                     # elseif X isa UniformFullDimensionalLogiset
                     #     onestep_aggregation(X, i_instance, dummyworldTODO, relation, feature, aggregator, i_metacond)
