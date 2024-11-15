@@ -65,7 +65,7 @@ function wrapdataset(
             else
                 MultiData.dimensional2dataframe(X)
             end
-        elseif X isa SupportedLogiset
+        elseif SoleData.hassupports(X)
             X
         elseif X isa AbstractModalLogiset
             SupportedLogiset(X;
