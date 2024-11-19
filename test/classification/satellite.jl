@@ -104,7 +104,7 @@ end
 function _simplify(φ::SyntaxTree)
     if token(φ) in [CONJUNCTION, DISJUNCTION]
         φ = LeftmostLinearForm(φ)
-        chs = children(φ)
+        chs = SoleLogics.grandchildren(φ)
         for i in length(chs):-1:1
             ch1 = chs[i]
             for ch2 in chs
