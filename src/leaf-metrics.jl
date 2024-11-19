@@ -1,12 +1,24 @@
-using MLJ
+# TODO remove and use SoleModels.accuracy, SoleModels.mae, SoleModels.mse
+function _acc(y_pred, y_true)
+    @assert length(y_pred) == length(y_true)
+    return (sum(y_pred .== y_true)/length(y_pred))
+end
+function _mae(y_pred, y_true)
+    @assert length(y_pred) == length(y_true)
+    return (sum(abs.(y_true .- y_pred)) / length(y_true))
+end
+function _mse(y_pred, y_true)
+    @assert length(y_pred) == length(y_true)
+    return (sum((y_true .- y_pred).^2) / length(y_true))
+end
 
 function leafperformance(leaf::AbstractDecisionLeaf{L}) where {L}
     _gts = supp_labels(leaf)
     _preds = fill(prediction(leaf), length(_gts))
     if L <: CLabel
-        MLJ.accuracy(_gts, _preds)
+        _acc(_gts, _preds)
     elseif L <: RLabel
-        MLJ.mae(_gts, _preds)
+        _mse(_gts, _preds)
     else
         error("Could not compute leafperformance with unknown label type: $(L).")
     end
@@ -137,7 +149,8 @@ function get_metrics(
 
     n_inst = length(supporting_labels)
     
-    mae = MLJ.mae(supporting_labels, supporting_predictions)
+    mae = _mae(supporting_labels, supporting_predictions)
+    mse = _mse(supporting_labels, supporting_predictions)
     # sum(abs.(supporting_labels .- supporting_predictions)) / n_inst
     rmse = StatsBase.rmsd(supporting_labels, supporting_predictions)
     var = StatsBase.var(supporting_labels)
@@ -145,6 +158,7 @@ function get_metrics(
     metrics = merge(metrics, (
         n_inst = n_inst,
         mae = mae,
+        mse = mse,
         rmse = rmse,
         var = var,
     ))

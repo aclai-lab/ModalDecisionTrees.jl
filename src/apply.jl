@@ -1,3 +1,4 @@
+using MLJModelInterface: classes
 using StatsBase
 
 export apply_tree, apply_forest, apply_model, printapply, tree_walk_metrics

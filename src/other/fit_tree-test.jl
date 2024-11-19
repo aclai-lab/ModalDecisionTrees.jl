@@ -12,14 +12,14 @@ n_feats = n_vars*2
 n_pts = 5
 
 using SoleModels
-using SoleData: UnivariateMin, UnivariateMax
+using SoleData: VariableMin, VariableMax
 
 features  = []
 featsnops = []
 for i_var in 1:n_vars
-    push!(features, UnivariateMin(i_var))
+    push!(features, VariableMin(i_var))
     push!(featsnops, [≥])
-    push!(features, UnivariateMax(i_var))
+    push!(features, VariableMax(i_var))
     push!(featsnops, [<])
 end
 

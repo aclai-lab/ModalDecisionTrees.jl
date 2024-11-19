@@ -5,7 +5,14 @@ using SoleData
 using SoleModels
 using Test
 
-Xcube, y = CIFAR10(:test)[:]
+Xcube, y = begin
+    if MNIST isa Base.Callable # v0.7
+        CIFAR10(:test)[:]
+    else # v0.5
+        CIFAR10.testdata()
+    end
+end
+
 class_names = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
 y = map(_y-> class_names[_y+1], y)
 
@@ -30,7 +37,7 @@ model = ModalDecisionTree(;
     conditions = [minimum],
     # initconditions = :start_at_center,
     featvaltype = Float32,
-    downsize = (10,10), # (x)->ModalDecisionTrees.moving_average(x, (10,10))
+    downsize = (10,10), # (x)->ModalDecisionTrees.MLJInterface.moving_average(x, (10,10))
     # conditions = [minimum, maximum, UnivariateFeature{Float64}(recheight), UnivariateFeature{Float64}(recwidth)],
     # conditions = [minimum, maximum, UnivariateFeature{Float32}(1, recheight), UnivariateFeature{Float32}(1, recwidth)],
     print_progress = true,

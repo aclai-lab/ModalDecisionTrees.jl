@@ -1,4 +1,3 @@
-
 function parse_tree(
     tree_str::String;
     check_format = true,
@@ -46,34 +45,35 @@ function _parse_tree(
     # _threshold_ex = "[^\\)\\s)]+" # TODO use smarter regex (e.g., https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch06s10.html )
     # Regex("[-+]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)") == r"[-+]?([0-9]+(\.[0-9]*)?|\.[0-9]+)"
     # _threshold_ex = "[-+]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)" # GOOD
-    _threshold_ex = "[-+]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)"
+    _threshold_ex = "[-+]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:e?[-+]?)(?:[0-9]+)?" # https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch06s10.html
+
     _indentation_ex = "[ │]*[✔✘]"
     _metrics_ex = "\\(\\S*.*\\)"
-    _feature_ex             = "(?:\\S+)\\s+(?:(?:⫹|⫺|⪳|⪴|⪵|⪶|↗|↘|>|<|=|≤|≥|<=|>=))"
+    _feature_ex             = "(?:[^\\s\\(\\)]+)\\s+(?:(?:⫹|⫺|⪳|⪴|⪵|⪶|↗|↘|>|<|=|≤|≥|<=|>=))"
     _normal_feature_ex_capturing    = "^(\\S*)\\$openpar$V(\\d+)\\$closepar\\s+((?:>|<|=|≤|≥|<=|>=))\$"
     _propositional_feature_ex_capturing    = "^$V(\\d+)\\s+((?:>|<|=|≤|≥|<=|>=))\$"
     _special_feature_ex_capturing   = "^$V(\\d+)\\s+((?:⫹|⫺|⪳|⪴|⪵|⪶|↗|↘))\$"
-    _decision_ex            = "$(_feature_ex)\\s+(?:$(_threshold_ex))"
-    _decision_ex__capturing = "($(_feature_ex))\\s+($(_threshold_ex))"
-    
+    _decision_pr            = "$(_feature_ex)\\s+(?:$(_threshold_ex))"
+    _decision_pr__capturing = "($(_feature_ex))\\s+($(_threshold_ex))"
+
     leaf_ex            = "(?:\\S+)\\s+:\\s+\\d+/\\d+(?:\\s+(?:$(_metrics_ex)))?"
     leaf_ex__capturing = "(\\S+)\\s+:\\s+(\\d+)/(\\d+)(?:\\s+($(_metrics_ex)))?"
-    decision_ex            = "(?:⟨(?:\\S+)⟩\\s*)?(?:$(_decision_ex)|\\(\\s*$(_decision_ex)\\s*\\))"
-    decision_ex__capturing =   "(?:⟨(\\S+)⟩\\s*)?\\(?\\s*$(_decision_ex__capturing)\\s*\\)?"
-    # decision_ex__capturing =   "(?:⟨(\\S+)⟩\\s*)?\\s*($(_decision_ex__capturing)|\\(\\s*$(_decision_ex__capturing)\\s*\\))"
-    
+    decision_ex            = "(?:SimpleDecision\\()?(?:⟨(?:\\S+)⟩\\s*)?(?:$(_decision_pr)|\\(\\s*$(_decision_pr)\\s*\\))(?:\\))?"
+    decision_ex__capturing =   "(?:SimpleDecision\\()?(?:⟨(\\S+)⟩\\s*)?\\(?\\s*$(_decision_pr__capturing)\\s*\\)?(?:\\))?"
+    # _decision_ex__capturing = "(?:⟨(\\S+)⟩\\s*)?\\s*($(_decision_pr__capturing)|\\(\\s*$(_decision_pr__capturing)\\s*\\))"
+
     # TODO default frame to 1
     # split_ex = "(?:\\s*{(\\d+)}\\s+)?($(decision_ex))(?:\\s+($(leaf_ex)))?"
     split_ex = "\\s*{(\\d+)}\\s+($(decision_ex))(?:\\s*($(leaf_ex)))?"
-    
+
     blank_line_regex = Regex("^\\s*\$")
     split_line_regex = Regex("^($(_indentation_ex)\\s+)?$(split_ex)\\s*\$")
-    leaf_line_regex  = Regex("^($(_indentation_ex)\\s+)?$(leaf_ex)\\s*\$") 
+    leaf_line_regex  = Regex("^($(_indentation_ex)\\s+)?$(leaf_ex)\\s*\$")
 
     function _parse_simple_real(x)
         x = parse(Float64, x)
         x = isinteger(x) ? Int(x) : x
-    end 
+    end
 
     function _parse_decision((i_this_line, decision_str)::Tuple{<:Integer,<:AbstractString},)
         function _parse_relation(relation_str)
@@ -106,16 +106,16 @@ function _parse_tree(
         end
 
         function _parse_feature_test_operator(feature_str)
-            
+
             m_normal  = match(Regex(_normal_feature_ex_capturing), feature_str)
-            m_special = match(Regex(_special_feature_ex_capturing), feature_str) 
+            m_special = match(Regex(_special_feature_ex_capturing), feature_str)
             m_propos  = match(Regex(_propositional_feature_ex_capturing), feature_str)
 
             if !isnothing(m_normal) && length(m_normal) == 3
                 feature_fun, i_variable, test_operator = m_normal
                 function eval_feature_fun_constructor(fun_str)
-                    if     fun_str == "min" MDT.UnivariateMin
-                    elseif fun_str == "max" MDT.UnivariateMax
+                    if     fun_str == "min" MDT.VariableMin
+                    elseif fun_str == "max" MDT.VariableMax
                     else
                         try
                             fun = eval(Symbol(fun_str))
@@ -132,12 +132,12 @@ function _parse_tree(
             elseif !isnothing(m_special) && length(m_special) == 2
                 i_variable, feature_fun_test_operator = m_special
                 feature_fun_test_operator_d = Dict([
-                    "⪴"   => (i_variable)->(SoleData.UnivariateMin(i_variable), ≥),
-                    "⪴₈₀" => (i_variable)->(SoleData.UnivariateSoftMin(i_variable, 80), ≥),
-                    "⪳₈₀" => (i_variable)->(SoleData.UnivariateSoftMax(i_variable, 80), ≤),
-                    "⪳"   => (i_variable)->(SoleData.UnivariateMax(i_variable), ≤),
-                    "↘"   => (i_variable)->(SoleData.UnivariateMin(i_variable), ≤),
-                    "↗"   => (i_variable)->(SoleData.UnivariateMax(i_variable), ≥),
+                    "⪴"   => (i_variable)->(SoleData.VariableMin(i_variable), ≥),
+                    "⪴₈₀" => (i_variable)->(SoleData.VariableSoftMin(i_variable, 80), ≥),
+                    "⪳₈₀" => (i_variable)->(SoleData.VariableSoftMax(i_variable, 80), ≤),
+                    "⪳"   => (i_variable)->(SoleData.VariableMax(i_variable), ≤),
+                    "↘"   => (i_variable)->(SoleData.VariableMin(i_variable), ≤),
+                    "↗"   => (i_variable)->(SoleData.VariableMax(i_variable), ≥),
                 ])
                 feature_fun_test_operator = feature_fun_test_operator_d[feature_fun_test_operator]
                 i_variable = parse(Int, i_variable)
@@ -151,23 +151,23 @@ function _parse_tree(
             else
                 error("Unexpected format encountered on line $(i_this_line+offset) when parsing feature: \"$(feature_str)\". Matches $(m_normal), $(m_special), $(m_propos)")
             end
-        end 
+        end
 
         print(repeat(" ", _depth))
         m = match(Regex(decision_ex), decision_str)
-        @assert !isnothing(m) "Unexpected format encountered on line $(i_this_line+offset) when parsing decision: \"$(decision_str)\". Matches: $(m)" 
+        @assert !isnothing(m) "Unexpected format encountered on line $(i_this_line+offset) when parsing decision: \"$(decision_str)\". Matches: $(m)"
 
         m = match(Regex(decision_ex__capturing), decision_str)
         @assert !isnothing(m) && length(m) == 3 "Unexpected format encountered on line $(i_this_line+offset) when parsing decision: \"$(decision_str)\". Matches: $(m) Expected matches = 3"
         # print(repeat(" ", _depth))
-        # println(m) 
-
+        # println(m)
+        # @show m[3]
         relation, feature_test_operator, threshold = m
         relation = _parse_relation(relation)
         feature, test_operator = _parse_feature_test_operator(feature_test_operator)
-        threshold = _parse_simple_real(threshold) 
+        threshold = _parse_simple_real(threshold)
 
-        SimpleDecision(ScalarExistentialFormula(relation, feature, test_operator, threshold))
+        RestrictedDecision(ScalarExistentialFormula(relation, feature, test_operator, threshold))
     end
     function _parse_leaf((i_this_line, leaf_str)::Tuple{<:Integer,<:AbstractString},)
         m = match(Regex(leaf_ex__capturing), leaf_str)
@@ -186,15 +186,15 @@ function _parse_tree(
     ########################################################################################
     ########################################################################################
     ########################################################################################
-    
+
     # Can't do this because then i_line is misaligned
     # tree_str = strip(tree_str)
     lines = enumerate(split(tree_str, "\n")) |> collect
-    
+
     if check_format
         for (i_line, line) in lines
             !isempty(strip(line)) || continue
-            _line = line 
+            _line = line
 
             blank_match = match(blank_line_regex, _line)
             split_match = match(split_line_regex, _line)
@@ -202,35 +202,35 @@ function _parse_tree(
             is_blank = !isnothing(blank_match)
             is_split = !isnothing(split_match)
             is_leaf  = !isnothing(leaf_match)
-            
+
             # DEBUG
             # println(match(Regex("($(_indentation_ex)\\s+)?"), _line))
             # println(match(Regex("^\\s*($(_indentation_ex)\\s+)?({(\\d+)}\\s+)?"), _line))
             # println(match(Regex("^\\s*($(_indentation_ex)\\s+)?({(\\d+)}\\s+)?$V(\\d+)"), _line))
             # println(match(Regex("^\\s*($(_indentation_ex)\\s+)?({(\\d+)}\\s+)?(\\S+\\s+)?$V(\\d+)"), _line))
             # println(match(Regex("^\\s*($(_indentation_ex)\\s+)?({(\\d+)}\\s+)?(\\S+\\s+)?$V(\\d+)\\s+([⫹⫺⪳⪴⪵⪶↗↘])"), _line))
-            # println(match(Regex("^\\s*($(_indentation_ex)\\s+)?({(\\d+)}\\s+)?$(_decision_ex)"), _line))
+            # println(match(Regex("^\\s*($(_indentation_ex)\\s+)?({(\\d+)}\\s+)?$(_decision_pr)"), _line))
             # println(match(Regex("^\\s*($(_indentation_ex)\\s+)?({(\\d+)}\\s+)?$(decision_ex)"), _line))
             # println(match(Regex("^\\s*($(_indentation_ex)\\s+)?({(\\d+)}\\s+)?$(decision_ex)\\s+$(leaf_ex)"), _line))
-            
+
             @assert xor(is_blank, is_split, is_leaf) "Could not parse line $(i_line+offset): \"$(line)\". $((is_blank, is_split, is_leaf))"
         end
-    end 
+    end
 
-    _lines = filter(((i_line, line),)->(!isempty(strip(line))), lines) 
+    _lines = filter(((i_line, line),)->(!isempty(strip(line))), lines)
 
     if length(_lines) == 1 # a leaf
         _parse_leaf(_lines[1])
     else # a split
-        
+
         this_line, yes_line, no_line = begin
             this_line = nothing
             yes_line = -Inf
-            no_line = Inf 
+            no_line = Inf
 
             for (i_line, line) in lines
                 !isempty(strip(line)) || continue
-                _line = line 
+                _line = line
 
                 if !isnothing(match(r"^\s*{.*$", _line))
                     @assert isnothing(this_line) "Cannot have more than one row beginning with '{'"
@@ -251,7 +251,7 @@ function _parse_tree(
             end
             this_line, yes_line, no_line
         end
-        
+
         function clean_lines(lines)
             join([(isempty(strip(line)) ? line : begin
                     begin_ex = Regex("^([ │]|[✔✘]\\s+)(.*)\$")
@@ -260,7 +260,7 @@ function _parse_tree(
         end
         left_tree_str, right_tree_str = clean_lines(lines[yes_line:no_line]), clean_lines(lines[no_line+1:end])
         i_this_line, this_line = lines[this_line]
-        
+
         print(repeat(" ", _depth))
         m = match(Regex(split_ex), this_line)
         @assert !isnothing(m) && length(m) == 3 "Unexpected format encountered on line $(i_this_line+offset) : \"$(this_line)\". Matches: $(m) Expected matches = 3"
@@ -268,14 +268,14 @@ function _parse_tree(
         i_modality, decision_str, leaf_str = m
         # @show i_modality, decision_str, leaf_str
         i_modality = parse(Int, i_modality)
-        decision = _parse_decision((i_this_line, decision_str),) 
+        decision = _parse_decision((i_this_line, decision_str),)
 
         # println(clean_lines(lines[yes_line:no_line]))
         # println("\n")
         # println(clean_lines(lines[no_line+1:end]))
         left  = _parse_tree(left_tree_str;  offset = yes_line-1, check_format = false, _depth = _depth + 1, child_kwargs...)
         right = _parse_tree(right_tree_str; offset = no_line-1,  check_format = false, _depth = _depth + 1, child_kwargs...)
-        
+
         if isnothing(leaf_str)
             DTInternal(i_modality, decision, left, right)
         else
@@ -283,4 +283,4 @@ function _parse_tree(
             DTInternal(i_modality, decision, this, left, right)
         end
     end
-end 
+end

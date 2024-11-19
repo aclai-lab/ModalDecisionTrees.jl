@@ -1,4 +1,6 @@
+using Test
 using ModalDecisionTrees
+using SoleModels
 using MLJ
 
 ################################################################################
@@ -22,7 +24,7 @@ yhat = MLJ.predict_mode(mach, Xnew)
 
 yhat = MLJ.predict_mode(mach, X)
 
-@test MLJBase.accuracy(y, yhat) > 0.8
+@test MLJ.accuracy(y, yhat) > 0.8
 
 @test_nowarn fitted_params(mach).rawmodel
 @test_nowarn report(mach).model

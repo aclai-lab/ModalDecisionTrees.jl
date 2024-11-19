@@ -1,19 +1,19 @@
 
-include("fit_tree.jl")
+include("ModalCART.jl")
 
 ################################################################################
 ############################# Unimodal datasets ################################
 ################################################################################
 
-function build_stump(X::AbstractLogiset, args...; kwargs...)
+function build_stump(X::AbstractModalLogiset, args...; kwargs...)
     build_stump(MultiLogiset(X), args...; kwargs...)
 end
 
-function build_tree(X::AbstractLogiset, args...; kwargs...)
+function build_tree(X::AbstractModalLogiset, args...; kwargs...)
     build_tree(MultiLogiset(X), args...; kwargs...)
 end
 
-function build_forest(X::AbstractLogiset, args...; kwargs...)
+function build_forest(X::AbstractModalLogiset, args...; kwargs...)
     build_forest(MultiLogiset(X), args...; kwargs...)
 end
 
@@ -199,7 +199,7 @@ function build_forest(
         error("partial_sampling must be in the range (0,1]")
     end
     
-    if any(map(f->!(f isa SupportedLogiset), eachmodality(X)))
+    if any(map(f->!(SoleData.hassupports(f)), eachmodality(X)))
         @warn "Warning! Consider using structures optimized for model checking " *
             "such as SupportedLogiset."
     end

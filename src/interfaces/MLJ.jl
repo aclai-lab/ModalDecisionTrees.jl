@@ -30,7 +30,6 @@ const MDT = ModalDecisionTrees
 const _package_url = "https://github.com/giopaglia/$(MDT).jl"
 
 include("MLJ/default-parameters.jl")
-include("MLJ/sanity-checks.jl")
 include("MLJ/printer.jl")
 include("MLJ/wrapdataset.jl")
 include("MLJ/feature-importance.jl")

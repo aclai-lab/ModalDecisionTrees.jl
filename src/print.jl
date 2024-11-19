@@ -1,40 +1,44 @@
-export printmodel, print_tree, print_forest
+export printmodel
+# export print_tree, print_forest <--- TODO remove
 
 # print model
 function printmodel(model::Union{DTNode,DTree,DForest,RootLevelNeuroSymbolicHybrid}; kwargs...)
     printmodel(stdout, model; kwargs...)
 end
-function printmodel(io::IO, model::Union{DTNode,DTree}; kwargs...)
-    print_tree(io, model; kwargs...)
+function printmodel(io::IO, model::Union{DTNode,DTree,DForest,RootLevelNeuroSymbolicHybrid}; kwargs...)
+    print(io, displaymodel(model; kwargs...))
 end
-function printmodel(io::IO, model::DForest; kwargs...)
-    print_forest(io, model; kwargs...)
-end
-function printmodel(io::IO, model::RootLevelNeuroSymbolicHybrid; kwargs...)
-    print_rlnsdt(io, model; kwargs...)
-end
+# function printmodel(io::IO, model::Union{DTNode,DTree}; kwargs...)
+#     print_tree(io, model; kwargs...)
+# end
+# function printmodel(io::IO, model::DForest; kwargs...)
+#     print_forest(io, model; kwargs...)
+# end
+# function printmodel(io::IO, model::RootLevelNeuroSymbolicHybrid; kwargs...)
+#     print_rlnsdt(io, model; kwargs...)
+# end
 
 
-function print_tree(tree::Union{DTNode,DTree}, args...; kwargs...)
-    print_tree(stdout, tree, args...; kwargs...)
-end
-function print_forest(forest::DForest, args...; kwargs...)
-    print_forest(stdout, forest, args...; kwargs...)
-end
-function print_rlnsdt(rlnsdt::RootLevelNeuroSymbolicHybrid, args...; kwargs...)
-    print_rlnsdt(stdout, rlnsdt, args...; kwargs...)
-end
+# function print_tree(tree::Union{DTNode,DTree}, args...; kwargs...)
+#     print_tree(stdout, tree, args...; kwargs...)
+# end
+# function print_forest(forest::DForest, args...; kwargs...)
+#     print_forest(stdout, forest, args...; kwargs...)
+# end
+# function print_rlnsdt(rlnsdt::RootLevelNeuroSymbolicHybrid, args...; kwargs...)
+#     print_rlnsdt(stdout, rlnsdt, args...; kwargs...)
+# end
 
 
-function print_tree(io::IO, tree::Union{DTNode,DTree}, args...; kwargs...)
-    print(io, displaymodel(tree; args..., kwargs...))
-end
-function print_forest(io::IO, forest::DForest, args...; kwargs...)
-    print(io, displaymodel(forest; args..., kwargs...))
-end
-function print_rlnsdt(io::IO, rlnstd::RootLevelNeuroSymbolicHybrid, args...; kwargs...)
-    print(io, displaymodel(rlnstd; args..., kwargs...))
-end
+# function print_tree(io::IO, tree::Union{DTNode,DTree}, args...; kwargs...)
+#     print(io, displaymodel(tree; args..., kwargs...))
+# end
+# function print_forest(io::IO, forest::DForest, args...; kwargs...)
+#     print(io, displaymodel(forest; args..., kwargs...))
+# end
+# function print_rlnsdt(io::IO, rlnstd::RootLevelNeuroSymbolicHybrid, args...; kwargs...)
+#     print(io, displaymodel(rlnstd; args..., kwargs...))
+# end
 
 ############################################################################################
 
@@ -134,7 +138,7 @@ end
 function displaymodel(
     leaf::DTLeaf;
     indentation_str="",
-    depth=0,
+    depth = 0,
     variable_names_map = nothing,
     max_depth = nothing,
     hidemodality = false,
@@ -149,7 +153,7 @@ end
 function displaymodel(
     leaf::NSDTLeaf;
     indentation_str="",
-    depth=0,
+    depth = 0,
     variable_names_map = nothing,
     max_depth = nothing,
     hidemodality = false,
@@ -164,7 +168,7 @@ end
 function displaymodel(
     node::DTInternal;
     indentation_str="",
-    depth=0,
+    depth = 0,
     variable_names_map = nothing,
     max_depth = nothing,
     hidemodality = false,

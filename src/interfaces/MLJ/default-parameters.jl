@@ -166,7 +166,7 @@ function readinitconditions(model, dataset)
         map(mod->readinitconditions(model, mod), eachmodality(dataset))
     else
         if model.initconditions == mlj_default_initconditions
-            # d = dimensionality(SoleData.base(dataset)) # ? TODO maybe remove base for AbstractLogiset's?
+            # d = dimensionality(SoleData.base(dataset)) # ? TODO maybe remove base for AbstractModalLogiset's?
             d = dimensionality(frame(dataset, 1))
             if d == 0
                 AVAILABLE_INITCONDITIONS[:start_with_global]

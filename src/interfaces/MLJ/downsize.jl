@@ -1,3 +1,5 @@
+using StatsBase
+using StatsBase: mean
 using SoleBase: movingwindow
 using SoleData: AbstractDimensionalDataset
 
@@ -67,9 +69,11 @@ function make_downsizing_function(::ForestModel)
     end
 end
 
-_mean(::Type{T}, vals::AbstractArray{T}) where {T<:Number} = mean(vals)
-_mean(::Type{T1}, vals::AbstractArray{T2}) where {T1<:AbstractFloat,T2<:Integer} = T1(mean(vals))
-_mean(::Type{T1}, vals::AbstractArray{T2}) where {T1<:Integer,T2<:AbstractFloat} = round(T1, mean(vals))
+# TODO move to MultiData/SoleData
+
+_mean(::Type{T}, vals::AbstractArray{T}) where {T<:Number} = StatsBase.mean(vals)
+_mean(::Type{T1}, vals::AbstractArray{T2}) where {T1<:AbstractFloat,T2<:Integer} = T1(StatsBase.mean(vals))
+_mean(::Type{T1}, vals::AbstractArray{T2}) where {T1<:Integer,T2<:AbstractFloat} = round(T1, StatsBase.mean(vals))
 
 # # 1D
 # function moving_average(
@@ -93,9 +97,10 @@ _mean(::Type{T1}, vals::AbstractArray{T2}) where {T1<:Integer,T2<:AbstractFloat}
 # 1D-instance
 function moving_average(
     instance::AbstractArray{T,2},
-    nwindows::Integer,
+    nwindows::Union{Integer,Tuple{Integer}},
     relative_overlap::AbstractFloat = .5,
 ) where {T<:Union{Nothing,Number}}
+    nwindows = nwindows isa Tuple{<:Integer} ? nwindows[1] : nwindows
     npoints, n_variables = size(instance)
     new_instance = similar(instance, (nwindows, n_variables))
     for i_variable in 1:n_variables

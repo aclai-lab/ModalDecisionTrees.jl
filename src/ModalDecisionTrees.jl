@@ -27,7 +27,7 @@ using SoleData: nvariables,
 
 using FillArrays
 
-using SoleData: AbstractLogiset
+using SoleData: AbstractModalLogiset
 import SoleData: feature, test_operator, threshold
 
 
@@ -60,6 +60,7 @@ using SoleData: Interval, Interval2D
 using SoleData: IARelations, IA2DRelations
 
 using SoleLogics: FullDimensionalFrame
+using SoleLogics: normalize
 
 using SoleData: existential_aggregator, universal_aggregator, aggregator_bottom
 
@@ -93,7 +94,7 @@ include("loss-functions.jl")
 include("purity.jl")
 
 
-export SimpleDecision,
+export RestrictedDecision,
        ScalarExistentialFormula,
        displaydecision
 
@@ -124,7 +125,7 @@ export ModalDecisionTree, ModalRandomForest
 export depth, wrapdataset
 
 # Interfaces
-include("interfaces/Sole.jl")
+include("interfaces/Sole/main.jl")
 include("interfaces/MLJ.jl")
 include("interfaces/AbstractTrees.jl")
 

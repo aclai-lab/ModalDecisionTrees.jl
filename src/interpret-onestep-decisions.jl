@@ -3,7 +3,7 @@ using ResumableFunctions
 using SoleLogics: AbstractFrame
 using SoleData: AbstractWorld, AbstractWorlds, AbstractFeature
 using Logging: @logmsg
-using SoleData: AbstractLogiset, SupportedLogiset
+using SoleData: AbstractModalLogiset, SupportedLogiset
 
 using SoleData: base, globmemoset
 using SoleData: featchannel,
@@ -30,7 +30,7 @@ const AbstractScalarLogiset{
     U<:Number,
     FT<:AbstractFeature,
     FR<:AbstractFrame{W}
-} = AbstractLogiset{W,U,FT,FR}
+} = AbstractModalLogiset{W,U,FT,FR}
 
 nrelations(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset}}) where {W,U,FT,FR,L,N} = nrelations(supports(X)[1])
 nrelations(X::SupportedLogiset{W,U,FT,FR,L,N,<:Tuple{<:ScalarOneStepMemoset,<:AbstractFullMemoset}}) where {W,U,FT,FR,L,N} = nrelations(supports(X)[1])
@@ -49,7 +49,7 @@ function modalstep(
     X, # ::AbstractScalarLogiset{W},
     i_instance::Integer,
     worlds::AbstractWorlds{W},
-    decision::SimpleDecision{<:ScalarExistentialFormula},
+    decision::RestrictedDecision{<:ScalarExistentialFormula},
     return_worldmap::Union{Val{true},Val{false}} = Val(false)
 ) where {W<:AbstractWorld}
     @logmsg LogDetail "modalstep" worlds displaydecision(decision)
@@ -87,7 +87,7 @@ function modalstep(
         end
 
         for w in acc_worlds
-            if checkcondition(value(atom(φ)), X, i_instance, w)
+            if checkcondition(SoleLogics.value(atom(φ)), X, i_instance, w)
                 # @logmsg LogDetail " Found world " w ch_readWorld ... ch_readWorld(w, channel)
                 satisfied = true
                 push!(new_worlds, w)
@@ -125,8 +125,8 @@ Base.@propagate_inbounds @resumable function generate_decisions(
     allow_propositional_decisions::Bool,
     allow_modal_decisions::Bool,
     allow_global_decisions::Bool,
-    modal_relations_inds::AbstractVector{<:Integer},
-    features_inds::AbstractVector{<:Integer},
+    modal_relations_inds::AbstractVector,
+    features_inds::AbstractVector,
     grouped_featsaggrsnops::AbstractVector{<:AbstractDict{<:Aggregator,<:AbstractVector{<:ScalarMetaCondition}}},
     grouped_featsnaggrs::AbstractVector{<:AbstractVector{Tuple{<:Integer,<:Aggregator}}},
 ) where {W<:AbstractWorld,U}
@@ -188,7 +188,7 @@ function limit_threshold_domain(
         return T[], Nothing[]
     end
     if loss_function isa ShannonEntropy && test_op in [≥, <, ≤, >] && (W isa Ones) # TODO extendo to allequal(W) # TODO extend to Gini Index, Normalized Distance Measure, Info Gain, Gain Ratio (Ref. [Linear-Time Preprocessing in Optimal Numerical Range Partitioning])
-        if perform_domain_optimization
+        if !perform_domain_optimization
             thresh_domain = unique(aggr_thresholds)
             thresh_domain = begin
                 if test_op in [≥, <] # Remove edge-case with zero entropy
@@ -328,7 +328,7 @@ Base.@propagate_inbounds @resumable function generate_propositional_decisions(
     X::AbstractScalarLogiset{W,U,FT,FR},
     i_instances::AbstractVector{<:Integer},
     Sf::AbstractVector{<:AbstractWorlds{W}},
-    features_inds::AbstractVector{<:Integer},
+    features_inds::AbstractVector,
     grouped_featsaggrsnops::AbstractVector{<:AbstractDict{<:Aggregator,<:AbstractVector{<:ScalarMetaCondition}}},
     grouped_featsnaggrs::AbstractVector{<:AbstractVector{Tuple{<:Integer,<:Aggregator}}},
 ) where {W<:AbstractWorld,U,FT<:AbstractFeature,N,FR<:FullDimensionalFrame{N,W}}
@@ -366,8 +366,8 @@ Base.@propagate_inbounds @resumable function generate_propositional_decisions(
             # thresholds[:,instance_idx] = map(aggregator->aggregator(values), aggregators)
             
             for w in worlds
-                # gamma = featvalue(X[i_instance, w, feature) # TODO in general!
-                gamma = featvalue(X, i_instance, w, feature, i_feature)
+                # gamma = featvalue(feature, X[i_instance, w) # TODO in general!
+                gamma = featvalue(feature, X, i_instance, w, i_feature)
                 for (i_aggregator,aggregator) in enumerate(aggregators)
                     thresholds[i_aggregator,instance_idx] = SoleData.aggregator_to_binary(aggregator)(gamma, thresholds[i_aggregator,instance_idx])
                 end
@@ -395,8 +395,8 @@ Base.@propagate_inbounds @resumable function generate_modal_decisions(
     X::AbstractScalarLogiset{W,U,FT,FR},
     i_instances::AbstractVector{<:Integer},
     Sf::AbstractVector{<:AbstractWorlds{W}},
-    modal_relations_inds::AbstractVector{<:Integer},
-    features_inds::AbstractVector{<:Integer},
+    modal_relations_inds::AbstractVector,
+    features_inds::AbstractVector,
     grouped_featsaggrsnops::AbstractVector{<:AbstractDict{<:Aggregator,<:AbstractVector{<:ScalarMetaCondition}}},
     grouped_featsnaggrs::AbstractVector{<:AbstractVector{Tuple{<:Integer,<:Aggregator}}},
 ) where {W<:AbstractWorld,U,FT<:AbstractFeature,N,FR<:FullDimensionalFrame{N,W}}
@@ -482,7 +482,7 @@ Base.@propagate_inbounds @resumable function generate_global_decisions(
     X::AbstractScalarLogiset{W,U,FT,FR},
     i_instances::AbstractVector{<:Integer},
     Sf::AbstractVector{<:AbstractWorlds{W}},
-    features_inds::AbstractVector{<:Integer},
+    features_inds::AbstractVector,
     grouped_featsaggrsnops::AbstractVector{<:AbstractDict{<:Aggregator,<:AbstractVector{<:ScalarMetaCondition}}},
     grouped_featsnaggrs::AbstractVector{<:AbstractVector{Tuple{<:Integer,<:Aggregator}}},
 ) where {W<:AbstractWorld,U,FT<:AbstractFeature,N,FR<:FullDimensionalFrame{N,W}}
