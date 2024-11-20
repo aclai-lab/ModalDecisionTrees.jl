@@ -97,7 +97,8 @@ $(forest_hyperparams_str)
 
 $(n_subfeatures_str)
 
-- `feature=[minimum, maximum]`  Feature functions to be used by the tree to mine scalar conditions (e.g., `minimum[V2] ≥ 10`)
+- `features`  Feature functions to be used by the tree to mine scalar conditions (e.g., `minimum[V2] ≥ 10`).
+                            This hyper-parameter defaults to $(SoleData.mlj_default_conditions_str)
 
 - `featvaltype=Float64`     Output type for feature functions, when it cannot be inferred (e.g., with custom feature functions provided).
 
@@ -107,16 +108,12 @@ $(n_subfeatures_str)
                             :RCC5 and :RCC8 are [Region Connection Calculus algebras](https://en.wikipedia.org/wiki/Region_connection_calculus) with 5 and 8 topological operators, respectively.
                             Relations from :IA, :IA3, :IA7, capture directional aspects of the relative arrangement of two intervals in time (or rectangles in a 2D space),
                              while relations from :RCC5 and :RCC8 only capture topological aspects and are therefore rotation and flip-invariant.
-                            This hyper-parameter defaults to $(mlj_default_relations_str).
+                            This hyper-parameter defaults to $(SoleData.mlj_default_relations_str)
 
 - `initconditions=nothing` initial conditions for evaluating modal decisions at the root; it can be a symbol in [:start_with_global, :start_at_center].
                             :start_with_global forces the first decision to be a *global* decision (e.g., `⟨G⟩ (minimum[V2] ≥ 10)`, which translates to "there exists a region where the minimum of variable 2 is higher than 10").
                             :start_at_center forces the first decision to be evaluated on the smallest central world, that is, the central value of a time-series, or the central pixel of an image.
-<<<<<<< Updated upstream
-                            This hyper-parameter defaults to $(mlj_default_initconditions_str).
-=======
                             This hyper-parameter defaults to ...UPDATE THIS!
->>>>>>> Stashed changes
 
 - `downsize=true` Whether to perform automatic downsizing, by means of moving average. In fact, this algorithm has high complexity
     (both time and space), and can only handle small time-series (< 100 points) & small images (< 10 x 10 pixels).
@@ -325,7 +322,7 @@ ModalRandomForest
 # See also
 # [DecisionTree.jl](https://github.com/JuliaAI/DecisionTree.jl) and
 # the unwrapped model type
-# [MLJDecisionTreeInterface.DecisionTree.DecisionTreeRegressor](@ref).
+# [MLJDecisionTreeInterface.DecisionTree.DecisionTreeRegressor`](@ref).
 # """
 # DecisionTreeRegressor
 
@@ -343,4 +340,4 @@ ModalRandomForest
 # See also
 # [DecisionTree.jl](https://github.com/JuliaAI/DecisionTree.jl) and
 # the unwrapped model type
-# [MLJDecisionTreeInterface.DecisionTree.RandomForestRegressor](@ref).
+# [MLJDecisionTreeInterface.DecisionTree.RandomForestRegressor`](@ref).
