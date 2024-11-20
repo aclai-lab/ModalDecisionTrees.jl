@@ -202,7 +202,7 @@ function build_forest(
         error("partial_sampling must be in the range (0,1]")
     end
     
-    if any(map(f->!(f isa SupportedLogiset), eachmodality(X)))
+    if any(map(f->!(SoleData.hassupports(f)), eachmodality(X)))
         @warn "Warning! Consider using structures optimized for model checking " *
             "such as SupportedLogiset."
     end
