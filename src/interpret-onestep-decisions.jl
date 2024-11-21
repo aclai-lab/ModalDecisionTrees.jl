@@ -444,7 +444,8 @@ Base.@propagate_inbounds @resumable function generate_modal_decisions(
                             if true
                                 # _featchannel = featchannel(base(X), i_instance, i_feature)
                                 # featchannel_onestep_aggregation(X, _featchannel, i_instance, w, relation, feature(metacondition), aggregator)
-                                featchannel_onestep_aggregation(X, _featchannel, i_instance, w, relation, metacondition, i_metacond, i_relation; fixnans=fixnans)
+                                # featchannel_onestep_aggregation(X, _featchannel, i_instance, w, relation, metacondition, i_metacond, i_relation; fixnans=fixnans)
+                                featchannel_onestep_aggregation(X, _featchannel, i_instance, w, relation, metacondition, i_metacond, i_relation)
                                 # onestep_aggregation(X, i_instance, w, relation, feature, aggregator, i_metacond, i_relation)
                             # elseif X isa UniformFullDimensionalLogiset
                             #      onestep_aggregation(X, i_instance, w, relation, feature, aggregator, i_metacond, i_relation)
@@ -535,7 +536,8 @@ Base.@propagate_inbounds @resumable function generate_global_decisions(
                 gamma = begin
                     if true
                         # _featchannel = featchannel(base(X), i_instance, i_feature)
-                        featchannel_onestep_aggregation(X, _featchannel, i_instance, SoleLogics.emptyworld(frame(X, i_instance)), relation, metacondition, i_metacond; fixnans=fixnans)   
+                        # featchannel_onestep_aggregation(X, _featchannel, i_instance, SoleLogics.emptyworld(frame(X, i_instance)), relation, metacondition, i_metacond; fixnans=fixnans)   
+                        featchannel_onestep_aggregation(X, _featchannel, i_instance, SoleLogics.emptyworld(frame(X, i_instance)), relation, metacondition, i_metacond) 
                         # onestep_aggregation(X, i_instance, dummyworldTODO, relation, feature, aggregator, i_metacond)
                     # elseif X isa UniformFullDimensionalLogiset
                     #     onestep_aggregation(X, i_instance, dummyworldTODO, relation, feature, aggregator, i_metacond)
