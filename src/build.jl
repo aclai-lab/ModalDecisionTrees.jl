@@ -68,6 +68,7 @@ function build_tree(
     ##############################################################################
     rng                 :: Random.AbstractRNG = Random.GLOBAL_RNG,
     print_progress      :: Bool = true,
+    kwargs...
 ) where {L<:Label,U}
     
     @assert W isa AbstractVector || W in [nothing, :rebalance, :default]
@@ -108,8 +109,8 @@ function build_tree(
     @assert isnothing(max_depth) || (max_depth >= 0)
     @assert isnothing(max_modal_depth) || (max_modal_depth >= 0)
 
-    fit_tree(X, Y, initconditions, W
-        ;###########################################################################
+    fit_tree(X, Y, initconditions, W;
+        ###########################################################################
         loss_function               = loss_function,
         lookahead                   = lookahead,
         max_depth                   = max_depth,
@@ -127,6 +128,7 @@ function build_tree(
         ############################################################################
         rng                         = rng,
         print_progress              = print_progress,
+        kwargs...
     )
 end
 
@@ -162,6 +164,7 @@ function build_forest(
     rng                 :: Random.AbstractRNG = Random.GLOBAL_RNG,
     print_progress      :: Bool = true,
     suppress_parity_warning :: Bool = false,
+    fixnans             :: Bool = false,
 ) where {L<:Label,U}
 
     @assert W isa AbstractVector || W in [nothing, :rebalance, :default]

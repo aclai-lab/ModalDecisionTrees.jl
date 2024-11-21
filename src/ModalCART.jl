@@ -226,7 +226,8 @@ function generate_relevant_decisions(
     idxs,
     region,
     grouped_featsaggrsnopss,
-    grouped_featsnaggrss,
+    grouped_featsnaggrss;
+    kwargs...
 )
     out = []
     @inbounds for (i_modality,
@@ -295,6 +296,7 @@ function generate_relevant_decisions(
             features_inds,
             grouped_featsaggrsnopss[i_modality],
             grouped_featsnaggrss[i_modality],
+            get(kwargs, :fixnans, false),
         )
             decision_instantiator = _threshold->begin
                 cond = ScalarCondition(metacondition, _threshold)
@@ -348,8 +350,8 @@ Base.@propagate_inbounds @inline function optimize_node!(
     idxs                      :: AbstractVector{Int},
     n_classes                 :: Int,
     rng                       :: Random.AbstractRNG,
+    kwargs...
 ) where{P,L<:_Label,D<:AbstractDecision,U,NSubRelationsFunction<:Function,S<:MCARTState}
-
     # Region of idxs to use to perform the split
     region = node.region
     _ninstances = length(region)
@@ -724,13 +726,15 @@ Base.@propagate_inbounds @inline function optimize_node!(
         idxs,
         region,
         grouped_featsaggrsnopss,
-        grouped_featsnaggrss,
+        grouped_featsnaggrss;
+        kwargs...
     )
         if isa(_is_classification, Val{true})
             thresh_domain, additional_info = limit_threshold_domain(aggr_thresholds, Yf, Wf, loss_function, test_op, min_samples_leaf, perform_domain_optimization; n_classes = n_classes, nc = nc, nt = nt)
         else
             thresh_domain, additional_info = limit_threshold_domain(aggr_thresholds, Yf, Wf, loss_function, test_op, min_samples_leaf, perform_domain_optimization)
         end
+
         # Look for the best threshold 'a', as in atoms like "feature >= a"
         for (_threshold, threshold_info) in zip(thresh_domain, additional_info)
             decision = decision_instantiator(_threshold)
@@ -952,6 +956,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
                             idxs                           = deepcopy(idxs_copy),
                             n_classes                      = n_classes,
                             rng                            = copy(rng),
+                            kwargs...
                         )
                     end
                     # TODO: evaluate the goodneess of the subtree?
@@ -1029,7 +1034,7 @@ end
             _metaconditions = metaconditions(X)
 
             _grouped_metaconditions = SoleData.grouped_metaconditions(_metaconditions, _features)
-
+            
             # _grouped_metaconditions::AbstractVector{<:AbstractVector{Tuple{<:ScalarMetaCondition}}}
             # [[(i_metacond, aggregator, metacondition)...]...]
 
@@ -1061,7 +1066,7 @@ end
     grouped_featsnaggrss = last.(permodality_groups)
 
     # Process nodes recursively, using multi-threading
-    function process_node!(node, rng)
+    function process_node!(node, rng; kwargs...)
         # Note: better to spawn rng's beforehand, to preserve reproducibility independently from optimize_node!
         rng_l = spawn(rng)
         rng_r = spawn(rng)
@@ -1084,17 +1089,17 @@ end
             idxs                       = idxs,
             rng                        = rng,
             lookahead                  = lookahead,
-            kwargs...,
+            kwargs...
         )
         # !print_progress || ProgressMeter.update!(p, node.purity)
         !print_progress || ProgressMeter.next!(p, spinner="⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏")
         if !node.is_leaf
-            l = Threads.@spawn process_node!(node.l, rng_l)
-            r = Threads.@spawn process_node!(node.r, rng_r)
+            l = Threads.@spawn process_node!(node.l, rng_l; kwargs...)
+            r = Threads.@spawn process_node!(node.r, rng_r; kwargs...)
             wait(l), wait(r)
         end
     end
-    @sync Threads.@spawn process_node!(root, rng)
+    @sync Threads.@spawn process_node!(root, rng; kwargs...)
 
     !print_progress || ProgressMeter.finish!(p)
 
@@ -1192,9 +1197,10 @@ end
             * " lookahead >= 0)")
     end
 
-    if SoleData.hasnans(Xs)
-        error("This algorithm does not allow NaN values")
-    end
+    # fixnans = get(kwargs, :fixnans, false)
+    # if !fixnans && SoleData.hasnans(Xs)
+    #     error("This algorithm does not allow NaN values")
+    # end
 
     if nothing in Y
         error("This algorithm does not allow nothing values in Y")
@@ -1236,7 +1242,7 @@ function fit_tree(
     kwargs...,
 ) where {L<:Union{CLabel,RLabel}, U}
     # Check validity of the input
-    check_input(Xs, Y, initconditions, W; profile = profile, lookahead = lookahead, kwargs...)
+    check_input(Xs, Y, initconditions, W; profile=profile, lookahead=lookahead, kwargs...)
 
     # Classification-only: transform labels to categorical form (indexed by integers)
     n_classes = begin
