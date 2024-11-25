@@ -3,7 +3,7 @@
 module MLJInterface
 
 export ModalDecisionTree, ModalRandomForest
-export depth, wrapdataset
+export depth
 
 using MLJModelInterface
 using MLJModelInterface.ScientificTypesBase

@@ -49,6 +49,7 @@ mutable struct ModalRandomForest <: MMI.Probabilistic
 
     ## Miscellaneous
     downsize               :: Union{Bool,NTuple{N,Integer} where N,Function}
+    fixcallablenans        :: Bool
     print_progress         :: Bool
     rng                    :: Union{Random.AbstractRNG,Integer}
 
@@ -78,6 +79,7 @@ function ModalRandomForest(;
     initconditions = nothing,
     #
     downsize = true,
+    fixcallablenans = false,
     print_progress = (ntrees > 50),
     rng = Random.GLOBAL_RNG,
     #
@@ -105,6 +107,7 @@ function ModalRandomForest(;
         initconditions,
         #
         downsize,
+        fixcallablenans,
         print_progress,
         rng,
         #

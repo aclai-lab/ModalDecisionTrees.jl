@@ -9,7 +9,7 @@ function wrapdataset(
     X,
     model,
     force_var_grouping::Union{Nothing,AbstractVector{<:AbstractVector}} = nothing;
-    passive_mode = false
+    passive_mode = false,
 )
     SoleData.autologiset(
         X;
@@ -18,6 +18,7 @@ function wrapdataset(
         conditions = model.conditions,
         featvaltype = model.featvaltype,
         relations = model.relations,
+        fixcallablenans = model.fixcallablenans,
         passive_mode = passive_mode,
     )
 end
