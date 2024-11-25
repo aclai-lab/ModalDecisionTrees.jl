@@ -122,7 +122,9 @@ include("posthoc.jl")
 include("apply.jl")
 
 export ModalDecisionTree, ModalRandomForest
-export depth, wrapdataset
+export depth
+
+export wrapdataset
 
 # Interfaces
 include("interfaces/Sole/main.jl")
