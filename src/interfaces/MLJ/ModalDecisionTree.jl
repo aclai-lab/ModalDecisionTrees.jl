@@ -49,6 +49,7 @@ mutable struct ModalDecisionTree <: MMI.Probabilistic
 
     ## Miscellaneous
     downsize               :: Union{Bool,NTuple{N,Integer} where N,Function}
+    force_i_variables      :: Bool
     fixcallablenans        :: Bool
     print_progress         :: Bool
     rng                    :: Union{Random.AbstractRNG,Integer}
@@ -77,6 +78,7 @@ function ModalDecisionTree(;
     initconditions = nothing,
     #
     downsize = true,
+    force_i_variables = true,
     fixcallablenans = false,
     print_progress = false,
     rng = Random.GLOBAL_RNG,
@@ -102,6 +104,7 @@ function ModalDecisionTree(;
         initconditions,
         #
         downsize,
+        force_i_variables,
         fixcallablenans,
         print_progress,
         rng,

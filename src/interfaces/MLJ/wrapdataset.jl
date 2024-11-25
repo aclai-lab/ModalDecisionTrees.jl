@@ -19,6 +19,7 @@ function wrapdataset(
         featvaltype = model.featvaltype,
         relations = model.relations,
         fixcallablenans = model.fixcallablenans,
+        force_i_variables = model.force_i_variables,
         passive_mode = passive_mode,
     )
 end
