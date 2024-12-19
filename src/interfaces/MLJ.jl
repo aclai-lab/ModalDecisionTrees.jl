@@ -2,8 +2,9 @@
 
 module MLJInterface
 
-export ModalDecisionTree, ModalRandomForest
-export depth, wrapdataset
+export ModalDecisionTree, ModalRandomForest, ModalAdaBoost
+export depth
+export wrapdataset
 
 using MLJModelInterface
 using MLJModelInterface.ScientificTypesBase
@@ -36,12 +37,14 @@ include("MLJ/feature-importance.jl")
 
 include("MLJ/ModalDecisionTree.jl")
 include("MLJ/ModalRandomForest.jl")
+include("MLJ/ModalAdaBoost.jl")
 
 include("MLJ/docstrings.jl")
 
 const SymbolicModel = Union{
     ModalDecisionTree,
     ModalRandomForest,
+    ModalAdaBoost,
 }
 
 const TreeModel = Union{
@@ -50,6 +53,10 @@ const TreeModel = Union{
 
 const ForestModel = Union{
     ModalRandomForest,
+}
+
+const StumpsModel = Union{
+    ModalAdaBoost,
 }
 
 include("MLJ/downsize.jl")
@@ -75,7 +82,9 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
         if m isa ModalDecisionTree
             MDT.build_tree(X, y, w; get_kwargs(m, X)..., kwargs...)
         elseif m isa ModalRandomForest
-            MDT.build_forest(X, y, w; get_kwargs(m, X)..., kwargs...)
+            MDT.build_forest(X, y, w; get_kwargs(m, X)...)
+        elseif m isa ModalAdaBoost
+            MDT.build_stump(X, y, w; get_kwargs(m, X)...)
         else
             error("Unexpected model type: $(typeof(m))")
         end

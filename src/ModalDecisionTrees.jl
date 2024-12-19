@@ -121,8 +121,10 @@ include("posthoc.jl")
 # Apply decision tree/forest to a dataset
 include("apply.jl")
 
-export ModalDecisionTree, ModalRandomForest
-export depth, wrapdataset
+export ModalDecisionTree, ModalRandomForest, ModalAdaBoost
+export depth
+
+export wrapdataset
 
 # Interfaces
 include("interfaces/Sole/main.jl")

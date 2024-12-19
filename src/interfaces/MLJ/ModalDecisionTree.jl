@@ -110,6 +110,7 @@ function ModalDecisionTree(;
         merge_purity_threshold,
         feature_importance,
     )
+    @show model isa SymbolicModel
     message = MMI.clean!(model)
     isempty(message) || @warn message
     return model
