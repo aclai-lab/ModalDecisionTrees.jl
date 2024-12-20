@@ -44,7 +44,7 @@ a random forest model on logiset `X` with labels `Y` and weights `W`.
 """
 
 # """$(doc_build)"""
-function build_stumps(
+function build_adaboost_stumps(
     X                 :: MultiLogiset,
     y                 :: AbstractVector{L},
     weigths           :: Union{Nothing,AbstractVector{U},Symbol} = nothing;
@@ -65,8 +65,8 @@ function build_stumps(
         new_stump = build_stump(X, y, weigths; kwargs...)
         predictions = apply_tree(new_stump, X)
         err = _weighted_error(y, predictions, weights)
-        @show predictions
-        @show err
+        # @show predictions
+        # @show err
         if err >= thresh # should be better than random guess
             continue
         end
@@ -82,10 +82,10 @@ function build_stumps(
         end
     end
 
-    for i in 1:n_iter
-        @show stumps[i]
-        @show coeffs[i]
-    end
+    # for i in 1:n_iter
+    #     @show stumps[i]
+    #     @show coeffs[i]
+    # end
 
     return stumps, coeffs
 end

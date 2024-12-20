@@ -84,7 +84,7 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
     elseif m isa ModalRandomForest
         model = MDT.build_forest(X, y, w; get_kwargs(m, X)...)
     elseif m isa ModalAdaBoost
-        model, coeffs = MDT.build_stumps(X, y, w; get_kwargs(m, X)...)
+        model, coeffs = MDT.build_adaboost_stumps(X, y, w; get_kwargs(m, X)...)
     else
         error("Unexpected model type: $(typeof(m))")
     end
