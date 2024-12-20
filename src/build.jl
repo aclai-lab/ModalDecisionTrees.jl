@@ -1,9 +1,21 @@
 
 include("ModalCART.jl")
 
+function _weighted_error(
+    actual::AbstractVector, predicted::AbstractVector, weights::AbstractVector{T}
+) where {T<:Real}
+    mismatches = actual .!= predicted
+    err = sum(weights[mismatches]) / sum(weights)
+    return err
+end
+
 ################################################################################
 ############################# Unimodal datasets ################################
 ################################################################################
+
+function build_stumps(X::AbstractModalLogiset, args...; kwargs...)
+    build_stumps(MultiLogiset(X), args...; kwargs...)
+end
 
 function build_stump(X::AbstractModalLogiset, args...; kwargs...)
     build_stump(MultiLogiset(X), args...; kwargs...)
@@ -36,7 +48,7 @@ function build_stumps(
     X                 :: MultiLogiset,
     y                 :: AbstractVector{L},
     weigths           :: Union{Nothing,AbstractVector{U},Symbol} = nothing;
-    n_iter            :: Int = 10;
+    n_iter            :: Int = 10,
     # rng               :: Random.AbstractRNG = Random.GLOBAL_RNG,
     kwargs...,
 ) where {L<:Label,U}
@@ -50,33 +62,32 @@ function build_stumps(
     # n_features = size(X, 2)
 
     for i in 1:n_iter
-        new_stump = build_stump(X, y, weigths; impurity_importance=false, kwargs...)
-        # new_stump = MDT.build_stump( # TODO c'è anche in MDT!!!
-        #     X, y, weights; rng=DT.mk_rng(rng), impurity_importance=false
-        # )
-        # predictions = MDT.apply_tree(new_stump, X) # TODO c'è anche in MDT!!!
-        # err = DT._weighted_error(y, predictions, weights)
-        # if err >= thresh # should be better than random guess
-        #     continue
-        # end
-        # # SAMME algorithm
-        # new_coeff = log((1.0 - err) / err) + base_coeff
-        # unmatches = labels .!= predictions
-        # weights[unmatches] *= exp(new_coeff)
-        # weights /= sum(weights)
-        # push!(coeffs, new_coeff)
-        # push!(stumps, new_stump.node)
-        # if err < 1e-6
-        #     break
-        # end
+        new_stump = build_stump(X, y, weigths; kwargs...)
+        predictions = apply_tree(new_stump, X)
+        err = _weighted_error(y, predictions, weights)
+        @show predictions
+        @show err
+        if err >= thresh # should be better than random guess
+            continue
+        end
+        # SAMME algorithm
+        new_coeff = log((1.0 - err) / err) + base_coeff
+        unmatches = y .!= predictions
+        weights[unmatches] *= exp(new_coeff)
+        weights /= sum(weights)
+        push!(coeffs, new_coeff)
+        push!(stumps, new_stump)
+        if err < 1e-6
+            break
+        end
     end
-    # return (DT.Ensemble{S,T}(stumps, n_features, Float64[]), coeffs)
 
-    stumps = DTree[]
     for i in 1:n_iter
-        push!(stump_trees, build_stump(X, y, weigths; kwargs...))
+        @show stumps[i]
+        @show coeffs[i]
     end
-    return stump_trees
+
+    return stumps, coeffs
 end
 
 """$(doc_build)"""

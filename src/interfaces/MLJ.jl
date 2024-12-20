@@ -78,17 +78,17 @@ depth(t::MDT.DTree) = height(t)
 
 function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, classes_seen=nothing, w=nothing)
     # @show get_kwargs(m, X)
-    model = begin
-        if m isa ModalDecisionTree
-            MDT.build_tree(X, y, w; get_kwargs(m, X)...)
-        elseif m isa ModalRandomForest
-            MDT.build_forest(X, y, w; get_kwargs(m, X)...)
-        elseif m isa ModalAdaBoost
-            MDT.build_stumps(X, y, w; get_kwargs(m, X)...)
-        else
-            error("Unexpected model type: $(typeof(m))")
-        end
+    # model = begin
+    if m isa ModalDecisionTree
+        model = MDT.build_tree(X, y, w; get_kwargs(m, X)...)
+    elseif m isa ModalRandomForest
+        model = MDT.build_forest(X, y, w; get_kwargs(m, X)...)
+    elseif m isa ModalAdaBoost
+        model, coeffs = MDT.build_stumps(X, y, w; get_kwargs(m, X)...)
+    else
+        error("Unexpected model type: $(typeof(m))")
     end
+    # end
 
     if m.post_prune
         merge_purity_threshold = m.merge_purity_threshold
@@ -109,10 +109,10 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
     ))
 
     rawmodel_full = model
-    rawmodel = MDT.prune(model; simplify = true)
+    rawmodel = m isa ModalAdaBoost ? model : MDT.prune(model; simplify = true)
 
     solemodel_full = translate_function(model)
-    solemodel = translate_function(rawmodel)
+    solemodel = m isa ModalAdaBoost ? solemodel_full : translate_function(rawmodel)
 
     fitresult = (
         model         = model,

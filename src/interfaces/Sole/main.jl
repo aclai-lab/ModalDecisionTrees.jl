@@ -40,6 +40,20 @@ function translate(
 end
 
 function translate(
+    model::AbstractVector{<:DTree},
+    info = (;);
+    kwargs...
+)
+    pure_trees = [translate(tree; kwargs...) for tree in model]
+
+    # info = merge(info, (; # TODO
+    #     metrics = metrics(model[1]),
+    # ))
+
+    return SoleModels.DecisionEnsemble(pure_trees, info)
+end
+
+function translate(
     forest::DForest,
     info = (;);
     kwargs...

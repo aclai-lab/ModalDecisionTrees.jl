@@ -64,8 +64,8 @@ end
 # keyword constructor
 function ModalAdaBoost(;
     max_depth = 1,
-    min_samples_leaf = nothing,
-    min_purity_increase = nothing,
+    min_samples_leaf = 1,
+    min_purity_increase = 0.0,
     max_purity_at_leaf = nothing,
     max_modal_depth = nothing,
     #
@@ -82,7 +82,7 @@ function ModalAdaBoost(;
     rng = Random.GLOBAL_RNG,
     #
     display_depth = nothing,
-    min_samples_split = nothing,
+    min_samples_split = 2,
     n_subfeatures = nothing,
     post_prune = false,
     merge_purity_threshold = nothing,
