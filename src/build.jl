@@ -31,6 +31,54 @@ a random forest model on logiset `X` with labels `Y` and weights `W`.
 
 """
 
+# """$(doc_build)"""
+function build_stumps(
+    X                 :: MultiLogiset,
+    y                 :: AbstractVector{L},
+    weigths           :: Union{Nothing,AbstractVector{U},Symbol} = nothing;
+    n_iter            :: Int = 10;
+    # rng               :: Random.AbstractRNG = Random.GLOBAL_RNG,
+    kwargs...,
+) where {L<:Label,U}
+    n_y = length(y)
+    n_labels = length(unique(y))
+    base_coeff = log(n_labels - 1)
+    thresh = 1 - 1 / n_labels
+    weights = ones(n_y) / n_y
+    stumps = DTree[]
+    coeffs = Float64[]
+    # n_features = size(X, 2)
+
+    for i in 1:n_iter
+        new_stump = build_stump(X, y, weigths; impurity_importance=false, kwargs...)
+        # new_stump = MDT.build_stump( # TODO c'è anche in MDT!!!
+        #     X, y, weights; rng=DT.mk_rng(rng), impurity_importance=false
+        # )
+        # predictions = MDT.apply_tree(new_stump, X) # TODO c'è anche in MDT!!!
+        # err = DT._weighted_error(y, predictions, weights)
+        # if err >= thresh # should be better than random guess
+        #     continue
+        # end
+        # # SAMME algorithm
+        # new_coeff = log((1.0 - err) / err) + base_coeff
+        # unmatches = labels .!= predictions
+        # weights[unmatches] *= exp(new_coeff)
+        # weights /= sum(weights)
+        # push!(coeffs, new_coeff)
+        # push!(stumps, new_stump.node)
+        # if err < 1e-6
+        #     break
+        # end
+    end
+    # return (DT.Ensemble{S,T}(stumps, n_features, Float64[]), coeffs)
+
+    stumps = DTree[]
+    for i in 1:n_iter
+        push!(stump_trees, build_stump(X, y, weigths; kwargs...))
+    end
+    return stump_trees
+end
+
 """$(doc_build)"""
 function build_stump(
     X                 :: MultiLogiset,
