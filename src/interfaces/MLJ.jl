@@ -119,6 +119,7 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
         rawmodel      = rawmodel,
         solemodel     = solemodel,
         var_grouping  = var_grouping,
+        coeffs        = m isa ModalAdaBoost ? coeffs : nothing,
     )
 
     printer = ModelPrinter(m, model, solemodel, var_grouping)
@@ -128,7 +129,7 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
         printmodel                  = printer,
         sprinkle                    = (Xnew, ynew; simplify = false)->begin
             (Xnew, ynew, var_grouping, classes_seen, w) = MMI.reformat(m, Xnew, ynew; passive_mode = true)
-            preds, sprinkledmodel = ModalDecisionTrees.sprinkle(model, Xnew, ynew)
+            preds, sprinkledmodel = ModalDecisionTrees.sprinkle(model, Xnew, ynew; tree_weights=coeffs)
             if simplify
                 sprinkledmodel = MDT.prune(sprinkledmodel; simplify = true)
             end
@@ -145,6 +146,7 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
         # LEGACY with JuliaIA/DecisionTree.jl
         print_tree                  = printer,
         # features                    = ?,
+        coeffs                      = m isa ModalAdaBoost ? coeffs : nothing,
     )
 
     if !isnothing(classes_seen)

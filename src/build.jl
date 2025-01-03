@@ -9,12 +9,16 @@ function _weighted_error(
     return err
 end
 
+# make a Random Number Generator object
+mk_rng(rng::Random.AbstractRNG) = rng
+mk_rng(seed::T) where {T<:Integer} = Random.MersenneTwister(seed)
+
 ################################################################################
 ############################# Unimodal datasets ################################
 ################################################################################
 
-function build_stumps(X::AbstractModalLogiset, args...; kwargs...)
-    build_stumps(MultiLogiset(X), args...; kwargs...)
+function build_adaboost_stumps(X::AbstractModalLogiset, args...; kwargs...)
+    build_adaboost_stumps(MultiLogiset(X), args...; kwargs...)
 end
 
 function build_stump(X::AbstractModalLogiset, args...; kwargs...)
@@ -47,45 +51,43 @@ a random forest model on logiset `X` with labels `Y` and weights `W`.
 function build_adaboost_stumps(
     X                 :: MultiLogiset,
     y                 :: AbstractVector{L},
-    weigths           :: Union{Nothing,AbstractVector{U},Symbol} = nothing;
+    weights           :: Union{Nothing,AbstractVector{U},Symbol} = nothing;
     n_iter            :: Int = 10,
-    # rng               :: Random.AbstractRNG = Random.GLOBAL_RNG,
+    rng               :: Random.AbstractRNG = Random.GLOBAL_RNG,
     kwargs...,
 ) where {L<:Label,U}
-    n_y = length(y)
     n_labels = length(unique(y))
     base_coeff = log(n_labels - 1)
     thresh = 1 - 1 / n_labels
-    weights = ones(n_y) / n_y
+    n_y = ninstances(X)
+    isnothing(weights) && (weights = ones(n_y) / n_y)
+    # weights = Vector{Float64}(default_weights(ninstances(X)))
     stumps = DTree[]
     coeffs = Float64[]
     # n_features = size(X, 2)
 
     for i in 1:n_iter
-        new_stump = build_stump(X, y, weigths; kwargs...)
-        predictions = apply_tree(new_stump, X)
+        new_stump = build_stump(X, y, weights * n_y; rng=mk_rng(rng), kwargs...)
+        predictions = apply(new_stump, X)
+
         err = _weighted_error(y, predictions, weights)
-        # @show predictions
-        # @show err
         if err >= thresh # should be better than random guess
             continue
         end
+
         # SAMME algorithm
         new_coeff = log((1.0 - err) / err) + base_coeff
         unmatches = y .!= predictions
+
         weights[unmatches] *= exp(new_coeff)
         weights /= sum(weights)
+
         push!(coeffs, new_coeff)
         push!(stumps, new_stump)
         if err < 1e-6
             break
         end
     end
-
-    # for i in 1:n_iter
-    #     @show stumps[i]
-    #     @show coeffs[i]
-    # end
 
     return stumps, coeffs
 end

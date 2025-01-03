@@ -82,7 +82,7 @@ function ModalAdaBoost(;
     rng = Random.GLOBAL_RNG,
     #
     display_depth = nothing,
-    min_samples_split = 2,
+    min_samples_split = nothing,
     n_subfeatures = nothing,
     post_prune = false,
     merge_purity_threshold = nothing,
