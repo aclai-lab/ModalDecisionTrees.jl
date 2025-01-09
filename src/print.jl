@@ -73,8 +73,8 @@ function get_metrics_str(metrics::NamedTuple)
     if haskey(metrics,:lift)
         push!(metrics_str_pieces, "lift = $(@sprintf "%.2f" metrics.lift)")
     end
-    if haskey(metrics,:support)
-        push!(metrics_str_pieces, "supp = $(@sprintf "%.4f" metrics.support)")
+    if haskey(metrics,:coverage)
+        push!(metrics_str_pieces, "cov = $(@sprintf "%.4f" metrics.coverage)")
     end
     if haskey(metrics,:conviction)
         push!(metrics_str_pieces, "conv = $(@sprintf "%.4f" metrics.conviction)")
