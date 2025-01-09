@@ -9,6 +9,6 @@ function make_downsizing_function(::ForestModel)
     make_downsizing_function(Val(2))
 end
 
-function make_downsizing_function(::StumpsModel)
+function make_downsizing_function(::BoostedModel)
     make_downsizing_function(Val(1))
 end

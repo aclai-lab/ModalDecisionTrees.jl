@@ -55,7 +55,7 @@ const ForestModel = Union{
     ModalRandomForest,
 }
 
-const StumpsModel = Union{
+const BoostedModel = Union{
     ModalAdaBoost,
 }
 

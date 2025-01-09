@@ -29,7 +29,7 @@ function get_kwargs(m::SymbolicModel, X)
                 ntrees = m.ntrees,
                 suppress_parity_warning = true,
             )
-        elseif m isa StumpsModel
+        elseif m isa BoostedModel
             (;
                 n_iter = m.n_iter,
             )
@@ -54,7 +54,7 @@ function MMI.clean!(m::SymbolicModel)
         mlj_default_n_subfeatures = mlj_mrf_default_n_subfeatures
         mlj_default_ntrees = mlj_mrf_default_ntrees
         mlj_default_sampling_fraction = mlj_mrf_default_sampling_fraction
-    elseif m isa StumpsModel
+    elseif m isa BoostedModel
         mlj_default_min_samples_leaf = mlj_mdt_default_min_samples_leaf
         mlj_default_min_purity_increase = mlj_mdt_default_min_purity_increase
         mlj_default_max_purity_at_leaf = mlj_mdt_default_max_purity_at_leaf
