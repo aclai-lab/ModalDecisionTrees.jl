@@ -16,9 +16,8 @@ function apply end
 apply_model = apply
 
 # apply_tree = apply_model
-@deprecate apply_tree apply_model
-# apply_forest = apply_model
-@deprecate apply_forest apply_model
+# @deprecate apply_tree apply_model
+# @deprecate apply_forest apply_model
 
 function apply_proba end
 
