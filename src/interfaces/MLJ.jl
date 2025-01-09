@@ -129,7 +129,11 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
         printmodel                  = printer,
         sprinkle                    = (Xnew, ynew; simplify = false)->begin
             (Xnew, ynew, var_grouping, classes_seen, w) = MMI.reformat(m, Xnew, ynew; passive_mode = true)
-            preds, sprinkledmodel = ModalDecisionTrees.sprinkle(model, Xnew, ynew; tree_weights=coeffs)
+            if m isa ModalAdaBoost
+                preds, sprinkledmodel = ModalDecisionTrees.sprinkle(model, Xnew, ynew; tree_weights=coeffs)
+            else
+                preds, sprinkledmodel = ModalDecisionTrees.sprinkle(model, Xnew, ynew)
+            end
             if simplify
                 sprinkledmodel = MDT.prune(sprinkledmodel; simplify = true)
             end
