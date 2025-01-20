@@ -491,7 +491,7 @@ metrics(forest::DForest) = forest.metrics
 
 ############################################################################################
 
-# Ensamble of decision trees weighted by softmax autoencoder
+# Ensemble of decision trees weighted by softmax autoencoder
 struct RootLevelNeuroSymbolicHybrid{F<:Any,L<:Label} <: SymbolicModel{L}
     feature_function :: F
     # trees
