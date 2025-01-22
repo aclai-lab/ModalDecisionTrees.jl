@@ -47,7 +47,6 @@ mutable struct ModalAdaBoost <: MMI.Probabilistic
     force_i_variables       ::Bool
     fixcallablenans         ::Bool
     print_progress          ::Bool
-    rng                     ::Union{Random.AbstractRNG,Integer}
 
     ## DecisionTree.jl parameters
     display_depth           ::Union{Nothing,Int}
@@ -55,21 +54,22 @@ mutable struct ModalAdaBoost <: MMI.Probabilistic
     n_subfeatures           ::Union{Nothing,Int,Float64,Function}
     post_prune              ::Bool
     merge_purity_threshold  ::Union{Nothing,Float64}
-    feature_importance      ::Symbol
 
     ## AdaBoost parameters
     n_iter                  ::Int
+    feature_importance      ::Symbol
+    rng                     ::Union{Random.AbstractRNG,Integer}
 end
 
 # keyword constructor
 function ModalAdaBoost(;
     max_depth = 1,
-    min_samples_leaf = 1,
-    min_purity_increase = 0.0,
-    max_purity_at_leaf = nothing,
+    min_samples_leaf = 4,
+    min_purity_increase = 0.002,
+    max_purity_at_leaf = Inf,
     max_modal_depth = nothing,
     #
-    relations = nothing,
+    relations = :IA7,
     features = nothing,
     conditions = nothing,
     featvaltype = Float64,
@@ -77,18 +77,18 @@ function ModalAdaBoost(;
     #
     downsize = true,
     force_i_variables = true,
-    fixcallablenans = false,
+    fixcallablenans = true,
     print_progress = false,
-    rng = Random.GLOBAL_RNG,
     #
     display_depth = nothing,
     min_samples_split = nothing,
     n_subfeatures = nothing,
     post_prune = false,
     merge_purity_threshold = nothing,
-    feature_importance = :split,
     #
     n_iter = 10,
+    feature_importance = :split,
+    rng = Random.GLOBAL_RNG,
 )
     model = ModalAdaBoost(
         max_depth,
@@ -107,15 +107,16 @@ function ModalAdaBoost(;
         force_i_variables,
         fixcallablenans,
         print_progress,
-        rng,
         #
         display_depth,
         min_samples_split,
         n_subfeatures,
         post_prune,
         merge_purity_threshold,
-        feature_importance,
+        #
         n_iter,
+        feature_importance,
+        rng,
     )
     message = MMI.clean!(model)
     isempty(message) || @warn message

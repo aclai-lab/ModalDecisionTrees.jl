@@ -84,7 +84,7 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
     elseif m isa ModalRandomForest
         model = MDT.build_forest(X, y, w; get_kwargs(m, X)...)
     elseif m isa ModalAdaBoost
-        model, coeffs = MDT.build_adaboost_stumps(X, y, w; get_kwargs(m, X)...)
+        model, w = MDT.build_adaboost_stumps(X, y, w; get_kwargs(m, X)...)
     else
         error("Unexpected model type: $(typeof(m))")
     end
@@ -119,7 +119,7 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
         rawmodel      = rawmodel,
         solemodel     = solemodel,
         var_grouping  = var_grouping,
-        coeffs        = m isa ModalAdaBoost ? coeffs : nothing,
+        weights       = w,
     )
 
     printer = ModelPrinter(m, model, solemodel, var_grouping)
@@ -128,12 +128,9 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
     report = (
         printmodel                  = printer,
         sprinkle                    = (Xnew, ynew; simplify = false)->begin
-            (Xnew, ynew, var_grouping, classes_seen, w) = MMI.reformat(m, Xnew, ynew; passive_mode = true)
-            if m isa ModalAdaBoost
-                preds, sprinkledmodel = ModalDecisionTrees.sprinkle(model, Xnew, ynew; tree_weights=coeffs)
-            else
-                preds, sprinkledmodel = ModalDecisionTrees.sprinkle(model, Xnew, ynew)
-            end
+            (Xnew, ynew, var_grouping, classes_seen, w) = MMI.reformat(m, Xnew, ynew, w; passive_mode = true)
+            preds, sprinkledmodel = ModalDecisionTrees.sprinkle(model, Xnew, ynew; tree_weights=w)
+
             if simplify
                 sprinkledmodel = MDT.prune(sprinkledmodel; simplify = true)
             end
@@ -150,7 +147,7 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
         # LEGACY with JuliaIA/DecisionTree.jl
         print_tree                  = printer,
         # features                    = ?,
-        coeffs                      = m isa ModalAdaBoost ? coeffs : nothing,
+        weights                     = w,
     )
 
     if !isnothing(classes_seen)
@@ -165,8 +162,9 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
     return fitresult, cache, report
 end
 
-MMI.fitted_params(::TreeModel, fitresult) = merge(fitresult, (; tree = fitresult.rawmodel))
-MMI.fitted_params(::ForestModel, fitresult) = merge(fitresult, (; forest = fitresult.rawmodel))
+MMI.fitted_params(::TreeModel, fitresult)    = merge(fitresult, (; tree   = fitresult.rawmodel))
+MMI.fitted_params(::ForestModel, fitresult)  = merge(fitresult, (; forest = fitresult.rawmodel))
+MMI.fitted_params(::BoostedModel, fitresult) = merge(fitresult, (; stumps = fitresult.rawmodel))
 
 ############################################################################################
 ############################################################################################
@@ -179,7 +177,7 @@ function MMI.predict(m::SymbolicModel, fitresult, Xnew, var_grouping = nothing)
             "var_grouping = $(var_grouping)" *
             "\n"
     end
-    MDT.apply_proba(fitresult.rawmodel, Xnew, get(fitresult, :classes_seen, nothing); suppress_parity_warning = true)
+    MDT.apply_proba(fitresult.rawmodel, Xnew, get(fitresult, :classes_seen, nothing); tree_weights=fitresult.weights, suppress_parity_warning=true)
 end
 
 ############################################################################################

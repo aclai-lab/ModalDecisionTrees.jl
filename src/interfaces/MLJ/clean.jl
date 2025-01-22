@@ -59,7 +59,7 @@ function MMI.clean!(m::SymbolicModel)
         mlj_default_min_purity_increase = mlj_mdt_default_min_purity_increase
         mlj_default_max_purity_at_leaf = mlj_mdt_default_max_purity_at_leaf
         mlj_default_n_subfeatures = mlj_mdt_default_n_subfeatures
-        # TODO mlj_default_n_iter
+        # mlj_default_n_iter = mlj_mdt_default_n_iter
     else
         error("Unexpected model type: $(typeof(m))")
     end
