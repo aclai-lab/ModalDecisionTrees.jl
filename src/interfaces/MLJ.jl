@@ -129,7 +129,10 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
         printmodel                  = printer,
         sprinkle                    = (Xnew, ynew; simplify = false)->begin
             (Xnew, ynew, var_grouping, classes_seen, w) = MMI.reformat(m, Xnew, ynew, w; passive_mode = true)
-            preds, sprinkledmodel = ModalDecisionTrees.sprinkle(model, Xnew, ynew; tree_weights=w)
+            
+            preds, sprinkledmodel = model isa ModalDecisionTrees.DTree ?
+                ModalDecisionTrees.sprinkle(model, Xnew, ynew) :
+                ModalDecisionTrees.sprinkle(model, Xnew, ynew; tree_weights=w)
 
             if simplify
                 sprinkledmodel = MDT.prune(sprinkledmodel; simplify = true)
@@ -177,7 +180,10 @@ function MMI.predict(m::SymbolicModel, fitresult, Xnew, var_grouping = nothing)
             "var_grouping = $(var_grouping)" *
             "\n"
     end
-    MDT.apply_proba(fitresult.rawmodel, Xnew, get(fitresult, :classes_seen, nothing); tree_weights=fitresult.weights, suppress_parity_warning=true)
+
+    m isa ModalDecisionTree ?
+        MDT.apply_proba(fitresult.rawmodel, Xnew, get(fitresult, :classes_seen, nothing); suppress_parity_warning=true) :
+        MDT.apply_proba(fitresult.rawmodel, Xnew, get(fitresult, :classes_seen, nothing); tree_weights=fitresult.weights, suppress_parity_warning=true)
 end
 
 ############################################################################################
