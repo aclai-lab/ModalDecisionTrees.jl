@@ -1,9 +1,9 @@
-using Revise
+# using Revise
 using ModalDecisionTrees
 using SoleData.DimensionalDatasets
 
 using Random
-using BenchmarkTools
+# using BenchmarkTools
 rng = MersenneTwister(1)
 
 _ninstances, _ninstances_h = 10, 5
