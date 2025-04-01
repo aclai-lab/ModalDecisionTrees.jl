@@ -121,7 +121,7 @@ include("posthoc.jl")
 # Apply decision tree/forest to a dataset
 include("apply.jl")
 
-export ModalDecisionTree, ModalRandomForest
+export ModalDecisionTree, ModalRandomForest, ModalAdaBoost
 export depth
 
 export wrapdataset
