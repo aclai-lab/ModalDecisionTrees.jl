@@ -5,7 +5,7 @@ import Base: show
 
 struct ModelPrinter{M<:MDT.SymbolicModel,SM<:SoleModels.AbstractModel}
     m::MLJModelInterface.Model
-    rawmodel::M
+    rawmodel::Union{M, Vector{M}}
     solemodel::SM
     var_grouping::Union{Nothing,AbstractVector{<:AbstractVector},AbstractVector{<:AbstractDict}}
 end
