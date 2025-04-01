@@ -409,9 +409,9 @@ function sprinkle(
 ) where {L<:Label}
     predictions, trees = begin
         if weight_trees_by == false
-            sprinkle(trees(forest), Xs, Y; kwargs...)
+            sprinkle(ModalDecisionTrees.trees(forest), Xs, Y; kwargs...)
         elseif isa(weight_trees_by, AbstractVector)
-            sprinkle(trees(forest), Xs, Y; tree_weights = weight_trees_by, kwargs...)
+            sprinkle(ModalDecisionTrees.trees(forest), Xs, Y; tree_weights = weight_trees_by, kwargs...)
         # elseif weight_trees_by == :accuracy
         #   # TODO: choose HOW to weight a tree... overall_accuracy is just an example (maybe can be parameterized)
         #   sprinkle(forest.trees, Xs; tree_weights = map(cm -> overall_accuracy(cm), get(forest.metrics, :oob_metrics...)))
