@@ -36,6 +36,7 @@ test_suites = [
         "classification/japanesevowels.jl",
         "classification/digits.jl",
         "classification/mnist.jl",
+        "classification/modal_adaboost.jl",
         # "classification/demo-juliacon2022.jl",
     ]),
     ("Classification", [
