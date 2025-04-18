@@ -106,6 +106,10 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
         # syntaxstring_kwargs = (; hidemodality = (length(var_grouping) == 1), variable_names_map = var_grouping)
     ))
 
+    translate_model = (m, preds)->ModalDecisionTrees.translate(m,
+        (; supporting_predictions=preds)
+    )
+
     rawmodel_full = model
     rawmodel = m isa ModalAdaBoost ? model : MDT.prune(model; simplify = true)
 
@@ -135,7 +139,7 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
             if simplify
                 sprinkledmodel = MDT.prune(sprinkledmodel; simplify = true)
             end
-            preds, translate_function(sprinkledmodel)
+            preds, translate_model(sprinkledmodel, preds)
         end,
         # TODO remove redundancy?
         model                       = solemodel,

@@ -74,7 +74,8 @@ function translate(
 )
     pure_root = translate(ModalDecisionTrees.root(tree), ModalDecisionTrees.initconditions(tree); kwargs...)
 
-    info = merge(info, SoleModels.info(pure_root))
+    # info = merge(info, SoleModels.info(pure_root))
+    info = merge(SoleModels.info(pure_root), info)
     info = merge(info, (;))
 
     return SoleModels.DecisionTree(pure_root, info)
