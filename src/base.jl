@@ -491,6 +491,51 @@ metrics(forest::DForest) = forest.metrics
 
 ############################################################################################
 
+# AdaBoost Stumps (i.e., ensable of trees via bagging)
+struct DStumps{L<:Label} <: SymbolicModel{L}
+    # trees
+    trees       :: Vector{<:DTree{L}}
+    # weights
+    weights     :: Vector{<:Real}
+    # metrics
+    metrics     :: NamedTuple
+
+    # create forest from vector of trees and own weights
+    function DStumps{L}(
+        trees     :: AbstractVector{<:DTree},
+        weights   :: Vector{<:Real},
+    ) where {L<:Label}
+        new{L}(collect(trees), weights, (;))
+    end
+    function DStumps(
+        trees     :: AbstractVector{<:DTree{L}},
+        weights   :: Vector{<:Real},
+    ) where {L<:Label}
+        DStumps{L}(trees, weights)
+    end
+
+    # create forest from vector of trees and weights, with attached metrics
+    function DStumps{L}(
+        trees     :: AbstractVector{<:DTree},
+        weights   :: Vector{<:Real},
+        metrics   :: NamedTuple,
+    ) where {L<:Label}
+        new{L}(collect(trees), weights, metrics)
+    end
+    function DStumps(
+        trees     :: AbstractVector{<:DTree{L}},
+        weights   :: Vector{<:Real},
+        metrics   :: NamedTuple,
+    ) where {L<:Label}
+        DStumps{L}(trees, weights, metrics)
+    end
+end
+
+trees(stumps::DStumps) = stumps.trees
+weights(stumps::DStumps) = stumps.weights
+
+############################################################################################
+
 # Ensemble of decision trees weighted by softmax autoencoder
 struct RootLevelNeuroSymbolicHybrid{F<:Any,L<:Label} <: SymbolicModel{L}
     feature_function :: F
