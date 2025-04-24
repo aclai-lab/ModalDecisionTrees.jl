@@ -54,6 +54,16 @@ function translate(
 end
 
 function translate(
+    stumps::DStumps,
+    info = (;);
+    kwargs...
+)
+    pure_trees = [translate(tree; kwargs...) for tree in trees(stumps)]
+
+    return SoleModels.DecisionEnsemble(pure_trees, info)
+end
+
+function translate(
     forest::DForest,
     info = (;);
     kwargs...

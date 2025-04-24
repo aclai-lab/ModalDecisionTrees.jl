@@ -83,7 +83,7 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
     elseif m isa ModalRandomForest
         model = MDT.build_forest(X, y, w; get_kwargs(m, X)...)
     elseif m isa ModalAdaBoost
-        model, w = MDT.build_adaboost_stumps(X, y, w; get_kwargs(m, X)...)
+        model = MDT.build_adaboost_stumps(X, y, w; get_kwargs(m, X)...)
     else
         error("Unexpected model type: $(typeof(m))")
     end
@@ -131,10 +131,17 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
         printmodel                  = printer,
         sprinkle                    = (Xnew, ynew; simplify = false)->begin
             (Xnew, ynew, var_grouping, classes_seen, w) = MMI.reformat(m, Xnew, ynew, w; passive_mode = true)
-            
-            preds, sprinkledmodel = model isa ModalDecisionTrees.DTree ?
-                ModalDecisionTrees.sprinkle(model, Xnew, ynew) :
-                ModalDecisionTrees.sprinkle(model, Xnew, ynew; tree_weights=w)
+            preds, sprinkledmodel = begin
+                if isa(model, ModalDecisionTrees.DTree)
+                    ModalDecisionTrees.sprinkle(model, Xnew, ynew)
+                elseif isa(model, ModalDecisionTrees.DForest)
+                    ModalDecisionTrees.sprinkle(model, Xnew, ynew; tree_weights=w)
+                elseif isa(model, ModalDecisionTrees.DStumps)
+                    ModalDecisionTrees.sprinkle(model, Xnew, ynew; tree_weights=model.weights)
+                else
+                    error("Unexpected model type: $(typeof(model))")
+                end
+            end
 
             if simplify
                 sprinkledmodel = MDT.prune(sprinkledmodel; simplify = true)

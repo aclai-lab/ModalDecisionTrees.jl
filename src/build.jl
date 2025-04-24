@@ -62,7 +62,7 @@ function build_adaboost_stumps(
     n_y = ninstances(X)
     isnothing(weights) && (weights = ones(n_y) / n_y)
     # weights = Vector{Float64}(default_weights(ninstances(X)))
-    stumps = DTree[]
+    stumps = DTree{L}[]
     coeffs = Float64[]
     # n_features = size(X, 2)
 
@@ -89,7 +89,7 @@ function build_adaboost_stumps(
         end
     end
 
-    return stumps, coeffs
+    DStumps{L}(stumps, coeffs, (;))
 end
 
 """$(doc_build)"""

@@ -350,8 +350,8 @@ end
 
 # use an array of trees to test features
 function sprinkle(
-    # trees::AbstractVector{<:DTree{<:L}},
-    trees::AbstractVector{<:DTree},
+    trees::AbstractVector{<:DTree{<:L}},
+    # trees::AbstractVector{<:DTree},
     Xs,
     Y::AbstractVector{<:L};
     print_progress = !(Xs isa MultiLogiset),
@@ -402,7 +402,7 @@ end
 
 # use a proper forest to test features
 function sprinkle(
-    forest::DForest,
+    forest::Union{DForest, DStumps},
     Xs,
     Y::AbstractVector{<:L};
     weight_trees_by::Union{Bool,Symbol,AbstractVector} = false,
@@ -410,9 +410,11 @@ function sprinkle(
 ) where {L<:Label}
     predictions, trees = begin
         if weight_trees_by == false
-            sprinkle(ModalDecisionTrees.trees(forest), Xs, Y; kwargs...)
+            # fix for UndefVarError: `trees` not defined in local scope
+            sprinkle(MDT.trees(forest), Xs, Y; kwargs...)
         elseif isa(weight_trees_by, AbstractVector)
-            sprinkle(trees(forest), Xs, Y; tree_weights = weight_trees_by, kwargs...)
+            # fix for UndefVarError: `trees` not defined in local scope
+            sprinkle(MDT.trees(forest), Xs, Y; tree_weights = weight_trees_by, kwargs...)
         # elseif weight_trees_by == :accuracy
         #   # TODO: choose HOW to weight a tree... overall_accuracy is just an example (maybe can be parameterized)
         #   sprinkle(forest.trees, Xs; tree_weights = map(cm -> overall_accuracy(cm), get(forest.metrics, :oob_metrics...)))
@@ -523,32 +525,32 @@ end
 
 # use an array of trees to test features
 function apply_proba(
-    # trees::AbstractVector{<:DTree{<:L}},
-    trees::AbstractVector{<:DTree},
+    trees::AbstractVector{<:DTree{<:L}},
+    # trees::AbstractVector{<:DTree},
     Xs,
     _classes;
     tree_weights::Union{AbstractMatrix{Z},AbstractVector{Z},Nothing} = nothing,
     suppress_parity_warning = false
-# ) where {L<:CLabel,Z<:Real}
-) where {Z<:Real}
+) where {L<:CLabel,Z<:Real}
+# ) where {Z<:Real}
     @logmsg LogDetail "apply_proba..."
     _classes = string.(_classes)
     ntrees = length(trees)
     _ninstances = ninstances(Xs)
 
-    # if !(tree_weights isa AbstractMatrix)
-    #     if isnothing(tree_weights)
-    #         tree_weights = nothing # Ones{Int}(length(trees), ninstances(Xs)) # TODO optimize?
-    #     elseif tree_weights isa AbstractVector
-    #         tree_weights = hcat([tree_weights for i_instance in 1:length(_classes)]...)
-    #     else
-    #         @show typeof(tree_weights)
-    #         error("Unexpected tree_weights encountered $(tree_weights).")
-    #     end
-    # end
+    if !(tree_weights isa AbstractMatrix)
+        if isnothing(tree_weights)
+            tree_weights = nothing # Ones{Int}(length(trees), ninstances(Xs)) # TODO optimize?
+        elseif tree_weights isa AbstractVector
+            tree_weights = hcat([tree_weights for i_instance in 1:length(_classes)]...)
+        else
+            @show typeof(tree_weights)
+            error("Unexpected tree_weights encountered $(tree_weights).")
+        end
+    end
 
-    @assert isnothing(tree_weights) || length(trees) == size(tree_weights, 1) "Each label must have a corresponding weight: labels length is $(length(labels)) and weights length is $(length(weights))."
-    # @assert isnothing(tree_weights) || length(_classes) == size(tree_weights, 2) "Each label must have a corresponding weight: labels length is $(length(labels)) and weights length is $(length(weights))."
+    # @assert isnothing(tree_weights) || length(trees) == size(tree_weights, 1) "Each label must have a corresponding weight: labels length is $(length(labels)) and weights length is $(length(weights))."
+    @assert isnothing(tree_weights) || length(_classes) == size(tree_weights, 2) "Each label must have a corresponding weight: labels length is $(length(labels)) and weights length is $(length(weights))."
     isnothing(tree_weights) || (tree_weights = tree_weights./sum(tree_weights))
     # apply each tree to the whole dataset
     _predictions = Array{Float64,3}(undef, _ninstances, ntrees, length(_classes))
