@@ -44,8 +44,8 @@ acc = sum(yhat .== y[test_idxs])/length(yhat)
 
 @test_nowarn report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = [('A':('A'+nvars))], threshold_digits = 2))
 
-@test_throws BoundsError report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = [["a", "b"]]))
-@test_throws BoundsError report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = ["a", "b"]))
+@test_logs (:warn, r"Could not find variable.*") (:warn, r"Could not find variable.*") (:warn, r"Could not find variable.*") report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = [["a", "b"]]))
+@test_logs (:warn, r"Could not find variable.*") (:warn, r"Could not find variable.*") (:warn, r"Could not find variable.*") report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = ["a", "b"]))
 @test_nowarn report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = 'A':('A'+nvars)))
 @test_nowarn report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = collect('A':('A'+nvars))))
 

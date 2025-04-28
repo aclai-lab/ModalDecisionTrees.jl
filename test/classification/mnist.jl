@@ -181,8 +181,8 @@ begin
         relations = :IA7,
         features = [minimum],
         initconditions = :start_at_center,
-        # downsize = (x)->ModalDecisionTrees.MLJInterface.moving_average(x, (10,10)),
-        downsize = (x)->ModalDecisionTrees.MLJInterface.moving_average(x, DOWNSIZE_WINDOW),
+        # downsize = (x)->SoleData.moving_average(x, (10,10)),
+        downsize = (x)->SoleData.moving_average(x, DOWNSIZE_WINDOW),
     )
 
     mach = @test_logs min_level=Logging.Error @time machine(model, X_train, y_train) |> fit!

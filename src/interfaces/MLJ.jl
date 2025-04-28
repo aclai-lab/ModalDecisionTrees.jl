@@ -9,7 +9,7 @@ export wrapdataset
 using MLJModelInterface
 using MLJModelInterface.ScientificTypesBase
 using CategoricalArrays
-using DataFrames
+# using DataFrames
 using DataStructures
 using Tables
 using Random

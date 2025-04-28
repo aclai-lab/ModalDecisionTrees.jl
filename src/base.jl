@@ -578,6 +578,7 @@ nnodes(leaf::AbstractDecisionLeaf)     = 1
 nnodes(node::DTInternal) = 1 + nnodes(left(node)) + nnodes(right(node))
 nnodes(tree::DTree)   = nnodes(root(tree))
 nnodes(f::DForest) = sum(nnodes.(trees(f)))
+nnodes(s::DStumps) = sum(nnodes.(trees(s)))
 nnodes(nsdt::RootLevelNeuroSymbolicHybrid)      = sum(nnodes.(trees(nsdt)))
 
 # Number of trees

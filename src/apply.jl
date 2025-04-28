@@ -643,6 +643,17 @@ function apply_proba(
     end
 end
 
+function apply_proba(
+    stumps::DStumps{L},
+    weights::AbstractVector{<:Real},
+    Xs,
+    args...;
+    weight_trees_by::Union{Bool,Symbol,AbstractVector} = false,
+    kwargs...
+) where {L<:Label}
+    apply_proba(trees(stumps), Xs, args...; tree_weights = weights, kwargs...)
+end
+
 
 ############################################################################################
 

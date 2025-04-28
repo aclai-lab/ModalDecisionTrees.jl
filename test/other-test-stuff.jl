@@ -11,7 +11,7 @@ using Pkg
 # Pkg.add("Tables")
 # Pkg.add("ARFFFiles#main")
 
-using Revise
+# using Revise
 using ModalDecisionTrees
 using MLJ
 using MLJBase
