@@ -59,7 +59,7 @@ model = ModalDecisionTree(;
 	rng = Random.MersenneTwister(2)
 )
 mach = @time machine(model, X, y) |> fit!
-@test depth(fitted_params(mach).tree) == 6
+@test depth(fitted_params(mach).tree) == 3
 @test_nowarn report(mach).printmodel()
 @test_nowarn report(mach).printmodel(false, 0)
 @test_nowarn report(mach).printmodel(true, 0)

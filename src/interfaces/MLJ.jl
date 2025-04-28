@@ -116,6 +116,8 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
     solemodel_full = translate_function(model)
     solemodel = m isa ModalAdaBoost ? solemodel_full : translate_function(rawmodel)
 
+    w = m isa ModalAdaBoost ? model.weights : w
+
     fitresult = (
         model         = model,
         rawmodel      = rawmodel,
@@ -131,17 +133,9 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
         printmodel                  = printer,
         sprinkle                    = (Xnew, ynew; simplify = false)->begin
             (Xnew, ynew, var_grouping, classes_seen, w) = MMI.reformat(m, Xnew, ynew, w; passive_mode = true)
-            preds, sprinkledmodel = begin
-                if isa(model, ModalDecisionTrees.DTree)
-                    ModalDecisionTrees.sprinkle(model, Xnew, ynew)
-                elseif isa(model, ModalDecisionTrees.DForest)
+            preds, sprinkledmodel = isa(model, ModalDecisionTrees.DTree) ?
+                    ModalDecisionTrees.sprinkle(model, Xnew, ynew) :
                     ModalDecisionTrees.sprinkle(model, Xnew, ynew; tree_weights=w)
-                elseif isa(model, ModalDecisionTrees.DStumps)
-                    ModalDecisionTrees.sprinkle(model, Xnew, ynew; tree_weights=model.weights)
-                else
-                    error("Unexpected model type: $(typeof(model))")
-                end
-            end
 
             if simplify
                 sprinkledmodel = MDT.prune(sprinkledmodel; simplify = true)
@@ -182,6 +176,7 @@ MMI.fitted_params(::BoostedModel, fitresult) = merge(fitresult, (; stumps = fitr
 ############################################################################################
 
 function MMI.predict(m::SymbolicModel, fitresult, Xnew, var_grouping = nothing)
+    tree_weights = isnothing(fitresult.weights) ? false : fitresult.weights
     if !isnothing(var_grouping) && var_grouping != fitresult.var_grouping
         @warn "variable grouping differs from the one used in training! " *
             "training var_grouping: $(fitresult.var_grouping)" *
@@ -190,7 +185,7 @@ function MMI.predict(m::SymbolicModel, fitresult, Xnew, var_grouping = nothing)
     end
     m isa ModalDecisionTree ?
         MDT.apply_proba(fitresult.rawmodel, Xnew, get(fitresult, :classes_seen, nothing); suppress_parity_warning=true) :
-        MDT.apply_proba(fitresult.rawmodel, Xnew, get(fitresult, :classes_seen, nothing); tree_weights=fitresult.weights, suppress_parity_warning=true)
+        MDT.apply_proba(fitresult.rawmodel, Xnew, get(fitresult, :classes_seen, nothing); tree_weights, suppress_parity_warning=true)
 end
 
 ############################################################################################

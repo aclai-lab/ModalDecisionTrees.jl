@@ -1,11 +1,10 @@
 using Random
 using ModalDecisionTrees
-using MLJBase
+using MLJ, MLJBase
 
 include("$(dirname(dirname(pathof(ModalDecisionTrees))))/test/data/load.jl")
 
 _X, _y = load_digits()
-_X = Float64.(_X)
 Xcube = cat(map(r->reshape(r, (8,8,1)), eachrow(_X))...; dims=4)
 
 Xcube_small = Xcube
@@ -129,17 +128,6 @@ mach = machine(ModalRandomForest(;
 @test nnodes(fitted_params(mach).rawmodel) == 702
 @test sum(predict_mode(mach, rows = test_idxs) .== y[test_idxs]) / length(y[test_idxs]) > 0.51
 
-
-mach = machine(ModalAdaBoost(;
-    n_iter              = 10,
-    n_subfeatures       = 0.2,
-    min_samples_leaf    = 1,
-    min_samples_split   = 2,
-    min_purity_increase = 0.0,
-    rng                 = Random.MersenneTwister(1),
-), Xnt, y) |> m->fit!(m, rows = train_idxs)
-@test nnodes(fitted_params(mach).rawmodel) == 22
-@test sum(predict_mode(mach, rows = test_idxs) .== y[test_idxs]) / length(y[test_idxs]) > 0.51
 
 # ############################################################################################
 # ############################################################################################

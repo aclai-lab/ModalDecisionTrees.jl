@@ -133,3 +133,48 @@ MLJ.kappa(yhat, y[test_idxs]) > 0.5
 
 @test_nowarn prune(fitted_params(mach).rawmodel, simplify=true)
 @test_nowarn prune(fitted_params(mach).rawmodel, simplify=true, min_samples_leaf = 20)
+
+############################################################################################
+############################################################################################
+############################################################################################
+
+# A Modal AdaBoost with 100 stumps
+t = ModalAdaBoost(;
+    n_iter=25,
+)
+
+# Load an example dataset (a temporal one)
+_X, _y = ModalDecisionTrees.load_japanesevowels()
+
+p = randperm(Random.MersenneTwister(2), 100)
+X, y = _X[p, :], _y[p]
+
+nvars = size(X, 2)
+N = length(y)
+
+# Split dataset
+p = randperm(Random.MersenneTwister(1), N)
+train_idxs, test_idxs = p[1:round(Int, N*.8)], p[round(Int, N*.8)+1:end]
+
+mach = machine(t, X[train_idxs, :], y[train_idxs]) |> MLJ.fit!
+
+# Perform predictions, compute accuracy
+yhat, _ = MLJ.report(mach).sprinkle(X[test_idxs, :], y[test_idxs])
+acc = sum(yhat .== y[test_idxs])/length(yhat)
+
+@test acc >= 0.8
+
+@test_nowarn report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = [('A':('A'+nvars))], threshold_digits = 2))
+
+@test_nowarn report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = 'A':('A'+nvars)))
+@test_nowarn report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = collect('A':('A'+nvars))))
+
+@test_nowarn printmodel(report(mach).model)
+
+# Access raw model
+fitted_params(mach).rawmodel;
+report(mach).printmodel(3);
+
+@time MLJ.fit!(mach)
+
+
