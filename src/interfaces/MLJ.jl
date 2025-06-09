@@ -133,7 +133,7 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
         printmodel                  = printer,
         sprinkle                    = (Xnew, ynew; simplify = false)->begin
             (Xnew, ynew, var_grouping, classes_seen, w) = MMI.reformat(m, Xnew, ynew, w; passive_mode = true)
-            preds, sprinkledmodel = isa(model, ModalDecisionTrees.DTree) ?
+            preds, sprinkledmodel = isnothing(w) ?
                     ModalDecisionTrees.sprinkle(model, Xnew, ynew) :
                     ModalDecisionTrees.sprinkle(model, Xnew, ynew; tree_weights=w)
 
