@@ -43,7 +43,7 @@ ThreadsX = "ac1d9e8a-700a-412c-b207-f0111f4b6c0d"
 [compat]
 AbstractTrees = "0.4"
 BenchmarkTools = "1"
-CategoricalArrays = "0.10"
+CategoricalArrays = "0.10, 1"
 CategoricalDistributions = "0.1"
 DataFrames = "1"
 DataStructures = "0.18"
