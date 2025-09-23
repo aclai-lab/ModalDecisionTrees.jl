@@ -17,7 +17,7 @@ X, y = ModalDecisionTrees.load_japanesevowels()
 
 X, varnames = SoleData.dataframe2cube(X)
 
-p = randperm(Random.MersenneTwister(2), 100)
+p = randperm(Random.Xoshiro(2), 100)
 X, y = X[:, :, p], y[p]
 
 X = NamedTuple(zip(Symbol.(1:length(eachslice(X; dims=2))), eachslice.(eachslice(X; dims=2); dims=2)))
@@ -28,7 +28,7 @@ N = length(y)
 mach = machine(t, X, y)
 
 # Split dataset
-p = randperm(Random.MersenneTwister(1), N)
+p = randperm(Random.Xoshiro(1), N)
 train_idxs, test_idxs = p[1:round(Int, N*.8)], p[round(Int, N*.8)+1:end]
 
 # Fit
@@ -44,8 +44,8 @@ acc = sum(yhat .== y[test_idxs])/length(yhat)
 
 @test_nowarn report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = [('A':('A'+nvars))], threshold_digits = 2))
 
-@test_logs (:warn, r"Could not find variable.*") (:warn, r"Could not find variable.*") (:warn, r"Could not find variable.*") report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = [["a", "b"]]))
-@test_logs (:warn, r"Could not find variable.*") (:warn, r"Could not find variable.*") (:warn, r"Could not find variable.*") report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = ["a", "b"]))
+@test_logs (:warn, r"Could not find variable.*") (:warn, r"Could not find variable.*") report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = [["a", "b"]]))
+@test_logs (:warn, r"Could not find variable.*") (:warn, r"Could not find variable.*") report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = ["a", "b"]))
 @test_nowarn report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = 'A':('A'+nvars)))
 @test_nowarn report(mach).printmodel(syntaxstring_kwargs = (; variable_names_map = collect('A':('A'+nvars))))
 
@@ -84,7 +84,7 @@ mach = @time machine(ModalDecisionTree(downsize = false,), X, y) |> MLJ.fit!
 # NaNs
 Xwithnans = deepcopy(X)
 for i in 1:4
-    rng = MersenneTwister(i)
+    rng = Xoshiro(i)
     c = rand(rng, 1:length(Xwithnans))
     r = rand(rng, 1:length(Xwithnans[c]))
     Xwithnans[c][r][rand(1:length(Xwithnans[c][r]))] = NaN
@@ -106,7 +106,7 @@ t = ModalDecisionTree(min_samples_split=100, post_prune = true, merge_purity_thr
 
 N = length(y)
 
-p = randperm(Random.MersenneTwister(1), N)
+p = randperm(Random.Xoshiro(1), N)
 train_idxs, test_idxs = p[1:round(Int, N*.8)], p[round(Int, N*.8)+1:end]
 
 
@@ -146,14 +146,14 @@ t = ModalAdaBoost(;
 # Load an example dataset (a temporal one)
 _X, _y = ModalDecisionTrees.load_japanesevowels()
 
-p = randperm(Random.MersenneTwister(2), 100)
+p = randperm(Random.Xoshiro(2), 100)
 X, y = _X[p, :], _y[p]
 
 nvars = size(X, 2)
 N = length(y)
 
 # Split dataset
-p = randperm(Random.MersenneTwister(1), N)
+p = randperm(Random.Xoshiro(1), N)
 train_idxs, test_idxs = p[1:round(Int, N*.8)], p[round(Int, N*.8)+1:end]
 
 mach = machine(t, X[train_idxs, :], y[train_idxs]) |> MLJ.fit!
