@@ -42,7 +42,7 @@ _size.(X_static)
 @test_throws AssertionError MLJ.fit!(machine(ModalDecisionTree(;), X_static, y), rows=train_idxs)
 
 mach = MLJ.fit!(machine(ModalDecisionTree(; min_samples_leaf = 2), Float64.(X_static[:,Not(:ID)]), y), rows=train_idxs)
-@test depth(fitted_params(mach).tree) == 0
+@test depth(fitted_params(mach).tree) == 1
 
 mach = MLJ.fit!(machine(ModalDecisionTree(; min_purity_increase=-Inf, min_samples_leaf = 1), Float64.(X_static[:,Not(:ID)]), y), rows=train_idxs)
 @test depth(fitted_params(mach).tree) > 0

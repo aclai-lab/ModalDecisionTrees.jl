@@ -129,7 +129,7 @@ tree_str10 = """
   ✔ YES : 39/39 (conf = 1.0000)
   ✘ NO_CLEAN_HISTORY_AND_LOW_PROBABILITY : 1/1 (conf = 1.0000)
 """
-@test_broken tree10 = parse_tree(tree_str10; worldtypes = [SoleData.Interval], initconditions = [ModalDecisionTrees.start_without_world])
+@test_nowarn tree10 = parse_tree(tree_str10; worldtypes = [SoleData.Interval], initconditions = [ModalDecisionTrees.start_without_world])
 
 
 
