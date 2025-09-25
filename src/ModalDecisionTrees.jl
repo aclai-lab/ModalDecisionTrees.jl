@@ -15,7 +15,7 @@ using StatsBase
 using SoleBase
 using SoleBase: LogOverview, LogDebug, LogDetail
 using SoleBase: spawn, nat_sort
-using SoleBase: CLabel, RLabel, Label, _CLabel, _Label, get_categorical_form
+using SoleBase: CLabel, RLabel, Label, get_categorical_form
 using SoleBase: bestguess, default_weights, slice_weights
 
 using SoleData

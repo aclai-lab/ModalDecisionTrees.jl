@@ -165,7 +165,7 @@ function limit_threshold_domain(
     n_classes::Union{Nothing,Integer} = nothing,
     nc::Union{Nothing,AbstractVector{U}} = nothing,
     nt::Union{Nothing,U} = nothing,
-) where {T,L<:_Label,U}
+) where {T,L<:Label,U}
     if allequal(aggr_thresholds) # Always zero entropy
         return T[], Nothing[]
     end

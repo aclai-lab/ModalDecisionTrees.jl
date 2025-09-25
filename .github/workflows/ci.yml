@@ -2,7 +2,7 @@ name: CI
 on:
   push:
     branches:
-      - 64-modaladaboost
+      - fixModal
     tags: ['*']
   pull_request:
   workflow_dispatch:

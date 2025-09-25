@@ -348,7 +348,7 @@ Base.@propagate_inbounds @inline function optimize_node!(
     idxs                      :: AbstractVector{Int},
     n_classes                 :: Int,
     rng                       :: Random.AbstractRNG,
-) where{P,L<:_Label,D<:AbstractDecision,U,NSubRelationsFunction<:Function,S<:MCARTState}
+) where{P,L<:Label,D<:AbstractDecision,U,NSubRelationsFunction<:Function,S<:MCARTState}
 
     # Region of idxs to use to perform the split
     region = node.region
@@ -993,8 +993,7 @@ end
     rng = Random.GLOBAL_RNG   :: Random.AbstractRNG,
     print_progress            :: Bool = true,
     kwargs...,
-) where{L<:_Label,U}
-
+) where{L<:Label,U}
     _ninstances = ninstances(Xs)
 
     if profile == :restricted
@@ -1014,7 +1013,7 @@ end
     idxs = collect(1:_ninstances)
 
     # Create root node
-    NodeMetaT = NodeMeta{(isa(_is_classification, Val{true}) ? Int64 : Float64),Float64,D}
+    NodeMetaT = NodeMeta{L,Float64,D}
     onlyallowglobal = [(initcond == ModalDecisionTrees.start_without_world) for initcond in initconditions]
     root = NodeMetaT(1:_ninstances, 0, 0, onlyallowglobal)
     
@@ -1234,7 +1233,7 @@ function fit_tree(
     # Debug-only: checks the consistency of the dataset during training
     perform_consistency_check :: Bool,
     kwargs...,
-) where {L<:Union{CLabel,RLabel}, U}
+) where {L<:Label, U}
     # Check validity of the input
     check_input(Xs, Y, initconditions, W; profile = profile, lookahead = lookahead, kwargs...)
 
