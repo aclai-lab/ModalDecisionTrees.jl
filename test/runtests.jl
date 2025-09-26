@@ -48,9 +48,9 @@ test_suites = [
         "regression/digits-regression.jl",
         # "regression/random.jl",
     ]),
-    # ("Miscellaneous", [
-    #     "multimodal-datasets-multiformulas-construction.jl",
-    # ]),
+    ("Miscellaneous", [
+        "multimodal-datasets-multiformulas-construction.jl",
+    ]),
     ("Other", [
         "other/parse-and-translate-restricted.jl",
         "other/restricted2complete.jl",
