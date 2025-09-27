@@ -1,4 +1,5 @@
 using Test
+using ModalDecisionTrees
 
 # For MLDatasets
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true
