@@ -33,6 +33,9 @@ SoleModels = "4249d9c7-3290-4ddd-961c-e1d3ec2467f8"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
 
+[sources]
+SoldeData = {rev = "fixModal", url = "https://github.com/aclai-lab/SoleData.jl"}
+
 [compat]
 AbstractTrees = "0.4"
 CategoricalArrays = "0.10"
