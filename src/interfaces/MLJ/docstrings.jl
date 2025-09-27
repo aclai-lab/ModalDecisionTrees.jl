@@ -308,6 +308,14 @@ report(mach).printmodel(3) # Note that the output here can be quite large.
 """
 ModalRandomForest
 
+# TODO
+# """
+# $(MMI.doc_header(ModalAdaBoost))
+# `ModalAdaBoost` implements the standard $DOC_RANDOM_FOREST, based on
+# $(docstring_piece_1(ModalAdaBoost))
+# """
+# ModalAdaBoost
+
 # # Examples
 # ```
 # using MLJ

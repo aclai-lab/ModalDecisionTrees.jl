@@ -1,4 +1,4 @@
-using Revise
+# using Revise
 
 using SoleLogics
 using SoleModels
@@ -40,6 +40,30 @@ function translate(
 end
 
 function translate(
+    model::AbstractVector{<:DTree},
+    info = (;);
+    kwargs...
+)
+    pure_trees = [translate(tree; kwargs...) for tree in model]
+
+    # info = merge(info, (; # TODO
+    #     metrics = metrics(model[1]),
+    # ))
+
+    return SoleModels.DecisionEnsemble(pure_trees, info)
+end
+
+function translate(
+    stumps::DStumps,
+    info = (;);
+    kwargs...
+)
+    pure_trees = [translate(tree; kwargs...) for tree in trees(stumps)]
+
+    return SoleModels.DecisionEnsemble(pure_trees, info)
+end
+
+function translate(
     forest::DForest,
     info = (;);
     kwargs...
@@ -60,7 +84,8 @@ function translate(
 )
     pure_root = translate(ModalDecisionTrees.root(tree), ModalDecisionTrees.initconditions(tree); kwargs...)
 
-    info = merge(info, SoleModels.info(pure_root))
+    # info = merge(info, SoleModels.info(pure_root))
+    info = merge(SoleModels.info(pure_root), info)
     info = merge(info, (;))
 
     return SoleModels.DecisionTree(pure_root, info)

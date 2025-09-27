@@ -351,6 +351,7 @@ end
 # use an array of trees to test features
 function sprinkle(
     trees::AbstractVector{<:DTree{<:L}},
+    # trees::AbstractVector{<:DTree},
     Xs,
     Y::AbstractVector{<:L};
     print_progress = !(Xs isa MultiLogiset),
@@ -401,22 +402,24 @@ end
 
 # use a proper forest to test features
 function sprinkle(
-    forest::DForest,
+    forest::Union{DForest, DStumps},
     Xs,
     Y::AbstractVector{<:L};
-    weight_trees_by::Union{Bool,Symbol,AbstractVector} = false,
+    tree_weights::Union{Bool,Symbol,AbstractVector} = false,
     kwargs...
 ) where {L<:Label}
     predictions, trees = begin
-        if weight_trees_by == false
-            sprinkle(trees(forest), Xs, Y; kwargs...)
-        elseif isa(weight_trees_by, AbstractVector)
-            sprinkle(trees(forest), Xs, Y; tree_weights = weight_trees_by, kwargs...)
-        # elseif weight_trees_by == :accuracy
+        if tree_weights == false
+            # fix for UndefVarError: `trees` not defined in local scope
+            sprinkle(MDT.trees(forest), Xs, Y; kwargs...)
+        elseif isa(tree_weights, AbstractVector)
+            # fix for UndefVarError: `trees` not defined in local scope
+            sprinkle(MDT.trees(forest), Xs, Y; tree_weights = tree_weights, kwargs...)
+        # elseif tree_weights == :accuracy
         #   # TODO: choose HOW to weight a tree... overall_accuracy is just an example (maybe can be parameterized)
         #   sprinkle(forest.trees, Xs; tree_weights = map(cm -> overall_accuracy(cm), get(forest.metrics, :oob_metrics...)))
         else
-            error("Unexpected value for weight_trees_by: $(weight_trees_by)")
+            error("Unexpected value for tree_weights: $(tree_weights)")
         end
     end
     predictions, DForest{L}(trees, (;)) # TODO note that the original metrics are lost here
@@ -523,11 +526,13 @@ end
 # use an array of trees to test features
 function apply_proba(
     trees::AbstractVector{<:DTree{<:L}},
+    # trees::AbstractVector{<:DTree},
     Xs,
     _classes;
     tree_weights::Union{AbstractMatrix{Z},AbstractVector{Z},Nothing} = nothing,
     suppress_parity_warning = false
 ) where {L<:CLabel,Z<:Real}
+# ) where {Z<:Real}
     @logmsg LogDetail "apply_proba..."
     _classes = string.(_classes)
     ntrees = length(trees)
@@ -537,24 +542,25 @@ function apply_proba(
         if isnothing(tree_weights)
             tree_weights = nothing # Ones{Int}(length(trees), ninstances(Xs)) # TODO optimize?
         elseif tree_weights isa AbstractVector
-            tree_weights = hcat([tree_weights for i_instance in 1:ninstances(Xs)]...)
+            tree_weights = hcat([tree_weights for i_instance in 1:length(_classes)]...)
         else
             @show typeof(tree_weights)
             error("Unexpected tree_weights encountered $(tree_weights).")
         end
     end
 
-    @assert isnothing(tree_weights) || length(trees) == size(tree_weights, 1) "Each label must have a corresponding weight: labels length is $(length(labels)) and weights length is $(length(weights))."
-    @assert isnothing(tree_weights) || ninstances(Xs) == size(tree_weights, 2) "Each label must have a corresponding weight: labels length is $(length(labels)) and weights length is $(length(weights))."
-
+    # @assert isnothing(tree_weights) || length(trees) == size(tree_weights, 1) "Each label must have a corresponding weight: labels length is $(length(labels)) and weights length is $(length(weights))."
+    @assert isnothing(tree_weights) || length(_classes) == size(tree_weights, 2) "Each label must have a corresponding weight: labels length is $(length(labels)) and weights length is $(length(weights))."
+    isnothing(tree_weights) || (tree_weights = tree_weights./sum(tree_weights))
     # apply each tree to the whole dataset
     _predictions = Array{Float64,3}(undef, _ninstances, ntrees, length(_classes))
     Threads.@threads for i_tree in 1:ntrees
         _predictions[:,i_tree,:] = apply_proba(trees[i_tree], Xs, _classes; return_scores = true)
+        isnothing(tree_weights) || (_predictions[:,i_tree,:] *= tree_weights[i_tree])
     end
 
     # Average the prediction scores
-    if isnothing(tree_weights)
+    # if isnothing(tree_weights)
         bestguesses_idx = mapslices(argmax, _predictions; dims=3)
         # @show bestguesses_idx
         bestguesses = dropdims(map(idx->_classes[idx], bestguesses_idx); dims=3)
@@ -565,19 +571,20 @@ function apply_proba(
             UnivariateFinite(classes(c), s ./ sum(s))
         end, eachslice(bestguesses; dims=1))
         # ret = map(s->bestguess(s; suppress_parity_warning = suppress_parity_warning), eachslice(bestguesses; dims=1))
-        # @show ret
         ret
         # x = map(x->_classes[argmax(x)], eachslice(_predictions; dims=[1,2]))
         # dropdims(mean(_predictions; dims=2), dims=2)
-    else
-        # TODO fix this, it errors.
-        tree_weights = tree_weights./sum(tree_weights)
-        prediction_scores = Matrix{Float64}(undef, _ninstances, length(_classes))
-        Threads.@threads for i in 1:_ninstances
-            prediction_scores[i,:] .= mean(_predictions[i,:,:] * tree_weights; dims=1)
-        end
-        prediction_scores
-    end
+    # else
+    #     # TODO fix this, it errors.
+    #     # tree_weights = tree_weights./sum(tree_weights)
+    #     prediction_scores = Matrix{Float64}(undef, _ninstances, length(_classes))
+    #     Threads.@threads for i in 1:_ninstances
+    #         # prediction_scores[i,:] .= mean(_predictions[i,:,:] * tree_weights; dims=1)
+    #         prediction_scores[i,:] = mean(_predictions[i,:,:] .* tree_weights; dims=1)
+    #     end
+    #     # prediction_scores
+    #     [prediction_scores[i,:] for i in 1:size(prediction_scores,1)]
+    # end
 end
 
 # use an array of trees to test features
@@ -618,21 +625,21 @@ end
 
 # use a proper forest to test features
 function apply_proba(
-    forest::DForest{L},
+    forest::Union{DForest{L}, DStumps{L}},
     Xs,
     args...;
-    weight_trees_by::Union{Bool,Symbol,AbstractVector} = false,
+    tree_weights::Union{Bool,Symbol,AbstractVector} = false,
     kwargs...
 ) where {L<:Label}
-    if weight_trees_by == false
+    if tree_weights == false
         apply_proba(trees(forest), Xs, args...; kwargs...)
-    elseif isa(weight_trees_by, AbstractVector)
-        apply_proba(trees(forest), Xs, args...; tree_weights = weight_trees_by, kwargs...)
-    # elseif weight_trees_by == :accuracy
+    elseif isa(tree_weights, AbstractVector)
+        apply_proba(trees(forest), Xs, args...; tree_weights = tree_weights, kwargs...)
+    # elseif tree_weights == :accuracy
     #   # TODO: choose HOW to weight a tree... overall_accuracy is just an example (maybe can be parameterized)
     #   apply_proba(forest.trees, Xs, args...; tree_weights = map(cm -> overall_accuracy(cm), get(forest.metrics, :oob_metrics...)))
     else
-        error("Unexpected value for weight_trees_by: $(weight_trees_by)")
+        error("Unexpected value for tree_weights: $(tree_weights)")
     end
 end
 

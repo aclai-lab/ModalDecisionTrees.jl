@@ -1,11 +1,12 @@
+using Test
+using ModalDecisionTrees
+
+using ModalDecisionTrees: translate
+using ModalDecisionTrees.experimentals: parse_tree
 
 using SoleModels
 using SoleModels: printmodel
 using SoleLogics
-
-using ModalDecisionTrees
-using ModalDecisionTrees: translate
-using ModalDecisionTrees.experimentals: parse_tree
 
 tree_str1 = """
 {1} ⟨G⟩ (min[V4] >= 0.04200671690893693)                        NO_CLEAN_HISTORY_AND_LOW_PROBABILITY : 37/74 (conf = 0.5000)
@@ -129,7 +130,7 @@ tree_str10 = """
   ✔ YES : 39/39 (conf = 1.0000)
   ✘ NO_CLEAN_HISTORY_AND_LOW_PROBABILITY : 1/1 (conf = 1.0000)
 """
-@test_broken tree10 = parse_tree(tree_str10; worldtypes = [SoleData.Interval], initconditions = [ModalDecisionTrees.start_without_world])
+@test_nowarn tree10 = parse_tree(tree_str10; worldtypes = [SoleData.Interval], initconditions = [ModalDecisionTrees.start_without_world])
 
 
 

@@ -1,5 +1,10 @@
+using Test
+using ModalDecisionTrees
+
 using MLJBase
 using StatsBase
+using Random
+
 rng = Random.MersenneTwister(1)
 X, y = make_regression(100, 2; rng = rng)
 

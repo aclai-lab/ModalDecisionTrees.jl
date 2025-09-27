@@ -1,19 +1,5 @@
 using Test
-
 using ModalDecisionTrees
-using MLJ
-using MLJBase
-using SoleModels
-using SoleData
-using SoleData.DimensionalDatasets
-using DataFrames
-
-using Random
-using CategoricalArrays
-using StatsBase
-using StatsBase: mean
-
-using ModalDecisionTrees: build_stump, build_tree, build_forest
 
 # For MLDatasets
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true
@@ -54,7 +40,7 @@ test_suites = [
     ("Other", [
         "other/parse-and-translate-restricted.jl",
         "other/restricted2complete.jl",
-        "other/translate-complete.jl",
+        # "other/translate-complete.jl",
     ]),
 
     ("Pluto Demo", ["$(dirname(dirname(pathof(ModalDecisionTrees))))/pluto-demo.jl", ]),

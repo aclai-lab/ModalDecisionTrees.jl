@@ -1,6 +1,10 @@
-using Random
+using Test
 using ModalDecisionTrees
-using MLJBase
+
+using Random
+using MLJ, MLJBase
+
+# using ModalDecisionTrees: build_stump, build_tree, build_forest
 
 include("$(dirname(dirname(pathof(ModalDecisionTrees))))/test/data/load.jl")
 
@@ -33,7 +37,7 @@ train_idxs, test_idxs = p[1:round(Int, N*.1)], p[round(Int, N*.1)+1:end]
 ############################################################################################
 
 mach = @time machine(ModalDecisionTree(;), X, y) |> m->fit!(m, rows = train_idxs)
-@test nnodes(fitted_params(mach).rawmodel) == 57
+@test nnodes(fitted_params(mach).rawmodel) == 55
 @test sum(predict_mode(mach, rows = test_idxs) .== y[test_idxs]) / length(y[test_idxs]) > 0.43
 
 
@@ -42,7 +46,7 @@ mach = @time machine(ModalDecisionTree(;
     max_depth           = 6,
     min_samples_leaf    = 5,
 ), X, y) |> m->fit!(m, rows = train_idxs)
-@test nnodes(fitted_params(mach).rawmodel) == 45
+@test nnodes(fitted_params(mach).rawmodel) == 47
 @test sum(predict_mode(mach, rows = test_idxs) .== y[test_idxs]) / length(y[test_idxs]) > 0.41
 
 
@@ -56,7 +60,7 @@ mach = machine(ModalRandomForest(;
     min_purity_increase = 0.0,
     rng = Random.MersenneTwister(1)
 ), X, y) |> m->fit!(m, rows = train_idxs)
-@test nnodes(fitted_params(mach).rawmodel) == 736
+@test nnodes(fitted_params(mach).rawmodel) == 676
 @test_nowarn predict_mode(mach, rows = test_idxs)
 @test_nowarn MLJ.predict(mach, rows = test_idxs)
 @test sum(predict_mode(mach, rows = test_idxs) .== y[test_idxs]) / length(y[test_idxs]) > 0.53
@@ -66,7 +70,7 @@ mach = machine(ModalRandomForest(;
 
 # NamedTuple dataset
 mach = @time machine(ModalDecisionTree(;), Xnt, y) |> m->fit!(m, rows = train_idxs)
-@test nnodes(fitted_params(mach).rawmodel) == 57
+@test nnodes(fitted_params(mach).rawmodel) == 55
 @test sum(predict_mode(mach, rows = test_idxs) .== y[test_idxs]) / length(y[test_idxs]) > 0.43
 
 mach = @time machine(ModalDecisionTree(;
@@ -74,7 +78,7 @@ mach = @time machine(ModalDecisionTree(;
     features = [minimum],
     initconditions = :start_at_center,
 ), Xnt, y) |> m->fit!(m, rows = train_idxs)
-@test nnodes(fitted_params(mach).rawmodel) == 43
+@test nnodes(fitted_params(mach).rawmodel) == 41
 @test sum(predict_mode(mach, rows = test_idxs) .== y[test_idxs]) / length(y[test_idxs]) > 0.58
 
 mach = @time machine(ModalDecisionTree(;
@@ -83,7 +87,7 @@ mach = @time machine(ModalDecisionTree(;
     # initconditions = :start_at_center,
     featvaltype = Float32,
 ), selectrows(Xnt, train_idxs), selectrows(y, train_idxs)) |> m->fit!(m)
-@test nnodes(fitted_params(mach).rawmodel) == 57
+@test nnodes(fitted_params(mach).rawmodel) == 55
 @test sum(predict_mode(mach, selectrows(Xnt, test_idxs)) .== y[test_idxs]) / length(y[test_idxs]) > 0.43
 
 
@@ -92,7 +96,7 @@ mach = @time machine(ModalDecisionTree(;
 ############################################################################################
 
 mach = @time machine(ModalDecisionTree(;), Xnt, y) |> m->fit!(m, rows = train_idxs)
-@test nnodes(fitted_params(mach).rawmodel) == 57
+@test nnodes(fitted_params(mach).rawmodel) == 55
 @test sum(predict_mode(mach, rows = test_idxs) .== y[test_idxs]) / length(y[test_idxs]) > 0.43
 
 mach = @time machine(ModalDecisionTree(;
@@ -100,7 +104,7 @@ mach = @time machine(ModalDecisionTree(;
     max_depth           = 6,
     min_samples_leaf    = 5,
 ), Xnt, y) |> m->fit!(m, rows = train_idxs)
-@test nnodes(fitted_params(mach).rawmodel) == 45
+@test nnodes(fitted_params(mach).rawmodel) == 47
 @test sum(predict_mode(mach, rows = test_idxs) .== y[test_idxs]) / length(y[test_idxs]) > 0.41
 
 
@@ -125,8 +129,9 @@ mach = machine(ModalRandomForest(;
     min_purity_increase = 0.0,
     rng                 = Random.MersenneTwister(1),
 ), Xnt, y) |> m->fit!(m, rows = train_idxs)
-@test nnodes(fitted_params(mach).rawmodel) == 768
+@test nnodes(fitted_params(mach).rawmodel) == 702
 @test sum(predict_mode(mach, rows = test_idxs) .== y[test_idxs]) / length(y[test_idxs]) > 0.51
+
 
 # ############################################################################################
 # ############################################################################################

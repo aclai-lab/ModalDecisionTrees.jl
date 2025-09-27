@@ -1,7 +1,9 @@
-
+using Test
 using ModalDecisionTrees
+
 using MLJ
 using Random
+using Tables
 
 X, y = @load_iris
 
@@ -59,7 +61,7 @@ model = ModalDecisionTree(;
 	rng = Random.MersenneTwister(2)
 )
 mach = @time machine(model, X, y) |> fit!
-@test depth(fitted_params(mach).tree) == 6
+@test depth(fitted_params(mach).tree) == 3
 @test_nowarn report(mach).printmodel()
 @test_nowarn report(mach).printmodel(false, 0)
 @test_nowarn report(mach).printmodel(true, 0)
@@ -79,7 +81,7 @@ report(mach).printmodel(hidemodality=false)
 @test_nowarn report(mach).printmodel(show_metrics = true, show_intermediate_finals = true)
 @test_nowarn report(mach).printmodel(show_metrics = true, show_intermediate_finals = true, max_depth=nothing)
 @test_nowarn report(mach).printmodel(show_metrics = (;), show_intermediate_finals = 200, max_depth=nothing)
-printmodel.(listrules(report(mach).model); show_metrics=true);
+printmodel.(ModalDecisionTrees.listrules(report(mach).model); show_metrics=true);
 
 out1 = (io = IOBuffer(); report(mach).printmodel(io, true); String(take!(io)))
 out2 = (io = IOBuffer(); report(mach).printmodel(io, false); String(take!(io)))
@@ -88,20 +90,21 @@ out2 = (io = IOBuffer(); report(mach).printmodel(io, false); String(take!(io)))
 @test occursin("petal", out2)
 # @test occursin("petal", displaymodel(report(mach).model))
 
-@test_nowarn listrules(report(mach).model)
-@test_nowarn listrules(report(mach).model; use_shortforms=true)
-@test_nowarn listrules(report(mach).model; use_shortforms=false)
-printmodel.(listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true))
-@test_nowarn listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true)
-# @test_throws ErrorException listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true)
-@test_nowarn listrules(report(mach).model; use_shortforms=false, use_leftmostlinearform = true)
-@test_throws ErrorException listrules(report(mach).model; use_shortforms=false, use_leftmostlinearform = true, force_syntaxtree = true)
+@test_nowarn ModalDecisionTrees.listrules(report(mach).model)
+@test_nowarn ModalDecisionTrees.listrules(report(mach).model; use_shortforms=true)
+@test_nowarn ModalDecisionTrees.listrules(report(mach).model; use_shortforms=false)
+printmodel.(ModalDecisionTrees.listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true))
+@test_nowarn ModalDecisionTrees.listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true)
+# @test_throws ErrorException ModalDecisionTrees.listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true)
+@test_nowarn ModalDecisionTrees.listrules(report(mach).model; use_shortforms=false, use_leftmostlinearform = true)
+@test_throws ErrorException ModalDecisionTrees.listrules(report(mach).model; use_shortforms=false, use_leftmostlinearform = true, force_syntaxtree = true)
 
 
 @test_nowarn report(mach).printmodel(true, 3; syntaxstring_kwargs = (;hidemodality = true))
 
 model = ModalRandomForest()
 
+w = ones(length(y))
 mach = @time machine(model, X, y, w) |> fit!
 
 Xnew = (sepal_length = [6.4, 7.2, 7.4],

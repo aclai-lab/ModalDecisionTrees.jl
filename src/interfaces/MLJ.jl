@@ -2,14 +2,14 @@
 
 module MLJInterface
 
-export ModalDecisionTree, ModalRandomForest
+export ModalDecisionTree, ModalRandomForest, ModalAdaBoost
 export depth
 export wrapdataset
 
 using MLJModelInterface
 using MLJModelInterface.ScientificTypesBase
 using CategoricalArrays
-using DataFrames
+# using DataFrames
 using DataStructures
 using Tables
 using Random
@@ -37,12 +37,14 @@ include("MLJ/feature-importance.jl")
 
 include("MLJ/ModalDecisionTree.jl")
 include("MLJ/ModalRandomForest.jl")
+include("MLJ/ModalAdaBoost.jl")
 
 include("MLJ/docstrings.jl")
 
 const SymbolicModel = Union{
     ModalDecisionTree,
     ModalRandomForest,
+    ModalAdaBoost,
 }
 
 const TreeModel = Union{
@@ -51,6 +53,10 @@ const TreeModel = Union{
 
 const ForestModel = Union{
     ModalRandomForest,
+}
+
+const BoostedModel = Union{
+    ModalAdaBoost,
 }
 
 include("MLJ/downsize.jl")
@@ -72,14 +78,14 @@ depth(t::MDT.DTree) = height(t)
 
 function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, classes_seen=nothing, w=nothing)
     # @show get_kwargs(m, X)
-    model = begin
-        if m isa ModalDecisionTree
-            MDT.build_tree(X, y, w; get_kwargs(m, X)...)
-        elseif m isa ModalRandomForest
-            MDT.build_forest(X, y, w; get_kwargs(m, X)...)
-        else
-            error("Unexpected model type: $(typeof(m))")
-        end
+    if m isa ModalDecisionTree
+        model = MDT.build_tree(X, y, w; get_kwargs(m, X)...)
+    elseif m isa ModalRandomForest
+        model = MDT.build_forest(X, y, w; get_kwargs(m, X)...)
+    elseif m isa ModalAdaBoost
+        model = MDT.build_adaboost_stumps(X, y, w; get_kwargs(m, X)...)
+    else
+        error("Unexpected model type: $(typeof(m))")
     end
 
     if m.post_prune
@@ -100,17 +106,24 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
         # syntaxstring_kwargs = (; hidemodality = (length(var_grouping) == 1), variable_names_map = var_grouping)
     ))
 
+    translate_model = (m, preds)->ModalDecisionTrees.translate(m,
+        (; supporting_predictions=preds)
+    )
+
     rawmodel_full = model
-    rawmodel = MDT.prune(model; simplify = true)
+    rawmodel = m isa ModalAdaBoost ? model : MDT.prune(model; simplify = true)
 
     solemodel_full = translate_function(model)
-    solemodel = translate_function(rawmodel)
+    solemodel = m isa ModalAdaBoost ? solemodel_full : translate_function(rawmodel)
+
+    w = m isa ModalAdaBoost ? model.weights : w
 
     fitresult = (
         model         = model,
         rawmodel      = rawmodel,
         solemodel     = solemodel,
         var_grouping  = var_grouping,
+        weights       = w,
     )
 
     printer = ModelPrinter(m, model, solemodel, var_grouping)
@@ -119,12 +132,15 @@ function MMI.fit(m::SymbolicModel, verbosity::Integer, X, y, var_grouping, class
     report = (
         printmodel                  = printer,
         sprinkle                    = (Xnew, ynew; simplify = false)->begin
-            (Xnew, ynew, var_grouping, classes_seen, w) = MMI.reformat(m, Xnew, ynew; passive_mode = true)
-            preds, sprinkledmodel = ModalDecisionTrees.sprinkle(model, Xnew, ynew)
+            (Xnew, ynew, var_grouping, classes_seen, w) = MMI.reformat(m, Xnew, ynew, w; passive_mode = true)
+            preds, sprinkledmodel = isnothing(w) ?
+                    ModalDecisionTrees.sprinkle(model, Xnew, ynew) :
+                    ModalDecisionTrees.sprinkle(model, Xnew, ynew; tree_weights=w)
+
             if simplify
                 sprinkledmodel = MDT.prune(sprinkledmodel; simplify = true)
             end
-            preds, translate_function(sprinkledmodel)
+            preds, translate_model(sprinkledmodel, preds)
         end,
         # TODO remove redundancy?
         model                       = solemodel,
@@ -153,19 +169,23 @@ end
 
 MMI.fitted_params(::TreeModel, fitresult) = merge(fitresult, (; tree = fitresult.rawmodel))
 MMI.fitted_params(::ForestModel, fitresult) = merge(fitresult, (; forest = fitresult.rawmodel))
+MMI.fitted_params(::BoostedModel, fitresult) = merge(fitresult, (; stumps = fitresult.rawmodel))
 
 ############################################################################################
 ############################################################################################
 ############################################################################################
 
 function MMI.predict(m::SymbolicModel, fitresult, Xnew, var_grouping = nothing)
+    tree_weights = isnothing(fitresult.weights) ? false : fitresult.weights
     if !isnothing(var_grouping) && var_grouping != fitresult.var_grouping
         @warn "variable grouping differs from the one used in training! " *
             "training var_grouping: $(fitresult.var_grouping)" *
             "var_grouping = $(var_grouping)" *
             "\n"
     end
-    MDT.apply_proba(fitresult.rawmodel, Xnew, get(fitresult, :classes_seen, nothing); suppress_parity_warning = true)
+    m isa ModalDecisionTree ?
+        MDT.apply_proba(fitresult.rawmodel, Xnew, get(fitresult, :classes_seen, nothing); suppress_parity_warning=true) :
+        MDT.apply_proba(fitresult.rawmodel, Xnew, get(fitresult, :classes_seen, nothing); tree_weights, suppress_parity_warning=true)
 end
 
 ############################################################################################

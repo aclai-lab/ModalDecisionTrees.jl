@@ -15,7 +15,7 @@ using StatsBase
 using SoleBase
 using SoleBase: LogOverview, LogDebug, LogDetail
 using SoleBase: spawn, nat_sort
-using SoleBase: CLabel, RLabel, Label, _CLabel, _Label, get_categorical_form
+using SoleBase: CLabel, RLabel, Label, get_categorical_form
 using SoleBase: bestguess, default_weights, slice_weights
 
 using SoleData
@@ -119,7 +119,7 @@ include("posthoc.jl")
 # Apply decision tree/forest to a dataset
 include("apply.jl")
 
-export ModalDecisionTree, ModalRandomForest
+export ModalDecisionTree, ModalRandomForest, ModalAdaBoost
 export depth
 
 export wrapdataset
