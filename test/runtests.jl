@@ -1,20 +1,5 @@
 using Test
 
-using ModalDecisionTrees
-using MLJ
-using MLJBase
-using SoleModels
-using SoleData
-using SoleData.DimensionalDatasets
-using DataFrames
-
-using Random
-using CategoricalArrays
-using StatsBase
-using StatsBase: mean
-
-using ModalDecisionTrees: build_stump, build_tree, build_forest
-
 # For MLDatasets
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true
 # Pkg.update()

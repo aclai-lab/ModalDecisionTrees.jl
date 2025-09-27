@@ -1,9 +1,10 @@
 using Test
+using ModalDecisionTrees
+
 using Logging
 using MLJ
 using SoleData
 using SoleModels
-using ModalDecisionTrees
 using MLDatasets
 
 DOWNSIZE_WINDOW = (3,3)
@@ -17,6 +18,7 @@ Xcube, y = begin
     end
 end
 
+Xcube = Float32.(Xcube)
 y = string.(y)
 
 N = length(y)

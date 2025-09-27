@@ -1,9 +1,11 @@
 using Test
-using SoleData
-using SoleModels
 using ModalDecisionTrees
+
 using ModalDecisionTrees: DTLeaf, prediction
 using ModalDecisionTrees: DTInternal, decision
+
+using SoleData
+using SoleModels
 
 # Creation of decision leaves, nodes, decision trees, forests
 

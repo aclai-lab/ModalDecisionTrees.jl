@@ -1,11 +1,12 @@
+using Test
+using ModalDecisionTrees
+
+using ModalDecisionTrees: translate
+using ModalDecisionTrees.experimentals: parse_tree
 
 using SoleModels
 using SoleModels: printmodel
 using SoleLogics
-
-using ModalDecisionTrees
-using ModalDecisionTrees: translate
-using ModalDecisionTrees.experimentals: parse_tree
 
 tree_str1 = """
 {1} ⟨G⟩ (min[V4] >= 0.04200671690893693)                        NO_CLEAN_HISTORY_AND_LOW_PROBABILITY : 37/74 (conf = 0.5000)

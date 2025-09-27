@@ -1,7 +1,8 @@
 # Import packages
 using Test
-using MLJ
 using ModalDecisionTrees
+
+using MLJ
 using SoleModels
 using SoleData
 using Random

@@ -1,11 +1,12 @@
 using Test
+using ModalDecisionTrees
+
+using ModalDecisionTrees: DTLeaf, DTInternal
 
 using AbstractTrees
 using SoleLogics
 using SoleData
 using SoleModels
-using ModalDecisionTrees
-using ModalDecisionTrees: DTLeaf, DTInternal
 
 reg_leaf, cls_leaf = DTLeaf([1.0,2.0]), DTLeaf([1,2])
 

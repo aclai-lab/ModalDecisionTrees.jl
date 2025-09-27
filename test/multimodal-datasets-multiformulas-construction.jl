@@ -1,4 +1,6 @@
+using Test
 using ModalDecisionTrees
+
 using MLJ
 using DataFrames
 using SoleModels
@@ -6,7 +8,6 @@ using SoleData
 using Logging
 using SoleLogics
 using Random
-using Test
 
 N = 5
 y = UInt32[i <= div(N,2)+1 for i in 1:N]
@@ -320,3 +321,24 @@ printmodel.(joinrules(listrules(report(mach).model)));
 
 @test_nowarn printmodel.(listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true))
 @test_nowarn printmodel.(joinrules(listrules(report(mach).model; use_shortforms=true, use_leftmostlinearform = true)))
+
+
+# ---------------------------------------------------------------------------- #
+#                 test multilogiset with different item sizes                  #
+# ---------------------------------------------------------------------------- #
+X = DataFrame(
+    p1     = 1:5,
+    vec1   = [randn(5), randn(5), randn(5), randn(5), randn(5)],
+    Image1 = [randn(5,5), randn(5,5), randn(5,5), randn(5,5), randn(5,5)],
+    Image2 = [randn(3,5), randn(3,5), randn(3,5), randn(3,5), randn(3,5)],
+)
+multilogiset, var_grouping = ModalDecisionTrees.wrapdataset(X, ModalDecisionTree())
+
+@test var_grouping == Vector{Any}[[:p1], [:vec1], [:Image1], [:Image2]]
+@test nmodalities(multilogiset) == 4
+@test length(eachmodality(multilogiset)) == 4
+
+@test size(eachmodality(multilogiset)[1].base.featstruct) == (5, 1)
+@test size(eachmodality(multilogiset)[2].base.featstruct) == (5, 5, 5, 2)
+@test size(eachmodality(multilogiset)[3].base.featstruct) == (5, 5, 5, 5, 5, 2)
+@test size(eachmodality(multilogiset)[4].base.featstruct) == (3, 3, 5, 5, 5, 2)

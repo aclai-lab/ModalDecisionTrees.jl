@@ -1,6 +1,10 @@
-using Random
+using Test
 using ModalDecisionTrees
+
+using Random
 using MLJ, MLJBase
+
+# using ModalDecisionTrees: build_stump, build_tree, build_forest
 
 include("$(dirname(dirname(pathof(ModalDecisionTrees))))/test/data/load.jl")
 
