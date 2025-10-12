@@ -102,6 +102,11 @@ function initialworldset(
     Worlds{W}([initcond.w])
 end
 
+"""
+    initialworldset(X, i_instance::Int64, args...)
+
+Invoke `SoleLogics.frame` on `X` and  `i_instance`, before resolving `initialworldset`.
+"""
 function initialworldset(X, i_instance::Int64, args...)
     initialworldset(frame(X, i_instance), args...)
 end
