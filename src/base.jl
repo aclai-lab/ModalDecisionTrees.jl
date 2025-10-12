@@ -120,7 +120,7 @@ anchor(φ::AbstractSyntaxStructure, ::StartAtCenter) = DiamondRelationalConnecti
 anchor(φ::AbstractSyntaxStructure, cm::StartAtWorld) = DiamondRelationalConnective(
     SoleLogics.AtWorldRelation(cm.w))(φ)
 
-function initialworldset(X, i_instance::Integer, args...)
+function initialworldset(X, i_instance::Int64, args...)
     initialworldset(frame(X, i_instance), args...)
 end
 
