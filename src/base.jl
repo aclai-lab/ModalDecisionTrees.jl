@@ -111,7 +111,14 @@ function initialworldset(X, i_instance::Int64, args...)
     initialworldset(frame(X, i_instance), args...)
 end
 
+"""
+    initialworldsets(Xs::MultiLogiset, initconds::AbstractVector{<:InitialCondition})
+
+See [`initialworldset`](@ref).
+"""
 function initialworldsets(Xs::MultiLogiset, initconds::AbstractVector{<:InitialCondition})
+    # Maybe the function signature contains too much Abstract things?
+
     Ss = Vector{Vector{WST} where {W,WST<:Worlds{W}}}(undef, nmodalities(Xs)) # Fix
     for (i_modality,X) in enumerate(eachmodality(Xs))
         W = worldtype(X)
@@ -120,7 +127,8 @@ function initialworldsets(Xs::MultiLogiset, initconds::AbstractVector{<:InitialC
             for i_instance in 1:ninstances(Xs)
         ]
     end
-    Ss
+
+    return Ss
 end
 
 """
