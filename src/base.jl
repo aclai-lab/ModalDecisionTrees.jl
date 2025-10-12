@@ -182,22 +182,76 @@ const DTNode{L<:Label,D<:AbstractDecision} = Union{
     <:AbstractDecisionInternal{L,D}
 }
 
+"""
+    isleftchild(node::DTNode, parent::AbstractDecisionInternal)
+
+Return `true` if `node` is the left child of `parent`.
+
+See also [`AbstractDecisionInternal`](@ref), [`DTNode`](@ref).
+"""
 isleftchild(node::DTNode, parent::AbstractDecisionInternal) = (left(parent) == node)
+
+"""
+    isright(node::DTNode, parent::AbstractDecisionInternal)
+
+Return `true` if `node` is the right child of `parent`.
+
+See also [`AbstractDecisionInternal`](@ref), [`DTNode`](@ref).
+"""
 isrightchild(node::DTNode, parent::AbstractDecisionInternal) = (right(parent) == node)
 
+
+"""
+    isinleftsubtree(node::DTNode, parent::AbstractDecisionInternal)
+
+Return `true` if `node` is contained in the left subtree of `parent`.
+
+See also [`AbstractDecisionInternal`](@ref), [`DTNode`](@ref), [`isinrightsubtree`](@ref),
+[`isinsubtree`](@ref).
+"""
 isinleftsubtree(
     node::DTNode,
     parent::AbstractDecisionInternal
 ) = isleftchild(node, parent) || isinsubtree(node, left(parent))
+
+
+"""
+    isinrightsubtree(node::DTNode, parent::AbstractDecisionInternal)
+
+Return `true` if `node` is contained in the right subtree of `parent`.
+
+See also [`AbstractDecisionInternal`](@ref), [`DTNode`](@ref), [`isinlefttsubtree`](@ref),
+[`isinsubtree`](@ref).
+"""
 isinrightsubtree(
     node::DTNode,
     parent::AbstractDecisionInternal
 ) = isrightchild(node, parent) || isinsubtree(node, right(parent))
+
+
+"""
+    isinsubtree(node::DTNode, parent::AbstractDecisionInternal)
+
+Return `true` if `node` is contained in any subtree rooted at `parent`.
+
+See also [`AbstractDecisionInternal`](@ref), [`DTNode`](@ref), [`isinlefttsubtree`](@ref),
+[`isinrightsubtree`](@ref).
+"""
 isinsubtree(
     node::DTNode,
     parent::DTNode
 ) = (node == parent) || (isinleftsubtree(node, parent) || isinrightsubtree(node, parent))
 
+"""
+    isleftchild(node::DTNode, parent::AbstractDecisionLeaf) = false
+    isrightchild(node::DTNode, parent::AbstractDecisionLeaf) = false
+    isinleftsubtree(node::DTNode, parent::AbstractDecisionLeaf) = false
+    isinrightsubtree(node::DTNode, parent::AbstractDecisionLeaf) = false
+
+Traits relationing a `node` with its `parent`.
+
+See also [`DTNode`](@ref), [`AbstractDecisionLeaf`](@ref).
+"""
 isleftchild(node::DTNode, parent::AbstractDecisionLeaf) = false
 isrightchild(node::DTNode, parent::AbstractDecisionLeaf) = false
 isinleftsubtree(node::DTNode, parent::AbstractDecisionLeaf) = false
