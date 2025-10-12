@@ -1,22 +1,57 @@
+"""
+    abstract type Loss end
+
+Abstract type encoding a generic loss function.
+
+See also [`ClassificationLoss`](@ref), [`RegressionLoss`](@ref).
+"""
 abstract type Loss end
 
+
+"""
+    abstract type ClassificationLoss <: Loss end;
+
+[`Loss`](@ref) subtype, designed for classification tasks.
+"""
 abstract type ClassificationLoss <: Loss end;
+
+
+"""
+    abstract type RegressionLoss <: Loss end;
+
+[`Loss`](@ref) subtype, designed for regression tasks.
+"""
 abstract type RegressionLoss <: Loss end;
 
+"""
+    default_loss_function(::Type{<:CLabel}) = entropy
+    default_loss_function(::Type{<:RLabel}) = variance
+
+Default [`Loss`](@ref) for classification or regression scenario.
+
+See also [`ClassificationLoss`](@ref), [`RegressionLoss`](@ref)
+"""
 default_loss_function(::Type{<:CLabel}) = entropy
 default_loss_function(::Type{<:RLabel}) = variance
 
+"""
+    istoploss(::Loss, purity) = isinf(purity)
+
+The highest value of a generic loss function.
+
+See also [`Loss`](@ref).
+"""
 istoploss(::Loss, purity) = isinf(purity)
 
 ############################################################################################
 # Loss functions for regression and classification
 # These functions return the additive inverse of entropy measures
-# 
+#
 # For each measure, three versions are defined:
 # - A single version, computing the loss for a single dataset
 # - A combined version, computing the loss for a dataset split, equivalent to (ws_l*entropy_l + ws_r*entropy_r)
 # - A final version, which corrects the loss and is only computed after the optimization step.
-# 
+#
 # Note: regression losses are defined in the weighted & unweigthed versions
 # TODO: write a loss based on gini index
 ############################################################################################
