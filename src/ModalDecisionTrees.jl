@@ -1,16 +1,6 @@
 module ModalDecisionTrees
 
-############################################################################################
-
-import Base: show, length
-
-using FunctionWrappers: FunctionWrapper
-using Logging: LogLevel, @logmsg
-using Printf
-using ProgressMeter
-using Random
-using Reexport
-using StatsBase
+##### Sole environment dependencies ########################################################
 
 using SoleBase
 using SoleBase: LogOverview, LogDebug, LogDetail
@@ -19,42 +9,23 @@ using SoleBase: CLabel, RLabel, Label, get_categorical_form
 using SoleBase: bestguess, default_weights, slice_weights
 
 using SoleData
-using SoleData: nvariables,
-                get_instance,
-                slicedataset
-
-using FillArrays
+using SoleData: nvariables, get_instance, slicedataset
+export slicedataset, nmodalities, ninstances, nvariables
 
 using SoleData: AbstractModalLogiset
 import SoleData: feature, test_operator, threshold
 
-
-
-import AbstractTrees: print_tree
-
-# Data structures
 @reexport using SoleData.DimensionalDatasets
-using SoleData: MultiLogiset
-using SoleData: Worlds
+using SoleData: MultiLogiset, Worlds
 
-using SoleData: nfeatures, nrelations,
-                            nmodalities, eachmodality, modality,
-                            displaystructure,
-                            #
-                            relations,
-                            #
-                            MultiLogiset,
-                            SupportedLogiset
+using SoleData: nfeatures, nrelations, nmodalities, eachmodality, modality,
+    displaystructure, relations,
+    MultiLogiset, SupportedLogiset
 
 using SoleData: AbstractWorld, AbstractRelation
 using SoleData: AbstractWorlds, Worlds
 
-using SoleData: worldtype
-
-using SoleData: OneWorld
-
-using SoleData: Interval, Interval2D
-
+using SoleData: worldtype, OneWorld, Interval, Interval2D
 using SoleData: IARelations, IA2DRelations
 
 using SoleLogics: FullDimensionalFrame
@@ -67,16 +38,19 @@ import SoleModels: nnodes
 import SoleModels: nleaves
 import SoleModels: height
 
-############################################################################################
 
-export slicedataset,
-       nmodalities, ninstances, nvariables
+##### Other dependencies ###################################################################
 
-export DTree,                         # Decision tree
-        DForest,                      # Decision forest
-        RootLevelNeuroSymbolicHybrid, # Root-level neurosymbolic hybrid model
-        #
-        nnodes, height, modalheight
+import AbstractTrees: print_tree
+import Base: show, length
+using FillArrays
+using FunctionWrappers: FunctionWrapper
+using Logging: LogLevel, @logmsg
+using Printf
+using ProgressMeter
+using Random
+using Reexport
+using StatsBase
 
 ############################################################################################
 
@@ -98,6 +72,11 @@ export RestrictedDecision,
 
 # Definitions for Decision Leaf, Internal, Node, Tree & Forest
 include("base.jl")
+
+export DTree,                        # Decision tree
+       DForest,                      # Decision forest
+       RootLevelNeuroSymbolicHybrid, # Root-level neurosymbolic hybrid model
+       nnodes, height, modalheight
 
 include("print.jl")
 
