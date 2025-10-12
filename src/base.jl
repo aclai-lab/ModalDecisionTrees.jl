@@ -102,6 +102,22 @@ function initialworldset(
     Worlds{W}([initcond.w])
 end
 
+function initialworldset(X, i_instance::Int64, args...)
+    initialworldset(frame(X, i_instance), args...)
+end
+
+function initialworldsets(Xs::MultiLogiset, initconds::AbstractVector{<:InitialCondition})
+    Ss = Vector{Vector{WST} where {W,WST<:Worlds{W}}}(undef, nmodalities(Xs)) # Fix
+    for (i_modality,X) in enumerate(eachmodality(Xs))
+        W = worldtype(X)
+        Ss[i_modality] = Worlds{W}[
+            initialworldset(X, i_instance, initconds[i_modality])
+            for i_instance in 1:ninstances(Xs)
+        ]
+    end
+    Ss
+end
+
 """
     anchor(φ::AbstractSyntaxStructure, ::StartWithoutWorld)
     anchor(φ::AbstractSyntaxStructure, ::StartAtCenter)
@@ -119,22 +135,6 @@ anchor(φ::AbstractSyntaxStructure, ::StartAtCenter) = DiamondRelationalConnecti
     SoleLogics.tocenterrel)(φ)
 anchor(φ::AbstractSyntaxStructure, cm::StartAtWorld) = DiamondRelationalConnective(
     SoleLogics.AtWorldRelation(cm.w))(φ)
-
-function initialworldset(X, i_instance::Int64, args...)
-    initialworldset(frame(X, i_instance), args...)
-end
-
-function initialworldsets(Xs::MultiLogiset, initconds::AbstractVector{<:InitialCondition})
-    Ss = Vector{Vector{WST} where {W,WST<:Worlds{W}}}(undef, nmodalities(Xs)) # Fix
-    for (i_modality,X) in enumerate(eachmodality(Xs))
-        W = worldtype(X)
-        Ss[i_modality] = Worlds{W}[
-            initialworldset(X, i_instance, initconds[i_modality])
-            for i_instance in 1:ninstances(Xs)
-        ]
-    end
-    Ss
-end
 
 ############################################################################################
 
