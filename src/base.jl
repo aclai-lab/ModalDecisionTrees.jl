@@ -11,49 +11,143 @@ using SoleLogics
 using SoleLogics: AbstractMultiModalFrame
 using SoleLogics: AbstractSyntaxStructure
 
+"""
+    abstract type InitialCondition end
+
+Identify a generic initial condition for exploring a modal structure.
+
+See `SoleLogics.AbstractInterpretation`, `SoleLogics.AbstractKripkeStructure`.
+"""
 abstract type InitialCondition end
 
-struct StartWithoutWorld               <: InitialCondition end;
-const start_without_world  = StartWithoutWorld();
+"""
+    struct StartWithoutWorld <: InitialCondition end;
+    const start_without_world = StartWithoutWorld();
 
-struct StartAtCenter                   <: InitialCondition end;
-const start_at_center      = StartAtCenter();
+The most simple [`InitialCondition`](@ref).
+See the corresponding [`initialworldset`](@ref) dispatch.
 
-struct StartAtWorld{W<:AbstractWorld}  <: InitialCondition w::W end;
+See also [`StartAtCenter`](@ref), [`StartAtWorld`](@ref).
 
-function initialworldset(fr::AbstractMultiModalFrame{W}, initcond::StartWithoutWorld) where {W<:AbstractWorld}
+"""
+struct StartWithoutWorld <: InitialCondition end;
+const start_without_world = StartWithoutWorld();
+
+"""
+    struct StartAtCenter <: InitialCondition end;
+    const start_at_center = StartAtCenter();
+
+See the corresponding [`initialworldset`](@ref) dispatch.
+
+See also [`StartWithoutWorld`](@ref), [`StartAtWorld`](@ref).
+"""
+struct StartAtCenter <: InitialCondition end;
+const start_at_center = StartAtCenter();
+
+"""
+    struct StartAtCenter <: InitialCondition end;
+    const start_at_center = StartAtCenter();
+
+See the corresponding [`initialworldset`](@ref) dispatch.
+
+See also [`StartAtCenter`](@ref), [`StartWithoutWorld`](@ref).
+"""
+struct StartAtWorld{W<:AbstractWorld} <: InitialCondition w::W end;
+
+"""
+    function initialworldset(
+        fr::AbstractMultiModalFrame{W},
+        initcond::StartWithoutWorld
+    ) where {W<:AbstractWorld}
+
+Similar to `SoleLogics.emptyworld(fr)`, but allocates and returns a vector of a specific
+subtype of `SoleLogics.AbstractWorld` with only one world.
+"""
+function initialworldset(
+    fr::AbstractMultiModalFrame{W},
+    initcond::StartWithoutWorld
+) where {W<:AbstractWorld}
     Worlds{W}([SoleLogics.emptyworld(fr)])
 end
 
-function initialworldset(fr::AbstractMultiModalFrame{W}, initcond::StartAtCenter) where {W<:AbstractWorld}
+"""
+    function initialworldset(
+        fr::AbstractMultiModalFrame{W},
+        initcond::StartAtCenter
+    ) where {W<:AbstractWorld}
+
+Similar to `SoleLogics.centralworld(fr)`, but allocates and returns a vector of
+a specific subtype of `SoleLogics.AbstractWorld` with only one world.
+"""
+function initialworldset(
+    fr::AbstractMultiModalFrame{W},
+    initcond::StartAtCenter
+) where {W<:AbstractWorld}
     Worlds{W}([SoleLogics.centralworld(fr)])
 end
 
-function initialworldset(::AbstractMultiModalFrame{W}, initcond::StartAtWorld{W}) where {W<:AbstractWorld}
+"""
+    function initialworldset(
+        ::AbstractMultiModalFrame{W},
+        initcond::StartAtWorld{W}
+    ) where {W<:AbstractWorld}
+
+Return a vector of a specific subtype of `SoleLogics.AbstractWorld`, containing the
+world specified in `initcond`.
+"""
+function initialworldset(
+    ::AbstractMultiModalFrame{W},
+    initcond::StartAtWorld{W}
+) where {W<:AbstractWorld}
     Worlds{W}([initcond.w])
 end
 
-anchor(φ::AbstractSyntaxStructure, ::StartWithoutWorld) = φ
-anchor(φ::AbstractSyntaxStructure, ::StartAtCenter) = DiamondRelationalConnective(SoleLogics.tocenterrel)(φ)
-anchor(φ::AbstractSyntaxStructure, cm::StartAtWorld) = DiamondRelationalConnective(SoleLogics.AtWorldRelation(cm.w))(φ)
+"""
+    initialworldset(X, i_instance::Int64, args...)
 
-function initialworldset(
-    X,
-    i_instance::Integer,
-    args...
-)
+Invoke `SoleLogics.frame` on `X` and  `i_instance`, before resolving `initialworldset`.
+"""
+function initialworldset(X, i_instance::Int64, args...)
     initialworldset(frame(X, i_instance), args...)
 end
 
+"""
+    initialworldsets(Xs::MultiLogiset, initconds::AbstractVector{<:InitialCondition})
+
+See [`initialworldset`](@ref).
+"""
 function initialworldsets(Xs::MultiLogiset, initconds::AbstractVector{<:InitialCondition})
+    # Maybe the function signature contains too much Abstract things?
+
     Ss = Vector{Vector{WST} where {W,WST<:Worlds{W}}}(undef, nmodalities(Xs)) # Fix
     for (i_modality,X) in enumerate(eachmodality(Xs))
         W = worldtype(X)
-        Ss[i_modality] = Worlds{W}[initialworldset(X, i_instance, initconds[i_modality]) for i_instance in 1:ninstances(Xs)]
-        # Ss[i_modality] = Worlds{W}[[Interval(1,2)] for i_instance in 1:ninstances(Xs)]
+        Ss[i_modality] = Worlds{W}[
+            initialworldset(X, i_instance, initconds[i_modality])
+            for i_instance in 1:ninstances(Xs)
+        ]
     end
-    Ss
+
+    return Ss
 end
+
+"""
+    anchor(φ::AbstractSyntaxStructure, ::StartWithoutWorld)
+    anchor(φ::AbstractSyntaxStructure, ::StartAtCenter)
+    anchor(φ::AbstractSyntaxStructure, cm::StartAtWorld)
+
+!!! note
+    TODO - @giopaglia, @ferdiu by @mauro
+    This is something you can explain better than me; I remember I briefly talked about
+    this with Ferdiu a while ago.
+
+See also [`StartAtCenter`](@ref), [`StartAtWorld`](@ref), [`StartWithoutWorld`](@ref).
+"""
+anchor(φ::AbstractSyntaxStructure, ::StartWithoutWorld) = φ
+anchor(φ::AbstractSyntaxStructure, ::StartAtCenter) = DiamondRelationalConnective(
+    SoleLogics.tocenterrel)(φ)
+anchor(φ::AbstractSyntaxStructure, cm::StartAtWorld) = DiamondRelationalConnective(
+    SoleLogics.AtWorldRelation(cm.w))(φ)
 
 ############################################################################################
 
@@ -83,55 +177,151 @@ abstract type AbstractDecisionInternal{L<:Label,D<:AbstractDecision} <: Abstract
 """
 Union type for internal and decision nodes of a decision tree.
 """
-const DTNode{L<:Label,D<:AbstractDecision} = Union{<:AbstractDecisionLeaf{<:L},<:AbstractDecisionInternal{L,D}}
+const DTNode{L<:Label,D<:AbstractDecision} = Union{
+    <:AbstractDecisionLeaf{<:L},
+    <:AbstractDecisionInternal{L,D}
+}
 
+"""
+    isleftchild(node::DTNode, parent::AbstractDecisionInternal)
+
+Return `true` if `node` is the left child of `parent`.
+
+See also [`AbstractDecisionInternal`](@ref), [`DTNode`](@ref).
+"""
 isleftchild(node::DTNode, parent::AbstractDecisionInternal) = (left(parent) == node)
+
+"""
+    isright(node::DTNode, parent::AbstractDecisionInternal)
+
+Return `true` if `node` is the right child of `parent`.
+
+See also [`AbstractDecisionInternal`](@ref), [`DTNode`](@ref).
+"""
 isrightchild(node::DTNode, parent::AbstractDecisionInternal) = (right(parent) == node)
 
-isinleftsubtree(node::DTNode, parent::AbstractDecisionInternal) = isleftchild(node, parent) || isinsubtree(node, left(parent))
-isinrightsubtree(node::DTNode, parent::AbstractDecisionInternal) = isrightchild(node, parent) || isinsubtree(node, right(parent))
-isinsubtree(node::DTNode, parent::DTNode) = (node == parent) || (isinleftsubtree(node, parent) || isinrightsubtree(node, parent))
 
+"""
+    isinleftsubtree(node::DTNode, parent::AbstractDecisionInternal)
+
+Return `true` if `node` is contained in the left subtree of `parent`.
+
+See also [`AbstractDecisionInternal`](@ref), [`DTNode`](@ref), [`isinrightsubtree`](@ref),
+[`isinsubtree`](@ref).
+"""
+isinleftsubtree(
+    node::DTNode,
+    parent::AbstractDecisionInternal
+) = isleftchild(node, parent) || isinsubtree(node, left(parent))
+
+
+"""
+    isinrightsubtree(node::DTNode, parent::AbstractDecisionInternal)
+
+Return `true` if `node` is contained in the right subtree of `parent`.
+
+See also [`AbstractDecisionInternal`](@ref), [`DTNode`](@ref), [`isinlefttsubtree`](@ref),
+[`isinsubtree`](@ref).
+"""
+isinrightsubtree(
+    node::DTNode,
+    parent::AbstractDecisionInternal
+) = isrightchild(node, parent) || isinsubtree(node, right(parent))
+
+
+"""
+    isinsubtree(node::DTNode, parent::AbstractDecisionInternal)
+
+Return `true` if `node` is contained in any subtree rooted at `parent`.
+
+See also [`AbstractDecisionInternal`](@ref), [`DTNode`](@ref), [`isinlefttsubtree`](@ref),
+[`isinrightsubtree`](@ref).
+"""
+isinsubtree(
+    node::DTNode,
+    parent::DTNode
+) = (node == parent) || (isinleftsubtree(node, parent) || isinrightsubtree(node, parent))
+
+"""
+    isleftchild(node::DTNode, parent::AbstractDecisionLeaf) = false
+    isrightchild(node::DTNode, parent::AbstractDecisionLeaf) = false
+    isinleftsubtree(node::DTNode, parent::AbstractDecisionLeaf) = false
+    isinrightsubtree(node::DTNode, parent::AbstractDecisionLeaf) = false
+
+Traits relationing a `node` with its `parent`.
+
+See also [`DTNode`](@ref), [`AbstractDecisionLeaf`](@ref).
+"""
 isleftchild(node::DTNode, parent::AbstractDecisionLeaf) = false
 isrightchild(node::DTNode, parent::AbstractDecisionLeaf) = false
 isinleftsubtree(node::DTNode, parent::AbstractDecisionLeaf) = false
 isinrightsubtree(node::DTNode, parent::AbstractDecisionLeaf) = false
 
 ############################################################################################
-############################################################################################
-############################################################################################
 
 include("decisions.jl")
 
 ############################################################################################
-############################################################################################
-############################################################################################
 
 # Decision leaf node, holding an output (prediction)
+"""
+    DTLeaf{L<:Label} <: AbstractDecisionLeaf{L}
+
+A decision tree leaf node that holds a prediction and supporting instance labels.
+
+# Fields
+- `prediction::L`: The predicted label for this leaf.
+- `supp_labels::Vector{L}`: The supporting (e.g., training) instance labels.
+"""
 struct DTLeaf{L<:Label} <: AbstractDecisionLeaf{L}
     # prediction
-    prediction    :: L
+    prediction::L
     # supporting (e.g., training) instances labels
-    supp_labels   :: Vector{L}
+    supp_labels::Vector{L}
 
     # create leaf
-    DTLeaf{L}(prediction, supp_labels::AbstractVector) where {L<:Label} = new{L}(prediction, supp_labels)
-    DTLeaf(prediction::L, supp_labels::AbstractVector) where {L<:Label} = DTLeaf{L}(prediction, supp_labels)
+    DTLeaf{L}(
+        prediction,
+        supp_labels::AbstractVector
+    ) where {L<:Label} = new{L}(prediction, supp_labels)
+    DTLeaf(
+        prediction::L,
+        supp_labels::AbstractVector
+    ) where {L<:Label} = DTLeaf{L}(prediction, supp_labels)
 
     # create leaf without supporting labels
     DTLeaf{L}(prediction) where {L<:Label} = DTLeaf{L}(prediction, L[])
     DTLeaf(prediction::L) where {L<:Label} = DTLeaf{L}(prediction, L[])
 
     # create leaf from supporting labels
-    DTLeaf{L}(supp_labels::AbstractVector) where {L<:Label} = DTLeaf{L}(bestguess(L.(supp_labels)), supp_labels)
+    DTLeaf{L}(
+        supp_labels::AbstractVector
+    ) where {L<:Label} = DTLeaf{L}(bestguess(L.(supp_labels)), supp_labels)
     function DTLeaf(supp_labels::AbstractVector)
         prediction = bestguess(supp_labels)
         DTLeaf(prediction, supp_labels)
     end
 end
 
+"""
+    prediction(leaf::DTLeaf) = leaf.prediction
+
+Return the [`Label`](@ref) wrapped within the [`DTLeaf`](@ref).
+
+See also [`AbstractDecisionLeaf`](@ref).
+"""
 prediction(leaf::DTLeaf) = leaf.prediction
 
+"""
+    supp_labels(leaf::DTLeaf; train_or_valid = true)
+
+Return the supporting [`Label`](@ref)s associated with the prediction of `leaf`.
+
+!!! note
+    TODO - Two identical dispatch are defined; which one is the correct one?
+
+See also [`DTLeaf`](@ref).
+"""
 function supp_labels(leaf::DTLeaf; train_or_valid = true)
     @assert train_or_valid == true
     leaf.supp_labels
@@ -621,6 +811,38 @@ ismodalnode(tree::DTree)      = ismodalnode(root(tree))
 ############################################################################################
 ############################################################################################
 
+"""
+    displaydecision(node::DTInternal, args...; kwargs...)
+
+    function displaydecision(
+        i_modality::ModalityId,
+        decision::AbstractDecision;
+        variable_names_map::Union{
+            Nothing,
+            AbstractVector{<:AbstractVector},
+            AbstractVector{<:AbstractDict}
+        } = nothing,
+        kwargs...,
+    )
+
+    function displaydecision(
+        d::RestrictedDecision;
+        node = NoNode(),
+        displayedges = true,
+        kwargs...
+    )
+
+    function displaydecision(
+        ded::DoubleEdgedDecision;
+        node = NoNode(),
+        displayedges = true,
+        kwargs...
+    )
+
+Stringify utility to display a decision.
+
+See also [`AbstractDecision`](@ref), [`DTinternal`](@ref).
+"""
 displaydecision(node::DTInternal, args...; kwargs...) =
     displaydecision(i_modality(node), decision(node), args...; node = node, kwargs...)
 
