@@ -7,14 +7,12 @@ See also [`ClassificationLoss`](@ref), [`RegressionLoss`](@ref).
 """
 abstract type Loss end
 
-
 """
     abstract type ClassificationLoss <: Loss end;
 
 [`Loss`](@ref) subtype, designed for classification tasks.
 """
 abstract type ClassificationLoss <: Loss end;
-
 
 """
     abstract type RegressionLoss <: Loss end;
@@ -36,6 +34,7 @@ default_loss_function(::Type{<:RLabel}) = variance
 
 """
     istoploss(::Loss, purity) = isinf(purity)
+    istoploss(::ShannonEntropy, purity) = iszero(purity)
 
 The highest value of a generic loss function.
 
@@ -64,12 +63,27 @@ istoploss(::Loss, purity) = isinf(purity)
 # (ps = normalize(ws, 1); return -sum(ps.*log.(ps)))
 # Source: _shannon_entropy from https://github.com/bensadeghi/DecisionTree.jl/blob/master/src/util.jl, with inverted sign
 
+"""
+    struct ShannonEntropy <: ClassificationLoss end
+
+Concrete type for [`ClassificationLoss`](@ref), encoding the information entropy measure.
+"""
 struct ShannonEntropy <: ClassificationLoss end
 
+# docstring at istoploss(::Loss, purity)
 istoploss(::ShannonEntropy, purity) = iszero(purity)
 
-# Single
-Base.@propagate_inbounds @inline function (::ShannonEntropy)(ws :: AbstractVector{U}, t :: U) where {U<:Real}
+"""
+    (::ShannonEntropy)(ws::AbstractVector{U}, t::U) where {U <: Real}
+    (ent::ShannonEntropy)(wss_n_ts::Tuple{AbstractVector{U}, U}...)
+    (::ShannonEntropy)(e::AbstractFloat)
+
+Apply method for [`ShannonEntropy`](@ref).
+"""
+Base.@propagate_inbounds @inline function (::ShannonEntropy)(
+    ws::AbstractVector{U},
+    t::U
+) where {U <: Real}
     s = 0.0
     @simd for k in ws
         if k > 0
@@ -78,14 +92,12 @@ Base.@propagate_inbounds @inline function (::ShannonEntropy)(ws :: AbstractVecto
     end
     return -(log(t) - s / t)
 end
-
-# Multiple
-Base.@propagate_inbounds @inline function (ent::ShannonEntropy)(wss_n_ts::Tuple{AbstractVector{U},U}...) where {U<:Real}
-    sum(((ws, t),)->t * ShannonEntropy()(ws, t), wss_n_ts)
+Base.@propagate_inbounds @inline function (ent::ShannonEntropy)(
+    wss_n_ts::Tuple{AbstractVector{U}, U}...
+) where {U <: Real}
+    sum(((ws, t),) -> t * ShannonEntropy()(ws, t), wss_n_ts)
 end
-
-# Correction
-Base.@propagate_inbounds @inline function (::ShannonEntropy)(e :: AbstractFloat)
+Base.@propagate_inbounds @inline function (::ShannonEntropy)(e::U) where {U <: Real}
     e
 end
 
@@ -124,88 +136,129 @@ end
 # (ps = normalize(ws, 1); return -log(sum(ps.^alpha))/(1.0-alpha)) with (alpha > 1.0)
 
 # Single
-Base.@propagate_inbounds @inline function _tsallis_entropy(alpha :: AbstractFloat, ws :: AbstractVector{U}, t :: U) where {U<:Real}
-    log(sum(ps = normalize(ws, 1).^alpha))
+Base.@propagate_inbounds @inline function _tsallis_entropy(
+        alpha::U,
+        ws::AbstractVector{U},
+        t::U
+    ) where {U <: Real}
+    log(sum(ps = normalize(ws, 1) .^ alpha))
 end
 
 # Double
 Base.@propagate_inbounds @inline function _tsallis_entropy(
-    alpha :: AbstractFloat,
-    ws_l :: AbstractVector{U}, tl :: U,
-    ws_r :: AbstractVector{U}, tr :: U,
-) where {U<:Real}
+        alpha::AbstractFloat,
+        ws_l::AbstractVector{U},
+        tl::U,
+        ws_r::AbstractVector{U},
+        tr::U
+) where {U <: Real}
     (tl * _tsallis_entropy(alpha, ws_l, tl) +
      tr * _tsallis_entropy(alpha, ws_r, tr))
 end
 
 # Correction
-Base.@propagate_inbounds @inline function _tsallis_entropy(alpha :: AbstractFloat, e :: AbstractFloat)
-    e*(1/(alpha-1.0))
+Base.@propagate_inbounds @inline function _tsallis_entropy(alpha::U, e::U) where {U <: Real}
+    e * (1 / (alpha - 1.0))
 end
 
-TsallisEntropy(alpha::AbstractFloat) = (args...)->_tsallis_entropy(alpha, args...)
+"""
+    TsallisEntropy(alpha::AbstractFloat)
+
+!!! note
+    TODO - The implementation of this should be adjusted to be similar to
+    [`ShannonEntropy`](@ref). Sometimes, for example, some arguments are unused.
+
+See also [`ClassificationLoss`](@ref).
+"""
+TsallisEntropy(alpha::U) where {U<:Real} = (args...) -> _tsallis_entropy(alpha, args...)
 
 ############################################################################################
 # Classification: Renyi entropy
 # (ps = normalize(ws, 1); -(1.0-sum(ps.^alpha))/(alpha-1.0)) with (alpha > 1.0)
 
 # Single
-Base.@propagate_inbounds @inline function _renyi_entropy(alpha :: AbstractFloat, ws :: AbstractVector{U}, t :: U) where {U<:Real}
-    (sum(normalize(ws, 1).^alpha)-1.0)
+Base.@propagate_inbounds @inline function _renyi_entropy(
+        alpha::AbstractFloat, ws::AbstractVector{U}, t::U) where {U <: Real}
+    (sum(normalize(ws, 1) .^ alpha) - 1.0)
 end
 
 # Double
 Base.@propagate_inbounds @inline function _renyi_entropy(
-    alpha :: AbstractFloat,
-    ws_l :: AbstractVector{U}, tl :: U,
-    ws_r :: AbstractVector{U}, tr :: U,
-) where {U<:Real}
+        alpha::AbstractFloat,
+        ws_l::AbstractVector{U}, tl::U,
+        ws_r::AbstractVector{U}, tr::U
+) where {U <: Real}
     (tl * _renyi_entropy(alpha, ws_l, tl) +
      tr * _renyi_entropy(alpha, ws_r, tr))
 end
 
 # Correction
-Base.@propagate_inbounds @inline function _renyi_entropy(alpha :: AbstractFloat, e :: AbstractFloat)
-    e*(1/(alpha-1.0))
+Base.@propagate_inbounds @inline function _renyi_entropy(
+        alpha::AbstractFloat, e::AbstractFloat)
+    e * (1 / (alpha - 1.0))
 end
 
-RenyiEntropy(alpha::AbstractFloat) = (args...)->_renyi_entropy(alpha, args...)
+
+"""
+    RenyiEntropy(alpha::AbstractFloat)
+
+!!! note
+    TODO - The implementation of this should be adjusted to be similar to
+    [`ShannonEntropy`](@ref). Sometimes, for example, some arguments are unused.
+
+See also [`ClassificationLoss`](@ref).
+"""
+RenyiEntropy(alpha::AbstractFloat) = (args...) -> _renyi_entropy(alpha, args...)
 
 ############################################################################################
 # Regression: Variance (weighted & unweigthed, see https://en.wikipedia.org/wiki/Weighted_arithmetic_mean)
 
+"""
+    struct Variance <: RegressionLoss end
+
+Concrete type for [`RegressionLoss`](@ref), encoding the standard variance formula.
+
+!!! note
+    TODO - seems like the implementation is not 100% correct; for example, note the comment
+    "remove / (1 - t) from here, and move it to the correction-version of (::Variance)..."
+    stating to move a denominator to the dispatchu of (::Variance) having only one argument.
+
+See also [`Loss`](@ref).
+"""
 struct Variance <: RegressionLoss end
 
 # Single
 # sum(ws .* ((ns .- (sum(ws .* ns)/t)).^2)) / (t)
-Base.@propagate_inbounds @inline function (::Variance)(ns :: AbstractVector{L}, s :: L, t :: Integer) where {L}
+Base.@propagate_inbounds @inline function (::Variance)(
+        ns::AbstractVector{L}, s::L, t::Integer) where {L}
     # @btime sum((ns .- mean(ns)).^2) / (1 - t)
     # @btime (sum(ns.^2)-s^2/t) / (1 - t)
-    (sum(ns.^2)-s^2/t) / (1 - t)
+    (sum(ns .^ 2) - s^2 / t) / (1 - t)
     # TODO remove / (1 - t) from here, and move it to the correction-version of (::Variance), but it must be for single-version only!
 end
 
 # Single weighted (non-frequency weigths interpretation)
 # sum(ws .* ((ns .- (sum(ws .* ns)/t)).^2)) / (t)
-Base.@propagate_inbounds @inline function (::Variance)(ns :: AbstractVector{L}, ws :: AbstractVector{U}, wt :: U) where {L,U<:Real}
+Base.@propagate_inbounds @inline function (::Variance)(
+        ns::AbstractVector{L}, ws::AbstractVector{U}, wt::U) where {L, U <: Real}
     # @btime (sum(ws .* ns)/wt)^2 - sum(ws .* (ns.^2))/wt
     # @btime (wns = ws .* ns; (sum(wns)/wt)^2 - sum(wns .* ns)/wt)
     # @btime (wns = ws .* ns; sum(wns)^2/wt^2 - sum(wns .* ns)/wt)
     # @btime (wns = ws .* ns; (sum(wns)^2/wt - sum(wns .* ns))/wt)
-    (wns = ws .* ns; (sum(wns .* ns) - sum(wns)^2/wt)/wt)
+    (wns = ws .* ns; (sum(wns .* ns) - sum(wns)^2 / wt) / wt)
 end
 
 # Double
 Base.@propagate_inbounds @inline function (::Variance)(
-    ns_l :: AbstractVector{LU}, sl :: L, tl :: U,
-    ns_r :: AbstractVector{LU}, sr :: L, tr :: U,
-) where {L,LU<:Real,U<:Real}
-    ((tl*sum(ns_l.^2)-sl^2) / (1 - tl)) +
-    ((tr*sum(ns_l.^2)-sr^2) / (1 - tr))
+        ns_l::AbstractVector{LU}, sl::L, tl::U,
+        ns_r::AbstractVector{LU}, sr::L, tr::U
+) where {L, LU <: Real, U <: Real}
+    ((tl * sum(ns_l .^ 2) - sl^2) / (1 - tl)) +
+    ((tr * sum(ns_l .^ 2) - sr^2) / (1 - tr))
 end
 
 # Correction
-Base.@propagate_inbounds @inline function (::Variance)(e :: AbstractFloat)
+Base.@propagate_inbounds @inline function (::Variance)(e::AbstractFloat)
     e
 end
 
@@ -215,5 +268,10 @@ end
 
 # The default classification loss is Shannon's entropy
 entropy = ShannonEntropy()
+
+# TODO
+# tallisentropy = TallisEntropy(...)
+# renyientropy = RenyiEntropy(...)
+
 # The default regression loss is variance
 variance = Variance()
