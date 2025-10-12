@@ -1,5 +1,18 @@
 module ModalDecisionTrees
 
+##### General dependencies #################################################################
+
+import AbstractTrees: print_tree
+import Base: show, length
+using FillArrays
+using FunctionWrappers: FunctionWrapper
+using Logging: LogLevel, @logmsg
+using Printf
+using ProgressMeter
+using Random
+using Reexport
+using StatsBase
+
 ##### Sole environment dependencies ########################################################
 
 using SoleBase
@@ -37,20 +50,6 @@ using SoleModels
 import SoleModels: nnodes
 import SoleModels: nleaves
 import SoleModels: height
-
-
-##### Other dependencies ###################################################################
-
-import AbstractTrees: print_tree
-import Base: show, length
-using FillArrays
-using FunctionWrappers: FunctionWrapper
-using Logging: LogLevel, @logmsg
-using Printf
-using ProgressMeter
-using Random
-using Reexport
-using StatsBase
 
 ############################################################################################
 
