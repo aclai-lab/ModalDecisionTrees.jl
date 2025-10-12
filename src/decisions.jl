@@ -13,10 +13,16 @@ using SoleData: ScalarOneStepFormula,
 
 struct NoNode end
 
+
+# looking for the docstring? see displaydecision(node::DTInternal, args...; kwargs...)
 function displaydecision(
     i_modality::ModalityId,
     decision::AbstractDecision;
-    variable_names_map::Union{Nothing,AbstractVector{<:AbstractVector},AbstractVector{<:AbstractDict}} = nothing,
+    variable_names_map::Union{
+        Nothing,
+        AbstractVector{<:AbstractVector},
+        AbstractVector{<:AbstractDict}
+    } = nothing,
     kwargs...,
 )
     _variable_names_map = isnothing(variable_names_map) ? nothing : variable_names_map[i_modality]
@@ -152,4 +158,3 @@ function DoubleEdgedDecision(
 )
     return error("TODO implement")
 end
-

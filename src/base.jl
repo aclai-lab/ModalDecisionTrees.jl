@@ -811,6 +811,38 @@ ismodalnode(tree::DTree)      = ismodalnode(root(tree))
 ############################################################################################
 ############################################################################################
 
+"""
+    displaydecision(node::DTInternal, args...; kwargs...)
+
+    function displaydecision(
+        i_modality::ModalityId,
+        decision::AbstractDecision;
+        variable_names_map::Union{
+            Nothing,
+            AbstractVector{<:AbstractVector},
+            AbstractVector{<:AbstractDict}
+        } = nothing,
+        kwargs...,
+    )
+
+    function displaydecision(
+        d::RestrictedDecision;
+        node = NoNode(),
+        displayedges = true,
+        kwargs...
+    )
+
+    function displaydecision(
+        ded::DoubleEdgedDecision;
+        node = NoNode(),
+        displayedges = true,
+        kwargs...
+    )
+
+Stringify utility to display a decision.
+
+See also [`AbstractDecision`](@ref), [`DTinternal`](@ref).
+"""
 displaydecision(node::DTInternal, args...; kwargs...) =
     displaydecision(i_modality(node), decision(node), args...; node = node, kwargs...)
 
