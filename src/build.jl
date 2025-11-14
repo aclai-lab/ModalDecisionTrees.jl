@@ -333,11 +333,11 @@ function build_forest(
         #  by averaging (or majority voting) only those
         #  trees corresponding to boot-strap samples in which the sample did not appear
         oob_classified = Vector{Bool}()
-        Threads.@threads for i in 1:tot_samples
+        @inbounds for i in 1:tot_samples
             selected_trees = fill(false, ntrees)
             
             # pick every tree trained without i-th sample
-            for i_tree in 1:ntrees
+            Threads.@threads for i_tree in 1:ntrees
                 if i in oob_instances[i_tree] # if i is present in the i_tree-th tree, selecte thi tree
                     selected_trees[i_tree] = true
                 end
