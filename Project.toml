@@ -2,8 +2,8 @@ name = "ModalDecisionTrees"
 uuid = "e54bda2e-c571-11ec-9d64-0242ac120002"
 license = "MIT"
 desc = "Julia implementation of Modal Decision Trees and Random Forest algorithms"
-authors = ["Giovanni PAGLIARINI"]
 version = "0.5.3"
+authors = ["Giovanni PAGLIARINI"]
 
 [deps]
 AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
@@ -44,7 +44,7 @@ FillArrays = "1"
 FunctionWrappers = "1"
 Lazy = "0.15"
 Logging = "1"
-MLJ = "0.20, 0.21"
+MLJ = "0.20, 0.21, 0.22"
 MLJModelInterface = "1"
 Memoization = "0.2"
 MultiData = "0 - 0.1"
