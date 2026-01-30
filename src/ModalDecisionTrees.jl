@@ -92,7 +92,7 @@ include("interpret-onestep-decisions.jl")
 include("build.jl")
 
 # Perform post-hoc manipulation/analysis on a decision tree/forest (e.g., pruning)
-include("posthoc.jl")
+include("posthoc.jl") # TODO mybe we want move this to another package
 
 # Apply decision tree/forest to a dataset
 include("apply.jl")
